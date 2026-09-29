@@ -1780,10 +1780,13 @@ public function teacherGetApprovalSheet($groupId)
         }
     }
 
-    $record = GroupCertificate::where('group_id', $groupId)
-        ->whereHas('certificate', fn($q) => $q->where('document_type', 'approval'))
-        ->latest('issued_date')
-        ->first();
+   $record = GroupCertificate::where('group_id', $groupId)
+    ->whereHas('certificate', function ($q) {
+        $q->where('document_type', 'approval')
+          ->orWhere('certificate_title', 'like', '%Approval%');
+    })
+    ->latest('issued_date')
+    ->first();
 
     return response()->json([
         'capstone_title'   => $group->capstone_title,
@@ -2149,18 +2152,36 @@ public function joinRoomWithCode(Request $request)
  * Generate a unique serial number, prefixed by document type:
  * REC- for recommendation sheets, APR- for approval sheets, DOC- as a fallback.
  */
+/**
+ * Generate a unique, sequential serial number per document type and year:
+ *   MCC-REC-2026-0001, MCC-REC-2026-0002, ...
+ *   MCC-APR-2026-0001, MCC-APR-2026-0002, ...
+ *   MCC-DOC-2026-0001, ... (fallback)
+ */
 private function generateSerialNumber(?string $documentType): string
 {
     $prefix = match ($documentType) {
-        'recommendation' => 'REC',
-        'approval'       => 'APR',
-        default          => 'DOC',
+        'recommendation' => 'MCC-REC',
+        'approval'       => 'MCC-APR',
+        default          => 'MCC-DOC',
     };
 
     $year = now()->format('Y');
 
+    // Grab the highest existing serial for this prefix + year
+    $lastSerial = GroupCertificate::where('serial_number', 'like', "{$prefix}-{$year}-%")
+        ->orderByDesc('serial_number')
+        ->value('serial_number');
+
+    $nextNumber = 1;
+    if ($lastSerial && preg_match('/-(\d+)$/', $lastSerial, $m)) {
+        $nextNumber = ((int) $m[1]) + 1;
+    }
+
+    // Walk forward until we find a free slot (protects against races / gaps)
     do {
-        $serial = "{$prefix}-{$year}-" . strtoupper(Str::random(6));
+        $serial = sprintf('%s-%s-%04d', $prefix, $year, $nextNumber);
+        $nextNumber++;
     } while (GroupCertificate::where('serial_number', $serial)->exists());
 
     return $serial;
@@ -2316,7 +2337,8 @@ $adviserName = $group->adviser
 
     // ── CONFIRM VERIFICATION CODE ────────────────────
     public function confirmVerificationCode(Request $request)
-    {
+    {   
+         /** @var \App\Models\User $user */
         $user = Auth::user();
         $request->validate([
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -3271,6 +3293,17 @@ public function getApprovalSheet($groupId)
     // School President – you can store in settings or hardcode
     $president = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
 
+  $approvalRecord = GroupCertificate::where('group_id', $groupId)
+    ->where(function ($q) {
+        $q->whereHas('certificate', function ($c) {
+            $c->where('document_type', 'approval')
+              ->orWhere('certificate_title', 'like', '%Approval%');
+        })
+        ->orWhere('serial_number', 'like', 'MCC-APR-%');
+    })
+    ->latest('issued_date')
+    ->first();
+
     return response()->json([
         'capstone_title'     => $group->capstone_title,
         'members'            => $members,
@@ -3279,6 +3312,7 @@ public function getApprovalSheet($groupId)
         'oral_exam_result'   => $oralExamResult,
         'oral_exam_date'     => $oralExamDate,
         'school_president'   => $president,
+        'serial_number'      => $approvalRecord?->serial_number,    
     ]);
 }
 
@@ -3348,13 +3382,19 @@ public function getRecommendationSheet($groupId)
 
     // Date issued – we can use the current date or a stored date (adjust as needed)
     $dateIssued = now()->format('Y-m-d');
-
+$recRecord = GroupCertificate::where('group_id', $groupId)
+    ->whereHas('certificate', fn($q) =>
+        $q->where('document_type', 'recommendation')
+          ->orWhere('certificate_title', 'like', '%Recommendation%'))
+    ->latest('issued_date')
+    ->first();
     return response()->json([
         'capstone_title' => $group->capstone_title,
         'members'        => $members,
         'adviser'        => $adviser,
         'date_issued'    => $dateIssued,
         'group_name'     => $group->group_name,
+          'serial_number'  => $recRecord?->serial_number, 
     ]);
 }
 
@@ -3413,6 +3453,7 @@ public function issueRecommendationSheet(Request $request)
         'group_id'       => $validated['group_id'],
         'certificate_id' => $certificate->id,
         'issued_date'    => now()->toDateString(),
+        'serial_number'  => $this->generateSerialNumber('recommendation'),
     ]);
 
     return response()->json([
@@ -3506,6 +3547,7 @@ public function issueSheet(Request $request)
         'group_id'       => $validated['group_id'],
         'certificate_id' => $certificate->id,
         'issued_date'    => now()->toDateString(),
+           'serial_number'  => $this->generateSerialNumber($type),
     ]);
 
     return response()->json([
@@ -3521,14 +3563,28 @@ public function issueSheet(Request $request)
 public function getSheetStatus(Request $request, $groupId)
 {
     $type = $request->query('type', 'recommendation');
-
     if (! in_array($type, ['recommendation', 'approval', 'revision'], true)) {
         $type = 'recommendation';
     }
 
+    $prefixMap = [
+        'recommendation' => 'MCC-REC-%',
+        'approval'       => 'MCC-APR-%',
+        'revision'       => 'MCC-DOC-%',   // or whatever revision uses
+    ];
+    $titleMap = [
+        'recommendation' => '%Recommendation%',
+        'approval'       => '%Approval%',
+        'revision'       => '%Revision%',
+    ];
+
     $record = GroupCertificate::with('certificate')
         ->where('group_id', $groupId)
-        ->whereHas('certificate', fn ($q) => $q->where('document_type', $type))
+        ->where(function ($q) use ($type, $prefixMap, $titleMap) {
+            $q->whereHas('certificate', fn ($c) => $c->where('document_type', $type))
+              ->orWhereHas('certificate', fn ($c) => $c->where('certificate_title', 'like', $titleMap[$type]))
+              ->orWhere('serial_number', 'like', $prefixMap[$type]);
+        })
         ->first();
 
     return response()->json([

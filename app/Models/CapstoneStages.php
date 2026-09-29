@@ -23,4 +23,8 @@ class CapstoneStages extends Model
         {
             return $this->hasMany(Group::class, 'capstone_stage_id');
         }
+            public function milestones()
+            {
+                return $this->hasMany(Milestone::class, 'capstone_stage_id');
+            }
 }

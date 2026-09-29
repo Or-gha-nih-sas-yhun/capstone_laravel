@@ -9,6 +9,7 @@ use App\Models\Evaluation;
 use App\Models\Certificate;
 use App\Models\GroupCertificate;
 use App\Models\GroupMilestones;
+use App\Support\DefaultRubrics; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -905,103 +906,104 @@ use Illuminate\Support\Facades\Log;
 
 
     public function createRoom(Request $request)
-    {
-            $validated = $request->validate([
-                'room_count'            => 'required|integer|min:1',
-                'required_milestone_id' => 'required|exists:milestones,id',
-                'activity_name'         => 'nullable|string|max:255',
-                'panelists'             => 'nullable|array',
-                'panelists.*'           => 'exists:teachers,id',
-            ]);
+{
+    $validated = $request->validate([
+        'room_count'            => 'required|integer|min:1',
+        'required_milestone_id' => 'required|exists:milestones,id',
+        'activity_name'         => 'nullable|string|max:255',
+        'panelists'             => 'nullable|array',
+        'panelists.*'           => 'exists:teachers,id',
+    ]);
 
-            $panelists = $validated['panelists'] ?? [];
-            $roomCount = $validated['room_count'];
+    $panelists = $validated['panelists'] ?? [];
+    $roomCount = $validated['room_count'];
 
-            $milestone = \App\Models\Milestone::findOrFail($validated['required_milestone_id']);
-            $activityName = $validated['activity_name'] ?? $milestone->milestone_title;
+    $milestone = \App\Models\Milestone::findOrFail($validated['required_milestone_id']);
+    $activityName = $validated['activity_name'] ?? $milestone->milestone_title;
 
-            $selectedMilestone = \App\Models\Milestone::findOrFail($validated['required_milestone_id']);
-            $stageId = $selectedMilestone->capstone_stage_id;
+    $selectedMilestone = \App\Models\Milestone::findOrFail($validated['required_milestone_id']);
+    $stageId = $selectedMilestone->capstone_stage_id;
 
-            $isOralPresentation = in_array(strtoupper($selectedMilestone->milestone_title), [
-                'CAPSTONE ORAL PRESENTATION', 
-                'CAPSTONE PROJECT 2 ORAL PRESENTATION'
-            ]);
+    $isOralPresentation = in_array(strtoupper($selectedMilestone->milestone_title), [
+        'CAPSTONE ORAL PRESENTATION',
+        'CAPSTONE PROJECT 2 ORAL PRESENTATION'
+    ]);
 
-            $qualificationMilestoneId = $validated['required_milestone_id'];
+    $qualificationMilestoneId = $validated['required_milestone_id'];
 
-            if ($isOralPresentation) {
-                $recomMilestone = \App\Models\Milestone::where('capstone_stage_id', $stageId)
-                    ->where(function($q) {
-                        $q->where('milestone_title', 'like', '%ISSUANCE OF RECOMMENDATION SHEET%')
-                        ->orWhere('milestone_title', 'like', '%Recommendation Sheet%');
-                    })
-                    ->first();
+    if ($isOralPresentation) {
+        $recomMilestone = \App\Models\Milestone::where('capstone_stage_id', $stageId)
+            ->where(function($q) {
+                $q->where('milestone_title', 'like', '%ISSUANCE OF RECOMMENDATION SHEET%')
+                  ->orWhere('milestone_title', 'like', '%Recommendation Sheet%');
+            })
+            ->first();
 
-                if ($recomMilestone) {
-                    $qualificationMilestoneId = $recomMilestone->id;
-                }
-            }
-
-            foreach ($panelists as $teacherId) {
-                $alreadyAssigned = DB::table('room_panelists')->where('teacher_id', $teacherId)->exists();
-                if ($alreadyAssigned) {
-                    $teacherObj = Teacher::find($teacherId);
-                    $teacherName = $teacherObj ? ($teacherObj->teacher_first_name . ' ' . $teacherObj->teacher_last_name) : 'Selected Teacher';
-                    return back()->withErrors(['panelists' => "Teacher {$teacherName} is already assigned to another evaluation room."])->withInput();
-                }
-            }
-
-            DB::transaction(function () use ($validated, $panelists, $roomCount, $activityName, $qualificationMilestoneId) {
-                $requiredMilestoneId = $validated['required_milestone_id'];
-
-                // Get all groups without a room that have completed the qualification milestone
-                $groups = Group::whereNull('room_id')
-                    ->whereHas('groupMilestones', function ($query) use ($qualificationMilestoneId) {
-                        $query->where('milestone_id', $qualificationMilestoneId)
-                            ->where('status', 'completed');
-                    })->get();
-
-                // Divide groups evenly
-                $groupsPerRoom = ceil($groups->count() / $roomCount);
-                $rooms = [];
-
-                for ($i = 1; $i <= $roomCount; $i++) {
-                    $baseName = 'Room ' . $i . ' - ' . now()->format('Y-m-d');
-                    $roomName = $baseName;
-                    $counter = 1;
-                    while (EvaluationRoom::where('room_name', $roomName)->exists()) {
-                        $roomName = $baseName . ' (' . $counter . ')';
-                        $counter++;
-                    }
-
-                    $room = EvaluationRoom::create([
-                        'room_name'             => $roomName,
-                        'join_code'             => EvaluationRoom::generateUniqueCode(),
-                        'required_milestone_id' => $requiredMilestoneId,
-                        'activity_name'         => $activityName,
-                    ]);
-                    $rooms[] = $room;
-                }
-
-                // Distribute groups round-robin (only if any groups were found)
-                if ($groups->isNotEmpty()) {
-                    $groups->each(function ($group, $index) use ($rooms) {
-                        $room = $rooms[$index % count($rooms)];
-                        $group->room_id = $room->id;
-                        $group->save();
-                    });
-                }
-
-                // Distribute panelists round-robin (allowing multiple panelists per room, but each in exactly 1 room)
-                foreach ($panelists as $index => $teacherId) {
-                    $room = $rooms[$index % count($rooms)];
-                    $room->panelists()->attach($teacherId);
-                }
-            });
-
-            return back()->with('success', 'Evaluation rooms created successfully.');
+        if ($recomMilestone) {
+            $qualificationMilestoneId = $recomMilestone->id;
+        }
     }
+
+    foreach ($panelists as $teacherId) {
+        $alreadyAssigned = DB::table('room_panelists')->where('teacher_id', $teacherId)->exists();
+        if ($alreadyAssigned) {
+            $teacherObj = Teacher::find($teacherId);
+            $teacherName = $teacherObj ? ($teacherObj->teacher_first_name . ' ' . $teacherObj->teacher_last_name) : 'Selected Teacher';
+            return back()->withErrors(['panelists' => "Teacher {$teacherName} is already assigned to another evaluation room."])->withInput();
+        }
+    }
+
+    DB::transaction(function () use ($validated, $panelists, $roomCount, $activityName, $qualificationMilestoneId) {
+        $requiredMilestoneId = $validated['required_milestone_id'];
+
+        // Get all groups without a room that have completed the qualification milestone
+        $groups = Group::whereNull('room_id')
+            ->whereHas('groupMilestones', function ($query) use ($qualificationMilestoneId) {
+                $query->where('milestone_id', $qualificationMilestoneId)
+                      ->where('status', 'completed');
+            })->get();
+
+        // Find the highest existing "Room N" number so new rooms continue the sequence
+        $maxRoomNumber = EvaluationRoom::where('room_name', 'like', 'Room %')
+            ->pluck('room_name')
+            ->map(function ($name) {
+                return preg_match('/^Room\s+(\d+)$/i', trim($name), $m) ? (int) $m[1] : 0;
+            })
+            ->max() ?? 0;
+
+        $rooms = [];
+
+        for ($i = 1; $i <= $roomCount; $i++) {
+            $roomName = 'Room ' . ($maxRoomNumber + $i);
+
+            $room = EvaluationRoom::create([
+                'room_name'             => $roomName,
+                'join_code'             => EvaluationRoom::generateUniqueCode(),
+                'required_milestone_id' => $requiredMilestoneId,
+                'activity_name'         => $activityName,
+            ]);
+            $rooms[] = $room;
+        }
+
+        // Distribute groups round-robin
+        if ($groups->isNotEmpty()) {
+            $groups->each(function ($group, $index) use ($rooms) {
+                $room = $rooms[$index % count($rooms)];
+                $group->room_id = $room->id;
+                $group->save();
+            });
+        }
+
+        // Distribute panelists round-robin
+        foreach ($panelists as $index => $teacherId) {
+            $room = $rooms[$index % count($rooms)];
+            $room->panelists()->attach($teacherId);
+        }
+    });
+
+    return back()->with('success', 'Evaluation rooms created successfully.');
+}
+
     public function getRoom($roomId)
     {
             $room = EvaluationRoom::with(['panelists', 'groups', 'requiredMilestone'])->findOrFail($roomId);
@@ -1296,130 +1298,82 @@ use Illuminate\Support\Facades\Log;
     if (Auth::user()->role !== 'admin') {
         abort(403, 'Unauthorized.');
     }
- 
-    $validated = $request->validate([
-        'year' => 'required|string|regex:/^\d{4}/',
-        'capstone_1_enabled' => 'nullable|boolean',
-        'capstone_2_enabled' => 'nullable|boolean',
-        'is_active' => 'nullable|boolean',
-    ]);
- 
-    // Normalize: replace any dash variant with a standard hyphen
-    $year = preg_replace('/[–—]/', '-', $validated['year']);
-    $year = trim($year);
 
-    // Ensure format: e.g., "2026-2027"
+    $validated = $request->validate([
+        'year'                => 'required|string|regex:/^\d{4}/',
+        'capstone_1_enabled'  => 'nullable|boolean',
+        'capstone_2_enabled'  => 'nullable|boolean',
+        'is_active'           => 'nullable|boolean',
+    ]);
+
+    $year = trim(preg_replace('/[–—]/', '-', $validated['year']));
+
     if (!preg_match('/^\d{4}-\d{4}$/', $year)) {
         return back()->withErrors(['year' => 'Invalid year format. Use e.g., 2026-2027.']);
     }
- 
+
     if (CapstoneYear::where('year', $year)->exists()) {
         return back()->withErrors(['year' => "Capstone year {$year} already exists."]);
     }
- 
+
     $isActive = !empty($request->is_active);
- 
+
     DB::transaction(function () use ($year, $isActive, $request) {
+
+        // ── archive any previously active year ────────────────────────
         if ($isActive) {
             $previouslyActive = CapstoneYear::where('is_active', true)->get();
- 
+
             foreach ($previouslyActive as $prevYear) {
-                $prevYear->update(['is_active' => false, 'archived_at' => now()]);      
- 
+                $prevYear->update(['is_active' => false, 'archived_at' => now()]);
+
                 Group::where('capstone_year_id', $prevYear->id)->update(['is_archived' => true]);
                 Student::where('capstone_year_id', $prevYear->id)->update(['is_archived' => true]);
- 
-                // NEW: cascade archive onto the old year's Capstone 1/2 records
+
                 CapstoneStages::where('capstone_year_id', $prevYear->id)->update([
-                    'is_archived' => true,
+                    'is_archived'   => true,
                     'archived_year' => (int) substr($prevYear->year, 0, 4),
                 ]);
-                 $this->archiveRoomsForYear($prevYear->id);
+
+                $this->archiveRoomsForYear($prevYear->id);
             }
         }
- 
+
+        // ── create the new year row ───────────────────────────────────
         $newYear = CapstoneYear::create([
-            'year' => $year,
-            'is_active' => $isActive,
-            'capstone_1_enabled' => $request->has('capstone_1_enabled'),
-            'capstone_2_enabled' => $request->has('capstone_2_enabled'),
-            'archived_at' => $isActive ? null : now(),
+            'year'                => $year,
+            'is_active'           => $isActive,
+            'capstone_1_enabled'  => $request->has('capstone_1_enabled'),
+            'capstone_2_enabled'  => $request->has('capstone_2_enabled'),
+            'archived_at'         => $isActive ? null : now(),
         ]);
- 
+
+        // ── create the C1 / C2 stages for the new year ────────────────
         $c1Stage = CapstoneStages::create([
-            'stage_title' => "Capstone 1 - {$year}",
-            'stage_type' => 1,
-            'is_enabled' => $newYear->capstone_1_enabled,
-            'is_archived' => !$isActive,
-            'archived_year' => $isActive ? null : (int) substr($year, 0, 4),
+            'stage_title'      => "Capstone 1 - {$year}",
+            'stage_type'       => 1,
+            'is_enabled'       => $newYear->capstone_1_enabled,
+            'is_archived'      => !$isActive,
+            'archived_year'    => $isActive ? null : (int) substr($year, 0, 4),
             'capstone_year_id' => $newYear->id,
         ]);
- 
+
         $c2Stage = CapstoneStages::create([
-            'stage_title' => "Capstone 2 - {$year}",
-            'stage_type' => 2,
-            'is_enabled' => $newYear->capstone_2_enabled,
-            'is_archived' => !$isActive,
-            'archived_year' => $isActive ? null : (int) substr($year, 0, 4),
+            'stage_title'      => "Capstone 2 - {$year}",
+            'stage_type'       => 2,
+            'is_enabled'       => $newYear->capstone_2_enabled,
+            'is_archived'      => !$isActive,
+            'archived_year'    => $isActive ? null : (int) substr($year, 0, 4),
             'capstone_year_id' => $newYear->id,
         ]);
- 
-        $latestC1Stage = CapstoneStages::where('stage_type', 1)
-            ->where('id', '!=', $c1Stage->id)
-            ->latest('id')
-            ->first();
-        if ($latestC1Stage) {
-            $milestones = Milestone::where('capstone_stage_id', $latestC1Stage->id)->get();
-            foreach ($milestones as $m) {
-                Milestone::create([
-                    'milestone_title' => $m->milestone_title,
-                    'milestone_description' => $m->milestone_description,
-                    'capstone_stage_id' => $c1Stage->id,
-                    'step_order' => $m->step_order,
-                    'start_date' => $m->start_date,
-                    'due_date' => $m->due_date,
-                ]);
-            }
-        } else {
-            Milestone::create([
-                'milestone_title' => 'Proposal hearing',
-                'milestone_description' => 'Proposal hearing milestone',
-                'capstone_stage_id' => $c1Stage->id,
-                'step_order' => 1,
-                'start_date' => now()->toDateString(),
-                'due_date' => now()->addDays(14)->toDateString(),
-            ]);
-        }
- 
-        $latestC2Stage = CapstoneStages::where('stage_type', 2)
-            ->where('id', '!=', $c2Stage->id)
-            ->latest('id')
-            ->first();
-        if ($latestC2Stage) {
-            $milestones = Milestone::where('capstone_stage_id', $latestC2Stage->id)->get();
-            foreach ($milestones as $m) {
-                Milestone::create([
-                    'milestone_title' => $m->milestone_title,
-                    'milestone_description' => $m->milestone_description,
-                    'capstone_stage_id' => $c2Stage->id,
-                    'step_order' => $m->step_order,
-                    'start_date' => $m->start_date,
-                    'due_date' => $m->due_date,
-                ]);
-            }
-        } else {
-            Milestone::create([
-                'milestone_title' => 'Oral presentation',
-                'milestone_description' => 'Oral presentation milestone',
-                'capstone_stage_id' => $c2Stage->id,
-                'step_order' => 1,
-                'start_date' => now()->toDateString(),
-                'due_date' => now()->addDays(14)->toDateString(),
-            ]);
-        }
- 
+
+        // ── clone milestones + rubrics + criteria for each stage ──────
+        $this->cloneStageMilestonesAndRubrics(1, $c1Stage, 'Proposal hearing');
+        $this->cloneStageMilestonesAndRubrics(2, $c2Stage, 'Oral presentation');
+
+        // ── register the year in settings ─────────────────────────────
         $customYears = \App\Models\Setting::get('custom_years', '');
-        $yearsArray = $customYears ? explode(',', $customYears) : [];
+        $yearsArray  = $customYears ? explode(',', $customYears) : [];
         if (!in_array($year, $yearsArray)) {
             $yearsArray[] = $year;
             sort($yearsArray);
@@ -1429,8 +1383,69 @@ use Illuminate\Support\Facades\Log;
             \App\Models\Setting::set('active_year', $year);
         }
     });
- 
+
     return back()->with('success', "Capstone year {$year} added successfully.");
+}
+/**
+ * Clone every milestone (and its attached rubric + criteria) from the most
+ * recent stage of the given $stageType into the given $newStage.
+ * Falls back to a default milestone if no prior stage exists.
+ */
+private function cloneStageMilestonesAndRubrics(int $stageType, CapstoneStages $newStage, string $fallbackTitle): void
+{
+    // Latest stage of this type that actually HAS milestones
+    $sourceStage = CapstoneStages::where('stage_type', $stageType)
+        ->where('id', '!=', $newStage->id)
+        ->whereHas('milestones')   // see note below
+        ->latest('id')
+        ->first();
+
+    // Fallback: no prior stage with milestones
+    if (! $sourceStage) {
+        $title = $stageType === 1 ? 'Capstone Oral Presentation' : 'CAPSTONE PROJECT 2 ORAL PRESENTATION';
+
+        $m = Milestone::create([
+            'milestone_title'       => $title,
+            'milestone_description' => $title . ' milestone',
+            'capstone_stage_id'     => $newStage->id,
+            'step_order'            => 1,
+            'start_date'            => now()->toDateString(),
+            'due_date'              => now()->addDays(14)->toDateString(),
+        ]);
+        DefaultRubrics::attachTo($m);
+        return;
+    }
+
+    foreach (Milestone::where('capstone_stage_id', $sourceStage->id)->get() as $old) {
+        $new = Milestone::create([
+            'milestone_title'       => $old->milestone_title,
+            'milestone_description' => $old->milestone_description,
+            'capstone_stage_id'     => $newStage->id,
+            'step_order'            => $old->step_order,
+            'start_date'            => $old->start_date,
+            'due_date'              => $old->due_date,
+        ]);
+
+        $oldRubric = Rubric::where('milestone_id', $old->id)->with('criteria')->first();
+
+        if ($oldRubric) {
+            $newRubric = Rubric::create([
+                'rubric_name'  => $oldRubric->rubric_name,
+                'milestone_id' => $new->id,
+            ]);
+            foreach ($oldRubric->criteria as $c) {
+                RubricCriteria::create([
+                    'rubric_id'     => $newRubric->id,
+                    'criteria_name' => $c->criteria_name,
+                    'weight'        => $c->weight,
+                    'max_score'     => $c->max_score,
+                ]);
+            }
+        } else {
+            // Source had no rubric (e.g. older year): fall back to the defaults
+            DefaultRubrics::attachTo($new);
+        }
+    }
 }
     /**
      * Activate a capstone year, archiving the current one and restoring groups/students.

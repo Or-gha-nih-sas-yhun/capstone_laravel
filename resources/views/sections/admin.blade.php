@@ -23,6 +23,7 @@
 @if(is_string($flashSuccess) && $flashSuccess)<meta name="flash-success" content="{{ $flashSuccess }}">@endif
 @if(is_string($flashError) && $flashError)<meta name="flash-error" content="{{ $flashError }}">@endif
 @if($errors->any())<meta name="flash-errors" content="{{ json_encode($errors->all()) }}">@endif
+
     <title>Capstone Tracker | Admin Dashboard</title>
     <link rel="stylesheet" href="/css/dashboard.css">
     <link rel="icon" type="image/jpeg" href="{{ asset('pictures/favicon.jpg') }}">
@@ -466,6 +467,82 @@
     animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* ── CAPSTONE ENABLE TOGGLE SWITCH ── */
+.switch {
+  --switch-width: 46px;
+  --switch-height: 24px;
+  --switch-bg: rgb(226, 22, 22);
+  --switch-checked-bg: rgb(0, 218, 80);
+  --circle-diameter: 18px;
+  --circle-bg: #fff;
+  --switch-offset: calc((var(--switch-height) - var(--circle-diameter)) / 2);
+  --switch-transition: all .2s cubic-bezier(0.27, 0.2, 0.25, 1.51);
+  --circle-shadow: 1px 1px 2px rgba(146, 146, 146, 0.45);
+  --circle-checked-shadow: -1px 1px 2px rgba(163, 163, 163, 0.45);
+  --icon-transition: all .2s cubic-bezier(0.27, 0.2, 0.25, 1.51);
+  --icon-cross-color: var(--switch-bg);
+  --icon-cross-size: 6px;
+  --icon-checkmark-color: var(--switch-checked-bg);
+  --icon-checkmark-size: 10px;
+  --effect-width: calc(var(--circle-diameter) / 2);
+  --effect-height: calc(var(--effect-width) / 2 - 1px);
+  --effect-bg: var(--circle-bg);
+  --effect-border-radius: 1px;
+  --effect-transition: all .2s ease-in-out;
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+}
+.switch input { display: none; }
+.switch svg { transition: var(--icon-transition); position: absolute; height: auto; }
+.switch .checkmark { width: var(--icon-checkmark-size); color: var(--icon-checkmark-color); transform: scale(0); }
+.switch .cross { width: var(--icon-cross-size); color: var(--icon-cross-color); }
+.switch .slider {
+  box-sizing: border-box;
+  width: var(--switch-width);
+  height: var(--switch-height);
+  background: var(--switch-bg);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  transition: var(--switch-transition);
+  cursor: pointer;
+}
+.switch .circle {
+  width: var(--circle-diameter);
+  height: var(--circle-diameter);
+  background: var(--circle-bg);
+  border-radius: inherit;
+  box-shadow: var(--circle-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--switch-transition);
+  z-index: 1;
+  position: absolute;
+  left: var(--switch-offset);
+}
+.switch .slider::before {
+  content: "";
+  position: absolute;
+  width: var(--effect-width);
+  height: var(--effect-height);
+  left: calc(var(--switch-offset) + (var(--effect-width) / 2));
+  background: var(--effect-bg);
+  border-radius: var(--effect-border-radius);
+  transition: var(--effect-transition);
+}
+.switch input:checked + .slider { background: var(--switch-checked-bg); }
+.switch input:checked + .slider .checkmark { transform: scale(1); }
+.switch input:checked + .slider .cross { transform: scale(0); }
+.switch input:checked + .slider::before {
+  left: calc(100% - var(--effect-width) - (var(--effect-width) / 2) - var(--switch-offset));
+}
+.switch input:checked + .slider .circle {
+  left: calc(100% - var(--circle-diameter) - var(--switch-offset));
+  box-shadow: var(--circle-checked-shadow);
+}
     </style>
 </head>
 <body class="bg-[#f8f6f0] text-[#171e2c]">
@@ -1584,6 +1661,7 @@
             </div>
 
             <div class="grid grid-cols-1 gap-6 mb-6">
+                <!-- ==================== ACTIVE STAGES CONFIGURATION ==================== -->
                 <div class="content-card">
                     <div class="card-accent"></div>
                     <div class="p-6">
@@ -1592,7 +1670,7 @@
                         </h3>
                         <p class="text-xs text-[#5b6375] mb-6">Enabling/disabling a stage will automatically hide or show its corresponding milestones, rubrics, and progress stats across all dashboards.</p>
                         
-                        <div class="space-y-4">
+                        <div class="space-y-4" id="active-stages-list">
                             @foreach($capstoneStages as $stage)
                             <div class="flex items-center justify-between p-4 bg-[#faf8f4] border border-[#e2dacf] rounded-xl hover:border-[#d6b15c] transition">
                                 <div class="flex-1 min-w-0 pr-4">
@@ -1610,15 +1688,24 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div class="flex items-center gap-1.5 flex-shrink-0">
-                                    <form action="{{ route('admin.toggle_capstone_stage') }}" method="POST" class="inline">
+                                <div class="flex items-center gap-3 flex-shrink-0">
+                                    <form action="{{ route('admin.toggle_capstone_stage') }}" method="POST" class="inline toggle-stage-form">
                                         @csrf
                                         <input type="hidden" name="stage_id" value="{{ $stage->id }}">
-                                        <button type="submit" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg transition {{ $stage->is_enabled ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white' }}">
-                                            {{ $stage->is_enabled ? 'Disable' : 'Enable' }}
-                                        </button>
+                                        <label class="switch" title="{{ $stage->is_enabled ? 'Disable' : 'Enable' }} {{ $stage->stage_title }}">
+                                            <input type="checkbox" {{ $stage->is_enabled ? 'checked' : '' }} onchange="this.form.submit()">
+                                            <div class="slider">
+                                                <div class="circle">
+                                                    <svg class="cross" xml:space="preserve" style="enable-background:new 0 0 512 512" viewBox="0 0 365.696 365.696" y="0" x="0" height="6" width="6" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                                                        <g><path data-original="#000000" fill="currentColor" d="M243.188 182.86 356.32 69.726c12.5-12.5 12.5-32.766 0-45.247L341.238 9.398c-12.504-12.503-32.77-12.503-45.25 0L182.86 122.528 69.727 9.374c-12.5-12.5-32.766-12.5-45.247 0L9.375 24.457c-12.5 12.504-12.5 32.77 0 45.25l113.152 113.152L9.398 295.99c-12.503 12.503-12.503 32.769 0 45.25L24.48 356.32c12.5 12.5 32.766 12.5 45.247 0l113.132-113.132L295.99 356.32c12.503 12.5 32.769 12.5 45.25 0l15.081-15.082c12.5-12.504 12.5-32.77 0-45.25zm0 0"></path></g>
+                                                    </svg>
+                                                    <svg class="checkmark" xml:space="preserve" style="enable-background:new 0 0 512 512" viewBox="0 0 24 24" y="0" x="0" height="10" width="10" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                                                        <g><path data-original="#000000" fill="currentColor" d="M9.707 19.121a.997.997 0 0 1-1.414 0l-5.646-5.647a1.5 1.5 0 0 1 0-2.121l.707-.707a1.5 1.5 0 0 1 2.121 0L9 14.171l9.525-9.525a1.5 1.5 0 0 1 2.121 0l.707.707a1.5 1.5 0 0 1 0 2.121z"></path></g>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </label>
                                     </form>
-
                                     <button type="button" onclick="openEditStageModal({{ $stage->id }}, '{{ addslashes($stage->stage_title) }}', {{ $stage->stage_type }})" class="p-1.5 text-xs font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 text-[#0a1428] transition" title="Edit Stage Title">
                                         <i class="fas fa-pen"></i>
                                     </button>
@@ -3456,6 +3543,64 @@ function openDeleteGroupModal(id, name) {
     openModal('delete_group_modal');
 }
 
+// ---- ACTIVE STAGES TOGGLE (no reload) ----
+function setStatusBadge(el, enabled) {
+    el.className = 'text-xs text-[#5b6375] stage-status';
+    el.innerHTML = enabled
+        ? '<span class="text-green-600 font-semibold uppercase tracking-wider text-[10px]">Active / Enabled</span>'
+        : '<span class="text-red-500 font-semibold uppercase tracking-wider text-[10px]">Disabled</span>';
+}
+
+function applyStageStates(stages, year) {
+    (stages || []).forEach(s => {
+        const row = document.querySelector(`[data-stage-row="${s.id}"]`);
+        if (!row) return;
+        const cb = row.querySelector('.stage-toggle');
+        if (cb) cb.checked = s.is_enabled;
+        const status = row.querySelector('.stage-status');
+        if (status) setStatusBadge(status, s.is_enabled);
+    });
+
+    if (year) {
+        [['dash-c1-status', year.c1], ['dash-c2-status', year.c2]].forEach(([id, on]) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = on ? 'Enabled' : 'Disabled';
+            el.classList.toggle('text-green-600', on);
+            el.classList.toggle('text-red-500', !on);
+        });
+    }
+}
+
+async function toggleCapstoneStage(input) {
+    const form = input.closest('form');
+    const wanted = input.checked;
+    document.querySelectorAll('.stage-toggle').forEach(cb => cb.disabled = true);
+
+    try {
+        const res = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new FormData(form),
+            credentials: 'same-origin'
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) throw new Error(data?.message || 'Failed to update stage.');
+
+        applyStageStates(data.stages, data.year);
+        showToast(data.message);
+    } catch (err) {
+        input.checked = !wanted;   // revert the switch
+        showToast(err.message || 'Failed to update stage.', true);
+    } finally {
+        document.querySelectorAll('.stage-toggle').forEach(cb => cb.disabled = false);
+    }
+}
+window.toggleCapstoneStage = toggleCapstoneStage;
 // ---- EVALUATION ROOMS ----
 let currentEditRoomId = null;
 

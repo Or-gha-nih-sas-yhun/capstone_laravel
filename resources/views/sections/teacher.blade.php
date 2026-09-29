@@ -418,6 +418,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.8rem;
+    z-index: 1;
 }
 #viewModal .timeline-table th,
 #viewModal .timeline-table td {
@@ -3813,9 +3814,7 @@ function openViewModal(groupId) {
                     || m.id === 5
                     || m.id === 17;
 
-                const isApprovalMilestone =
-                    /issuance of approval/i.test(m.title || '')
-                    || m.id === 19;
+            
 
                 const issueButtonHtml = (isRecommendationMilestone && data.is_adviser)
                     ? `<button type="button"
@@ -3827,15 +3826,7 @@ function openViewModal(groupId) {
                     </button>`
                     : '';
 
-                const issueApprovalButtonHtml = (isApprovalMilestone && data.is_adviser)
-                    ? `<button type="button"
-                            class="issue-rec-btn text-[#b88d3a] hover:text-[#8b6914] text-[10px]
-                                    font-semibold mt-2 ml-3 focus:outline-none inline-flex items-center"
-                            data-milestone-id="${m.id}"
-                            data-doc-type="approval">
-                            <i class="fas fa-award mr-1"></i> Issue Approval Sheet
-                    </button>`
-                    : '';
+                
 
                 const editButtonHtml = data.is_adviser
                     ? `<button type="button"
@@ -3863,7 +3854,6 @@ function openViewModal(groupId) {
                             ${feedbackHtml}
                             ${editButtonHtml}
                              ${issueButtonHtml}
-                             ${issueApprovalButtonHtml}
                         </div>
 
                         <div class="remark-edit-mode hidden mt-2 p-3 bg-[#faf8f4] border border-[#e2dacf] rounded-lg space-y-2">
@@ -3957,62 +3947,11 @@ function openViewModal(groupId) {
                 remarksHtml = `<span class="remark-empty">Not yet available</span>`;
             }
 
-            // ── Panelist evaluation card (or "not yet evaluated" notice) ──
+            // ── Panelist evaluation summary (score + feedback, no rubric breakdown) ──
 let evaluationHtml = '';
 
 if (milestoneEvals.length > 0) {
-    evaluationHtml = milestoneEvals.map((evaluation, idx) => {
-        let criteriaRowsHtml = '';
-        if (evaluation.criteria && evaluation.criteria.length > 0) {
-            criteriaRowsHtml = `
-                <div id="eval_rubric_details_${m.id}_${idx}"
-                     class="hidden mt-2 p-2 bg-[#faf8f4] border border-[#e2dacf] rounded-lg">
-                    <table class="w-full text-[11px]">
-                        <thead>
-                            <tr class="border-b border-[#e2dacf] text-left text-[#5b6375]">
-                                <th class="py-1 text-left">Criterion</th>
-                                <th class="py-1 text-center font-normal">Max</th>
-                                <th class="py-1 text-center font-normal">Score</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${evaluation.criteria.map(c => `
-                                <tr class="border-b border-[#faf1e0]">
-                                    <td class="py-1 text-left text-[#171e2c] font-medium">${c.criteria_name}</td>
-                                    <td class="py-1 text-center text-[#5b6375]">${c.max_score}</td>
-                                    <td class="py-1 text-center font-bold text-[#1e6b3a]">${c.given_score}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>`;
-        }
-
-        return `
-            <div class="mt-3 pt-3 border-t border-[#e2dacf] text-xs">
-                <div class="flex justify-between items-center">
-                    <span class="font-semibold text-[#0a1428]">
-                        <i class="fa-solid fa-square-poll-vertical text-[#d6b15c] mr-1"></i>
-                        Panelist Evaluation
-                    </span>
-                    <span class="font-bold text-[#1e6b3a]">${evaluation.score} / ${evaluation.max_score}</span>
-                </div>
-                <p class="text-[10px] text-[#5b6375] mt-0.5">
-                    By ${evaluation.teacher_name} on ${fmtDate(evaluation.evaluation_date)}
-                </p>
-                ${evaluation.feedback
-                    ? `<p class="italic text-[#5b6375] mt-1 bg-[#fbfaf7] p-1.5 border-l-2 border-[#d6b15c]">${evaluation.feedback}</p>`
-                    : ''}
-                ${criteriaRowsHtml ? `
-                    <button type="button"
-                            onclick="document.getElementById('eval_rubric_details_${m.id}_${idx}').classList.toggle('hidden'); event.stopPropagation();"
-                            class="text-[#b88d3a] hover:text-[#8b6914] text-[11px] font-medium mt-1.5 block focus:outline-none">
-                        <i class="fas fa-list mr-1"></i> Toggle Rubric Criteria Scores
-                    </button>
-                    ${criteriaRowsHtml}
-                ` : ''}
-            </div>`;
-    }).join('');
+   
 } else if (m.has_rubric) {
     evaluationHtml = `
         <div class="mt-3 text-xs text-[#5b6375] italic bg-[#faf8f4] p-2 border border-[#e2dacf] rounded-lg">

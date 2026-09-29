@@ -2323,7 +2323,7 @@
                             <div>
                                 <h2 class="flex items-center gap-2">
                                     {{ $groups->group_name ?? 'Group' }}
-                                    <span class="badge badge-gold">#{{ $groups->id ?? '—' }}</span>
+                                   
                                 </h2>
                                 <p class="text-sm text-[#3d4450]">{{ $groups->capstone_title ?? '—' }}</p>
                                 <p class="text-xs text-[#5b6375] mt-1">Adviser: {{ $adviser?->teacher_last_name . ', ' . $adviser?->teacher_first_name ?? 'Not assigned' }}</p>
@@ -2531,28 +2531,18 @@
                             <span><i class="fa-regular fa-calendar-check mr-1"></i> Due: {{ $nextMilestone->due_date ? \Carbon\Carbon::parse($nextMilestone->due_date)->format('M d, Y') : '—' }}</span>
                         </div>
                     </div>
+                    @elseif(!$nextMilestone)
+                    <div class="next-milestone-box">
+                        <div class="icon-badge">
+                            <i class="fa-regular fa-compass"></i>You Caught Up!
+                        </div>
+                        <h3>You Have Completed All Steps</h3>
+                        <p>Congratulations on reaching this milestone!</p>
+                        
+                    </div>
                     @endif
 
-                    <div class="bg-white rounded-xl border border-[#e2dacf] shadow-sm overflow-hidden">
-                        <div class="px-5 py-4 border-b border-[#e2dacf] flex items-center justify-between">
-                            <h4 class="text-sm font-bold text-[#0a1428] flex items-center gap-2">
-                                <i class="fa-regular fa-star text-[#d6b15c]"></i> Recent Evaluations
-                            </h4>
-                        </div>
-                        <div class="p-4 space-y-3 max-h-72 overflow-y-auto">
-                            @forelse($evaluations as $eval)
-                            <div class="eval-item">
-                                <div>
-                                    <p class="text-sm font-medium text-[#0a1428]">{{ $eval->milestone->milestone_title ?? 'Evaluation' }}</p>
-                                    <p class="eval-meta">{{ $eval->teacher ? $eval->teacher->teacher_first_name . ' ' . $eval->teacher->teacher_last_name : ($eval->teacher->user->name ?? 'Teacher') }} • {{ \Carbon\Carbon::parse($eval->evaluation_date)->format('M d, Y') }}</p>
-                                </div>
-                                <div class="eval-score">{{ $eval->score }}/{{ $eval->max_score }}</div>
-                            </div>
-                            @empty
-                            <p class="text-sm text-[#5b6375] text-center py-4">No evaluations yet.</p>
-                            @endforelse
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
 
@@ -2596,7 +2586,7 @@
                         <p class="text-[#5b6375] text-sm mt-1">ID: {{ $student->user_id ?? $user->user_id }}</p>
 
                         <div class="mt-4 flex flex-wrap gap-2 justify-center">
-                            <span class="badge badge-gold"><i class="fa-solid fa-layer-group mr-1"></i>{{ $groups?->group_name ?? 'No Group' }} (#{{ $groups?->id ?? '—' }})</span>
+                            <span class="badge badge-gold"><i class="fa-solid fa-layer-group mr-1"></i>{{ $groups?->group_name ?? 'No Group' }} </span>
                         </div>
 
                         <div class="mt-5 w-full pt-5 border-t border-[#e2dacf] space-y-1">
@@ -3239,8 +3229,6 @@
             <!-- Title -->
             <h2 class="rec-title">Recommendation Sheet</h2>
 
-            <!-- Serial number -->
-            <p class="rec-serial" id="recommendationSerial">&nbsp;</p>
 
             <!-- Body -->
             <div class="rec-body" id="recommendationSheetContent">
@@ -3282,6 +3270,12 @@
                         {{ now()->format('F d, Y') }}
                     </div>
                     <div class="rec-footer-label">Date Issued</div>
+                </div>
+                <div class="rec-footer-block">
+                    <div class="rec-footer-value" id="recommendationSerial">
+                        {{ $groups->serial_number ?? '—' }}
+                    </div>
+                    <div class="rec-footer-label">Serial Number</div>
                 </div>
                 <div class="rec-footer-block">
                     <div class="rec-footer-value" id="recommendationGroup">
@@ -3910,7 +3904,7 @@ window.printModalContent = function (modalId) {
                     president.textContent = data.school_president || 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
                     if (serialEl) {
                         serialEl.textContent = data.serial_number
-                            ? 'Serial No. ' + data.serial_number
+                            ? data.serial_number
                             : ' ';
                     }
                 })
@@ -3974,7 +3968,7 @@ window.printModalContent = function (modalId) {
 
                         if (serialEl) {
                             serialEl.textContent = data.serial_number
-                                ? 'Serial No. ' + data.serial_number
+                                ?  data.serial_number
                                 : ' ';
                         }
                     })
@@ -4084,7 +4078,7 @@ window.printModalContent = function (modalId) {
                 }
                 if (serialEl) {
                     const sn = revData.serial_number || groupData.serial_number;
-                    serialEl.textContent = sn ? 'Serial No. ' + sn : ' ';
+                    serialEl.textContent = sn ? ' ' + sn : ' ';
                 }
                 overallRemarks.textContent = revData.overall_remarks || 'No overall remarks.';
             })
