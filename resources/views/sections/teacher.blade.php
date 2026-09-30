@@ -1131,6 +1131,423 @@
 .approval-oral-results .oral-label { margin-right: .35rem; }
 .approval-oral-results .oral-value { border-bottom: 1px solid #222; font-weight: 700; padding-bottom: .05rem; }
 .approval-approved-label { margin: 0 0 .25rem; font-size: .86rem; }
+/* ═════════ DOCUMENT MODALS (shared with student dashboard) ═════════ */
+.modal-loading-box {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .75rem; padding: 3rem 1.5rem; min-height: 220px;
+}
+.modal-loading-box p { font-size: .82rem; color: var(--text-muted); font-weight: 500; }
+#revisionSheetModal, #recommendationSheetModal, #approvalSheetModal { z-index: 60; }
+
+/* ── RECOMMENDATION SHEET — SCREEN (mirrors print) ── */
+@media screen {
+    .recommendation-sheet-modal {
+        container-type: inline-size; box-sizing: border-box; display: block;
+        width: 100%; max-width: calc(8.5in + 3rem) !important;
+        min-height: 0; max-height: 92vh; padding: 1.5rem !important; background: #e9e5db;
+    }
+    .recommendation-sheet-modal .recommendation-document {
+        --in: calc(100cqw / 8.5); --pt: calc(var(--in) / 72);
+        box-sizing: border-box; position: relative; display: flex; flex-direction: column;
+        width: 100%; aspect-ratio: 8.5 / 11; overflow: hidden;
+        padding: calc(var(--in) * 1.1) calc(var(--in) * 1.25) calc(var(--in) * 1.15);
+        background: #fff; border: 0; border-radius: 0;
+        box-shadow: 0 12px 32px rgba(0,0,0,.18); text-align: center;
+        font-family: 'Times New Roman', serif; color: #1a1a1a;
+    }
+    .recommendation-sheet-modal .rec-header-image { margin: 0 0 calc(var(--in) * .22); text-align: center; }
+    .recommendation-sheet-modal .rec-header-image img {
+        display: block; margin: 0 auto; width: auto;
+        max-width: calc(var(--in) * 5.9); max-height: calc(var(--in) * .85); object-fit: contain;
+    }
+    .recommendation-sheet-modal .rec-title {
+        font-family: 'Times New Roman', serif; font-size: calc(var(--pt) * 18); font-weight: 700;
+        line-height: 1; letter-spacing: .22em; text-align: center; color: #0a1428;
+        border-bottom: 2px solid #0a1428; padding-bottom: calc(var(--in) * .08);
+        margin: 0 auto calc(var(--in) * .36); max-width: 90%;
+    }
+    .recommendation-sheet-modal .rec-body {
+        flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; gap: 0;
+        max-width: calc(var(--in) * 6.4); margin: 0 auto; font-family: 'Times New Roman', serif;
+    }
+    .recommendation-sheet-modal .rec-body p {
+        font-size: calc(var(--pt) * 12); line-height: 1.75;
+        margin: 0 0 calc(var(--in) * .16); text-align: center; color: #1a1a1a;
+    }
+    .recommendation-sheet-modal .rec-capstone-title {
+        font-family: 'Times New Roman', serif; font-size: calc(var(--pt) * 15.5); font-weight: 700;
+        font-style: italic; line-height: 1.32; letter-spacing: .01em; max-width: calc(var(--in) * 6);
+        margin: calc(var(--in) * .14) auto calc(var(--in) * .2); padding: calc(var(--in) * .1) 0; color: #0a1428;
+    }
+    .recommendation-sheet-modal .rec-capstone-title::before,
+    .recommendation-sheet-modal .rec-capstone-title::after {
+        content: ''; display: block; width: calc(var(--in) * .75); height: 1px;
+        background: #d9cda6; margin: calc(var(--in) * .1) auto;
+    }
+    .recommendation-sheet-modal .rec-members { font-size: calc(var(--pt) * 12); line-height: 1.6; font-weight: 700; color: #0a1428; }
+    .recommendation-sheet-modal .rec-signature {
+        margin: auto 0 calc(var(--in) * .35); padding-top: calc(var(--in) * .35); min-width: 0; text-align: center;
+    }
+    .recommendation-sheet-modal .rec-sig-name {
+        display: inline-block; min-width: calc(var(--in) * 3);
+        padding: 0 calc(var(--in) * .1) calc(var(--in) * .04); border-bottom: 1px solid #222;
+        font-size: calc(var(--pt) * 12); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #0a1428;
+    }
+    .recommendation-sheet-modal .rec-sig-label {
+        display: block; margin-top: calc(var(--in) * .06); font-size: calc(var(--pt) * 9);
+        letter-spacing: .14em; text-transform: uppercase; color: #5b6375;
+    }
+    .recommendation-sheet-modal .rec-footer {
+        display: flex; flex-direction: row; justify-content: space-between; align-items: flex-end;
+        gap: calc(var(--in) * 1); margin-top: 0; padding-top: calc(var(--in) * .12); border-top: 1px solid #e2dacf;
+    }
+    .recommendation-sheet-modal .rec-footer-block { min-width: calc(var(--in) * 1.4); text-align: center; }
+    .recommendation-sheet-modal .rec-footer-value { font-size: calc(var(--pt) * 10); font-weight: 700; color: #171e2c; }
+    .recommendation-sheet-modal .rec-footer-label {
+        margin-top: calc(var(--in) * .03); font-size: calc(var(--pt) * 8.5);
+        letter-spacing: .12em; text-transform: uppercase; color: #9a9385;
+    }
+}
+
+/* ── APPROVAL SHEET — SCREEN (mirrors print) ── */
+@media screen {
+    #approvalSheetModal .approval-sheet-modal-box {
+        container-type: inline-size; box-sizing: border-box; width: 100%;
+        max-width: calc(8.5in + 3rem) !important; max-height: 92vh;
+        padding: 1.5rem !important; background: #e9e5db;
+    }
+    #approvalSheetModal .approval-paper {
+        --in: calc(100cqw / 8.5); --pt: calc(var(--in) / 72);
+        box-sizing: border-box; position: relative; display: flex; flex-direction: column;
+        width: 100%; min-height: calc(var(--in) * 11);
+        padding: calc(var(--in) * .75) calc(var(--in) * .85) calc(var(--in) * .8);
+        background: #fff; box-shadow: 0 12px 32px rgba(0,0,0,.18); text-align: center;
+        font-family: 'Times New Roman', serif; color: #1a1a1a;
+    }
+    #approvalSheetModal .approval-header-image { margin: 0 0 calc(var(--in) * .05); text-align: center; }
+    #approvalSheetModal .approval-header-image img {
+        display: block; margin: 0 auto; width: auto;
+        max-width: calc(var(--in) * 6.2); max-height: calc(var(--in) * .85); object-fit: contain;
+    }
+    #approvalSheetModal #approvalSheetHeading {
+        font-family: 'Times New Roman', serif; font-size: calc(var(--pt) * 17); line-height: 1; font-weight: 700;
+        letter-spacing: .24em; margin: calc(var(--in) * .08) 0 calc(var(--in) * .02); text-align: center; color: #0a1428;
+    }
+    #approvalSheetModal #approvalSheetHeading::after {
+        content: ''; display: block; width: calc(var(--in) * 1.8); height: 2px; background: #b88d3a;
+        margin: calc(var(--in) * .08) auto calc(var(--in) * .14);
+    }
+    #approvalSheetModal .print-serial {
+        font-family: 'Courier New', monospace; font-size: calc(var(--pt) * 9);
+        letter-spacing: .08em; color: #8b6914; margin: 0 0 calc(var(--in) * .14);
+    }
+    #approvalSheetModal #approvalSheetContent {
+        flex: 1 1 auto; display: flex; flex-direction: column;
+        font-family: 'Times New Roman', serif; font-size: calc(var(--pt) * 10); line-height: 1.28; color: #1a1a1a;
+    }
+    #approvalSheetModal #approvalSheetContent > * { width: 100%; }
+    #approvalSheetModal .approval-intro { font-size: calc(var(--pt) * 10.5); margin: 0 0 calc(var(--in) * .06); }
+    #approvalSheetModal .approval-title {
+        font-size: calc(var(--pt) * 12.5); font-weight: 700; line-height: 1.2; letter-spacing: .02em;
+        text-transform: uppercase; max-width: calc(var(--in) * 6.1); margin: 0 auto calc(var(--in) * .14);
+        padding: calc(var(--in) * .06) 0; border-top: 1px solid #d9cda6; border-bottom: 1px solid #d9cda6; color: #0a1428;
+    }
+    #approvalSheetModal .approval-body {
+        font-size: calc(var(--pt) * 10.5); line-height: 1.5; max-width: calc(var(--in) * 6.4);
+        margin: 0 auto calc(var(--in) * .2);
+    }
+    #approvalSheetModal .approval-signature { margin: 0 auto calc(var(--in) * .16); }
+    #approvalSheetModal .approval-signature .approval-sig-line {
+        display: inline-block; min-width: calc(var(--in) * 2.55);
+        padding: 0 calc(var(--in) * .06) calc(var(--in) * .03); margin-bottom: calc(var(--in) * .04);
+        border-bottom: 1px solid #222; font-size: calc(var(--pt) * 10); font-weight: 700;
+        line-height: 1.05; text-transform: uppercase; color: #0a1428;
+    }
+    #approvalSheetModal .approval-signature .approval-sig-role {
+        font-size: calc(var(--pt) * 8.5); line-height: 1; letter-spacing: .06em; text-transform: uppercase; color: #5b6375;
+    }
+    #approvalSheetModal .approval-panel-heading {
+        font-size: calc(var(--pt) * 10.5); line-height: 1; font-weight: 700; letter-spacing: .06em;
+        text-transform: uppercase; margin: calc(var(--in) * .05) 0 calc(var(--in) * .13); color: #0a1428;
+    }
+    #approvalSheetModal .approval-panel-grid {
+        gap: calc(var(--in) * .22) calc(var(--in) * .55); max-width: calc(var(--in) * 6);
+        margin: 0 auto calc(var(--in) * .16);
+    }
+    #approvalSheetModal .approval-panel-grid .approval-signature { margin: 0; }
+    #approvalSheetModal .approval-panel-grid .approval-sig-line { width: 100%; min-width: 0; font-size: calc(var(--pt) * 9.5); }
+
+    /* Lowered block: Accepted → Oral → Approved → President.
+       margin-top:auto pushes it to the bottom; the free space above is for panelists. */
+    #approvalSheetModal .approval-accepted {
+        font-size: calc(var(--pt) * 10); line-height: 1.4; max-width: calc(var(--in) * 6.2);
+        margin: auto auto calc(var(--in) * .16); padding-top: calc(var(--in) * .3);
+    }
+    #approvalSheetModal .approval-oral-results {
+        gap: calc(var(--in) * .06); font-size: calc(var(--pt) * 10); line-height: 1.15; margin: 0 0 calc(var(--in) * .14);
+    }
+    #approvalSheetModal .approval-oral-results .oral-value {
+        display: inline-block; min-width: calc(var(--in) * 1.5);
+        padding: 0 calc(var(--in) * .1) calc(var(--in) * .02); text-align: center; color: #0a1428;
+    }
+    #approvalSheetModal .approval-approved-label { margin: 0 0 calc(var(--in) * .05); font-size: calc(var(--pt) * 10); line-height: 1; }
+    #approvalSheetModal #approvalSheetContent > .approval-signature:last-child { margin-bottom: 0; }
+    #approvalSheetModal #approvalPresident { min-width: calc(var(--in) * 2.9); font-size: calc(var(--pt) * 10.5); letter-spacing: .03em; }
+
+    /* used by printModalContent to measure at true print size */
+    #approvalSheetModal .approval-sheet-modal-box.print-measure { padding: 0 !important; }
+    #approvalSheetModal .approval-sheet-modal-box.print-measure .approval-paper {
+        --in: 1in !important; --pt: 1pt !important; min-height: 0 !important;
+        padding: .2in .25in .05in !important; box-shadow: none;
+    }
+}
+
+/* ══════════ PRINT — SHARED SHELL (one document at a time) ══════════ */
+@media print {
+    @page { size: letter portrait; margin: .55in .6in .7in .6in; }
+    :root { --print-h: 9.5in; }
+    html, body {
+        width: auto !important; height: auto !important; margin: 0 !important; padding: 0 !important;
+        background: #fff !important; overflow: visible !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    body * { visibility: hidden !important; }
+
+    body.print-revision #revisionSheetModal, body.print-revision #revisionSheetModal *,
+    body.print-recommendation #recommendationSheetModal, body.print-recommendation #recommendationSheetModal *,
+    body.print-approval #approvalSheetModal, body.print-approval #approvalSheetModal * { visibility: visible !important; }
+
+    body.print-revision #revisionSheetModal,
+    body.print-recommendation #recommendationSheetModal,
+    body.print-approval #approvalSheetModal {
+        position: absolute !important; top: 0 !important; left: 0 !important; right: auto !important; bottom: auto !important;
+        width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important;
+        background: #fff !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+        display: block !important; overflow: visible !important; z-index: 1 !important;
+    }
+    /* any other open modal (e.g. Group Progress) must not print */
+    body.print-revision .modal-overlay:not(#revisionSheetModal),
+    body.print-recommendation .modal-overlay:not(#recommendationSheetModal),
+    body.print-approval .modal-overlay:not(#approvalSheetModal) { display: none !important; }
+
+    .desktop-sidebar, .mobile-bottom-nav, #toast, #app-splash, #route-progress, #page-loader,
+    main > .section-container { display: none !important; }
+    body { min-height: 0 !important; }
+    main { margin: 0 !important; padding: 0 !important; max-height: none !important; overflow: visible !important; }
+    tr, td, th, .approval-signature, .approval-panel-grid { break-inside: avoid !important; page-break-inside: avoid !important; }
+}
+
+/* ══════════ PRINT — REVISION SHEET ══════════ */
+@media print {
+    body.print-revision #revisionSheetModal .modal-box {
+        width: 100% !important; max-width: 100% !important; min-height: 0 !important; max-height: none !important;
+        overflow: visible !important; margin: 0 !important; padding: 0 !important; border: 0 !important;
+        border-radius: 0 !important; box-shadow: none !important; animation: none !important; background: #fff !important;
+        font-family: 'Times New Roman', serif !important; color: #1a1a1a !important;
+    }
+    body.print-revision #revisionSheetModal .text-center.mb-4 { margin: 0 0 .15in !important; text-align: center !important; }
+    body.print-revision #revisionSheetModal .text-center.mb-4 img {
+        display: block !important; margin: 0 auto !important; width: auto !important;
+        max-width: 6.2in !important; max-height: .85in !important; object-fit: contain !important;
+    }
+    body.print-revision #revisionSheetModal h2 {
+        font-family: 'Times New Roman', serif !important; font-size: 17pt !important; font-weight: 700 !important;
+        line-height: 1 !important; margin: .08in 0 .02in !important; letter-spacing: .22em !important;
+        text-align: center !important; color: #0a1428 !important;
+    }
+    body.print-revision #revisionSheetModal h2::after {
+        content: '' !important; display: block !important; width: 1.6in !important; height: 2px !important;
+        background: #b88d3a !important; margin: .08in auto .16in !important;
+    }
+    body.print-revision #revisionSheetModal .print-serial {
+        display: block !important; text-align: center !important; font-family: 'Courier New', monospace !important;
+        font-size: 9pt !important; letter-spacing: .08em !important; color: #8b6914 !important; margin: 0 0 .18in !important;
+    }
+    body.print-revision #revisionSheetContent {
+        font-family: 'Times New Roman', serif !important; font-size: 9.5pt !important; line-height: 1.35 !important;
+        border: 1.5px solid #8b6914 !important; border-radius: 0 !important; overflow: visible !important; background: #fff !important;
+    }
+    body.print-revision #revisionSheetContent table { font-size: 9.5pt !important; width: 100% !important; border-collapse: collapse !important; }
+    body.print-revision #revisionSheetContent td, body.print-revision #revisionSheetContent th {
+        padding: .05in .09in !important; line-height: 1.32 !important; vertical-align: top !important; border: 1px solid #8b6914 !important;
+    }
+    body.print-revision #revisionSheetContent thead th, body.print-revision #revisionSheetContent tr.bg-\[\#faf8f4\] th {
+        background: #f3ead1 !important; color: #0a1428 !important; font-weight: 700 !important; text-transform: uppercase !important;
+        font-size: 8pt !important; letter-spacing: .06em !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    body.print-revision #revisionSheetContent .font-bold.text-xs.uppercase.tracking-wider {
+        font-size: 8pt !important; font-weight: 700 !important; color: #5b6375 !important; letter-spacing: .07em !important; text-transform: uppercase !important;
+    }
+    body.print-revision #revisionSheetContent .badge {
+        display: inline-block !important; font-size: 7.5pt !important; font-weight: 700 !important; padding: 1px 7px !important;
+        border-radius: 999px !important; border: 1px solid currentColor !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    body.print-revision #revisionSheetContent .badge-green { background: #e6f4ea !important; color: #1e6b3a !important; }
+    body.print-revision #revisionSheetContent .badge-amber { background: #fef7e6 !important; color: #8a5d0b !important; }
+    body.print-revision #revisionSheetContent p { margin: 0 !important; }
+    body.print-revision #revisionSheetContent .whitespace-pre-line { white-space: pre-line !important; font-size: 9.5pt !important; line-height: 1.4 !important; }
+    body.print-revision #revisionSheetModal .btn-outline, body.print-revision #revisionSheetModal .btn-primary,
+    body.print-revision #revisionSheetModal .btn-ghost, body.print-revision #revisionSheetModal .flex.justify-end { display: none !important; }
+    body.print-revision #sheetApprovedBy {
+        display: inline-block !important; min-width: 2.6in !important; border-bottom: 1px solid #333 !important;
+        font-weight: 700 !important; color: #0a1428 !important; padding: 0 .06in .02in !important;
+    }
+    body.print-revision #revisionSheetModal { page-break-after: avoid !important; }
+    body.print-revision #revisionSheetContent { page-break-inside: avoid !important; }
+}
+
+/* ══════════ PRINT — RECOMMENDATION SHEET ══════════ */
+@media print {
+    body.print-recommendation #recommendationSheetModal .modal-box {
+        box-sizing: border-box !important; width: 100% !important; max-width: 100% !important;
+        min-height: var(--print-h) !important; height: var(--print-h) !important; max-height: var(--print-h) !important;
+        overflow: hidden !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+        box-shadow: none !important; animation: none !important; background: #fff !important; display: block !important;
+        font-family: 'Times New Roman', serif !important; color: #1a1a1a !important;
+    }
+    body.print-recommendation #recommendationSheetModal .recommendation-document {
+        box-sizing: border-box !important; width: 100% !important;
+        min-height: var(--print-h) !important; height: var(--print-h) !important; max-height: var(--print-h) !important;
+        margin: 0 !important; padding: .55in .65in .45in !important; border: 0 !important; border-radius: 0 !important;
+        box-shadow: none !important; background: #fff !important; display: flex !important; flex-direction: column !important;
+        overflow: hidden !important; text-align: center !important;
+    }
+    body.print-recommendation .recommendation-document .rec-header-image { margin: 0 0 .22in !important; text-align: center !important; }
+    body.print-recommendation .recommendation-document .rec-header-image img {
+        display: block !important; margin: 0 auto !important; width: auto !important; max-width: 5.9in !important; max-height: .85in !important; object-fit: contain !important;
+    }
+    body.print-recommendation .recommendation-document .rec-title {
+        font-family: 'Times New Roman', serif !important; font-size: 18pt !important; font-weight: 700 !important; line-height: 1 !important;
+        letter-spacing: .22em !important; text-align: center !important; color: #0a1428 !important; border-bottom: 2px solid #0a1428 !important;
+        padding-bottom: .08in !important; margin: 0 auto .36in !important; max-width: 90% !important;
+    }
+    body.print-recommendation #recommendationSheetContent {
+        flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; justify-content: center !important;
+        padding: 0 !important; margin: 0 auto !important; border: 0 !important; max-width: 6.4in !important;
+        font-family: 'Times New Roman', serif !important; overflow: visible !important;
+    }
+    body.print-recommendation #recommendationSheetContent p {
+        font-size: 12pt !important; line-height: 1.75 !important; margin: 0 0 .16in !important; text-align: center !important; color: #1a1a1a !important;
+    }
+    body.print-recommendation #recommendationSheetContent p strong { font-weight: 700 !important; }
+    body.print-recommendation #recommendationTitle {
+        font-family: 'Times New Roman', serif !important; font-size: 15.5pt !important; font-weight: 700 !important; font-style: italic !important;
+        line-height: 1.32 !important; letter-spacing: .01em !important; max-width: 6in !important; margin: .14in auto .2in !important;
+        padding: .1in 0 !important; color: #0a1428 !important;
+    }
+    body.print-recommendation #recommendationTitle::before, body.print-recommendation #recommendationTitle::after {
+        content: '' !important; display: block !important; width: .75in !important; height: 1px !important; background: #d9cda6 !important; margin: .1in auto !important;
+    }
+    body.print-recommendation #recommendationProponents { font-size: 12pt !important; line-height: 1.6 !important; font-weight: 700 !important; color: #0a1428 !important; }
+    body.print-recommendation .recommendation-document .rec-signature {
+        margin-top: auto !important; margin-bottom: .35in !important; padding-top: .35in !important; text-align: center !important; min-width: 0 !important;
+    }
+    body.print-recommendation .recommendation-document .rec-sig-name {
+        display: inline-block !important; min-width: 3in !important; padding: 0 .1in .04in !important; border-bottom: 1px solid #222 !important;
+        font-size: 12pt !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .04em !important; color: #0a1428 !important;
+    }
+    body.print-recommendation .recommendation-document .rec-sig-label {
+        display: block !important; margin-top: .06in !important; font-size: 9pt !important; letter-spacing: .14em !important; text-transform: uppercase !important; color: #5b6375 !important;
+    }
+    body.print-recommendation .recommendation-document .rec-footer {
+        display: flex !important; justify-content: space-between !important; align-items: flex-end !important; gap: 1in !important;
+        margin-top: 0 !important; padding-top: .12in !important; border-top: 1px solid #e2dacf !important;
+    }
+    body.print-recommendation .recommendation-document .rec-footer-block { text-align: center !important; min-width: 1.4in !important; }
+    body.print-recommendation .recommendation-document .rec-footer-value { font-size: 10pt !important; font-weight: 700 !important; color: #171e2c !important; }
+    body.print-recommendation .recommendation-document .rec-footer-label {
+        font-size: 8.5pt !important; letter-spacing: .12em !important; text-transform: uppercase !important; color: #9a9385 !important; margin-top: .03in !important;
+    }
+    body.print-recommendation #recommendationSheetModal .btn-outline, body.print-recommendation #recommendationSheetModal .btn-primary,
+    body.print-recommendation #recommendationSheetModal .btn-ghost, body.print-recommendation #recommendationSheetModal .flex.justify-end { display: none !important; }
+}
+
+/* ══════════ PRINT — APPROVAL SHEET (identical to the screen page) ══════════ */
+@media print {
+    body.print-approval #approvalSheetModal .approval-sheet-modal-box {
+        display: block !important; box-sizing: border-box !important; width: 100% !important; max-width: none !important;
+        height: auto !important; max-height: none !important; margin: 0 !important; padding: 0 !important; overflow: visible !important;
+        border: 0 !important; border-radius: 0 !important; box-shadow: none !important; animation: none !important; background: #fff !important;
+        font-family: 'Times New Roman', serif !important; color: #1a1a1a !important;
+    }
+    /* paper: same 6.8in text column and offsets as the on-screen page */
+    body.print-approval #approvalSheetModal .approval-paper {
+        box-sizing: border-box !important; display: flex !important; flex-direction: column !important;
+        width: 100% !important; height: var(--print-h) !important; min-height: 0 !important;
+        padding: .2in .25in .05in !important; background: #fff !important; box-shadow: none !important;
+        overflow: hidden !important; text-align: center !important;
+    }
+    body.print-approval #approvalSheetModal .approval-header-image { text-align: center !important; margin: 0 0 .05in !important; }
+    body.print-approval #approvalSheetModal .approval-header-image img {
+        display: block !important; margin: 0 auto !important; width: auto !important; max-width: 6.2in !important; max-height: .85in !important; object-fit: contain !important;
+    }
+    body.print-approval #approvalSheetHeading {
+        font-family: 'Times New Roman', serif !important; font-size: 17pt !important; line-height: 1 !important; font-weight: 700 !important;
+        letter-spacing: .24em !important; margin: .08in 0 .02in !important; text-align: center !important; color: #0a1428 !important;
+    }
+    body.print-approval #approvalSheetHeading::after {
+        content: '' !important; display: block !important; width: 1.8in !important; height: 2px !important; background: #b88d3a !important; margin: .08in auto .14in !important;
+    }
+    body.print-approval #approvalSheetModal .print-serial {
+        display: block !important; text-align: center !important; font-family: 'Courier New', monospace !important;
+        font-size: 9pt !important; letter-spacing: .08em !important; color: #8b6914 !important; margin: 0 0 .14in !important;
+    }
+    body.print-approval #approvalSheetContent {
+        display: flex !important; flex-direction: column !important; flex: 1 1 auto !important;
+        border: 0 !important; padding: 0 !important; margin: 0 !important; overflow: visible !important;
+    }
+    body.print-approval #approvalSheetContent > * { width: 100% !important; }
+    body.print-approval .approval-sheet-doc { font-family: 'Times New Roman', serif !important; line-height: 1.28 !important; font-size: 10pt !important; color: #1a1a1a !important; }
+    body.print-approval .approval-intro { font-size: 10.5pt !important; margin: 0 0 .06in !important; text-align: center !important; color: #1a1a1a !important; }
+    body.print-approval .approval-title {
+        font-size: 12.5pt !important; font-weight: 700 !important; line-height: 1.2 !important; margin: 0 auto .14in !important; max-width: 6.1in !important;
+        padding: .06in 0 !important; border-top: 1px solid #d9cda6 !important; border-bottom: 1px solid #d9cda6 !important;
+        text-align: center !important; text-transform: uppercase !important; color: #0a1428 !important; letter-spacing: .02em !important;
+    }
+    body.print-approval .approval-body {
+        font-size: 10.5pt !important; line-height: 1.5 !important; max-width: 6.4in !important; margin: 0 auto .2in !important; text-align: center !important; color: #1a1a1a !important;
+    }
+    body.print-approval .approval-signature { margin: 0 auto .16in !important; text-align: center !important; }
+    body.print-approval .approval-signature .approval-sig-line {
+        display: inline-block !important; min-width: 2.55in !important; border-bottom: 1px solid #222 !important; font-size: 10pt !important; font-weight: 700 !important;
+        text-transform: uppercase !important; line-height: 1.05 !important; padding: 0 .06in .03in !important; margin-bottom: .04in !important; color: #0a1428 !important;
+    }
+    body.print-approval .approval-signature .approval-sig-role {
+        font-size: 8.5pt !important; line-height: 1 !important; color: #5b6375 !important; letter-spacing: .06em !important; text-transform: uppercase !important;
+    }
+    body.print-approval .approval-panel-heading {
+        font-size: 10.5pt !important; line-height: 1 !important; margin: .05in 0 .13in !important; text-align: center !important;
+        font-weight: 700 !important; letter-spacing: .06em !important; text-transform: uppercase !important; color: #0a1428 !important;
+    }
+    body.print-approval .approval-panel-grid {
+        display: grid !important; grid-template-columns: 1fr 1fr !important; gap: .22in .55in !important; max-width: 6in !important; margin: 0 auto .16in !important;
+    }
+    body.print-approval .approval-panel-grid .approval-signature { margin: 0 !important; }
+    body.print-approval .approval-panel-grid .approval-sig-line { width: 100% !important; min-width: 0 !important; font-size: 9.5pt !important; }
+
+    /* lowered block — same as screen */
+    body.print-approval .approval-accepted {
+        font-size: 10pt !important; line-height: 1.4 !important; max-width: 6.2in !important;
+        margin: auto auto .16in !important; padding-top: .3in !important; text-align: center !important; color: #1a1a1a !important;
+    }
+    body.print-approval .approval-accepted strong { font-weight: 700 !important; }
+    body.print-approval .approval-oral-results {
+        display: flex !important; flex-direction: column !important; align-items: center !important; gap: .06in !important;
+        font-size: 10pt !important; line-height: 1.15 !important; margin: 0 0 .14in !important;
+    }
+    body.print-approval .approval-oral-results .oral-label { margin-right: .35rem !important; color: #1a1a1a !important; }
+    body.print-approval .approval-oral-results .oral-value {
+        border-bottom: 1px solid #222 !important; font-weight: 700 !important; padding: 0 .1in .02in !important;
+        min-width: 1.5in !important; display: inline-block !important; text-align: center !important; color: #0a1428 !important;
+    }
+    body.print-approval .approval-approved-label { font-size: 10pt !important; line-height: 1 !important; margin: 0 0 .05in !important; text-align: center !important; color: #1a1a1a !important; }
+    body.print-approval #approvalSheetContent > .approval-signature:last-child { margin-bottom: 0 !important; }
+    body.print-approval #approvalPresident { min-width: 2.9in !important; font-size: 10.5pt !important; letter-spacing: .03em !important; }
+
+    body.print-approval #approvalSheetModal button, body.print-approval #approvalSheetModal .btn-outline,
+    body.print-approval #approvalSheetModal .btn-primary, body.print-approval #approvalSheetModal .btn-ghost,
+    body.print-approval #approvalSheetModal .flex.justify-end { display: none !important; }
+}
 </style>
 </head>
 <body class="bg-[#f8f6f0] text-[#171e2c]">
@@ -1631,7 +2048,7 @@
                                     </div>
                                 </div>
                                 <select id="as_group_filter_{{ $section->id }}" class="form-select text-xs w-44 as-group-filter" data-section-id="{{ $section->id }}">
-                                    <option value="All">Filter by Group: All</option>
+                                    <option value="All">Filter Students by Group: All</option>
                                     @foreach($groupsInSection as $gfg)
                                         <option value="{{ $gfg->group_name }}">{{ $gfg->group_name }}</option>
                                     @endforeach
@@ -2429,131 +2846,8 @@
 </main>
 
 <!-- ==================== MODALS ==================== -->
-<!-- ═══════════ TEACHER: RECOMMENDATION SHEET MODAL ═══════════ -->
-<div id="teacherRecommendationSheetModal" class="modal-overlay">
-    <div class="modal-box wide recommendation-sheet-modal" style="max-width: 52rem;">
-        <div class="recommendation-document">
-            <div class="rec-header-image">
-                <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header">
-            </div>
-            <h2 class="rec-title">Recommendation Sheet</h2>
-            <p class="rec-serial" id="tchRecommendationSerial">&nbsp;</p>
 
-            <div class="rec-body" id="tchRecommendationContent">
-                <div id="tchRecommendationLoading"
-                     class="modal-loading-box absolute inset-0 bg-white/90 backdrop-blur-sm z-10 rounded-lg"
-                     style="display:flex;">
-                    <div class="spinner-sm"></div>
-                    <p>Loading recommendation sheet…</p>
-                </div>
-                <p>This <strong>Capstone Project</strong> hereto entitled:</p>
-                <p class="rec-capstone-title" id="tchRecommendationTitle">—</p>
-                <p>prepared and submitted by
-                    <span class="rec-members" id="tchRecommendationProponents">—</span>
-                </p>
-                <p>in partial fulfillment of the requirements for the degree of
-                    <strong>Bachelor of Science in Information Technology</strong>
-                    has been examined, accepted, and recommended for Oral Presentation.
-                </p>
-                <div class="rec-signature">
-                    <span class="rec-sig-name" id="tchRecommendationAdviser">—</span>
-                    <span class="rec-sig-label">Capstone Adviser</span>
-                </div>
-            </div>
 
-            <div class="rec-footer">
-                <div class="rec-footer-block">
-                    <div class="rec-footer-value" id="tchRecommendationDate">—</div>
-                    <div class="rec-footer-label">Date Issued</div>
-                </div>
-                <div class="rec-footer-block">
-                    <div class="rec-footer-value" id="tchRecommendationGroup">—</div>
-                    <div class="rec-footer-label">Group</div>
-                </div>
-            </div>
-        </div>
-        <div class="flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
-            <button type="button" onclick="closeModal('teacherRecommendationSheetModal')" class="btn-primary text-xs py-2 px-4">Close</button>
-        </div>
-    </div>
-</div>
-
-<!-- ═══════════ TEACHER: APPROVAL SHEET MODAL ═══════════ -->
-<div id="teacherApprovalSheetModal" class="modal-overlay">
-    <div class="modal-box wide" style="max-width: 52rem; padding: 1.5rem;">
-        <div class="text-center mb-4">
-            <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header" class="w-full max-h-24 object-contain">
-        </div>
-        <h2 id="tchApprovalHeading" class="text-center text-2xl font-bold tracking-widest text-[#0a1428] mb-4" style="font-family:'Cormorant Garamond',serif;">APPROVAL SHEET</h2>
-        <p class="text-center text-xs tracking-widest mt-1" id="tchApprovalSerial"
-           style="font-family:'Courier New', monospace; color:#8b6914;">&nbsp;</p>
-
-        <div id="tchApprovalContent" class="approval-sheet-doc relative">
-            <div id="tchApprovalLoading"
-                 class="modal-loading-box absolute inset-0 bg-white/90 backdrop-blur-sm z-10 rounded-lg"
-                 style="display:flex;">
-                <div class="spinner-sm"></div>
-                <p>Loading approval sheet…</p>
-            </div>
-            <p class="approval-intro">This Capstone Project 2 hereto entitled:</p>
-            <p id="tchApprovalTitle" class="approval-title">—</p>
-            <p class="approval-body">
-                prepared and submitted by <span id="tchApprovalProponents">—</span>
-                in partial fulfillment of the requirements for the degree of
-                <strong>Bachelor of Science in Information Technology</strong>
-                has been examined, accepted and recommended for Oral Presentation.
-            </p>
-            <div class="approval-signature">
-                <span id="tchApprovalAdviser" class="approval-sig-line">—</span>
-                <div class="approval-sig-role">Adviser</div>
-            </div>
-            <p class="approval-panel-heading">Panel of Examiners</p>
-            <div id="tchApprovalPanelists" class="approval-panel-grid">
-                <div class="approval-signature"><span class="approval-sig-line">Loading...</span><div class="approval-sig-role">Member</div></div>
-            </div>
-            <div id="tchApprovalChairmanBlock" class="approval-signature" style="display:none;">
-                <span id="tchApprovalChairman" class="approval-sig-line">—</span>
-                <div class="approval-sig-role">Chairman, Board of Panels</div>
-            </div>
-            <p class="approval-accepted">
-                <strong>ACCEPTED AND APPROVED</strong> in partial fulfillment of the requirements for the degree of
-                <strong>BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY</strong>.
-            </p>
-            <div class="approval-oral-results">
-                <span><span class="oral-label">Oral Examination:</span><span id="tchApprovalOralResult" class="oral-value">—</span></span>
-                <span><span class="oral-label">Date of Oral Examination:</span><span id="tchApprovalOralDate" class="oral-value">—</span></span>
-            </div>
-            <p class="approval-approved-label">Approved:</p>
-            <div class="approval-signature">
-                <span id="tchApprovalPresident" class="approval-sig-line">DR. FLORIPIS A. MONTECILLO, Ed.D.</span>
-                <div class="approval-sig-role">School President</div>
-            </div>
-        </div>
-        <div class="flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
-            <button type="button" onclick="closeModal('teacherApprovalSheetModal')" class="btn-primary text-xs py-2 px-4">Close</button>
-        </div>
-    </div>
-</div>
-<!-- VIEW-ONLY REVISION SHEET MODAL -->
-<div id="viewRevisionModal" class="modal-overlay">
-    <div class="modal-box wide">
-        <div class="modal-accent" style="background-color: #d6b15c;"></div>
-        <div class="flex justify-between items-center mb-4">
-            <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:600; color:var(--navy);">
-                Revision Sheet
-            </h2>
-            <button type="button" onclick="closeModal('viewRevisionModal')" class="text-[#5b6375] hover:text-[#0a1428] transition text-lg">&times;</button>
-        </div>
-
-        <div id="viewRevisionContent">
-            <p class="text-sm text-[#5b6375]">Loading…</p>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-4 mt-4 border-t border-[#e2dacf]">
-            <button type="button" onclick="closeModal('viewRevisionModal')" class="btn-ghost">Close</button>
-        </div>
-    </div>
-</div>
 <!-- REVISION CHECKING MODAL (verification) -->
 <div id="revisionCheckModal" class="modal-overlay">
     <div class="modal-box wide">
@@ -3335,6 +3629,208 @@
     </div>
 </div>
 
+<!-- ═══════════ REVISION SHEET MODAL ═══════════ -->
+<div id="revisionSheetModal" class="modal-overlay">
+    <div class="modal-box wide" style="max-width: 52rem; padding: 1.5rem;">
+        <div class="text-center mb-4">
+            <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header" class="w-full max-h-24 object-contain">
+        </div>
+        <h2 class="text-center text-2xl font-bold tracking-widest text-[#0a1428] mb-4" style="font-family:'Cormorant Garamond',serif;">REVISION SHEET</h2>
+        <p class="print-serial text-center text-xs tracking-widest mt-1" id="revisionSheetSerial" style="font-family:'Courier New', monospace; color:#8b6914;">&nbsp;</p>
+
+        <div id="revisionSheetContent" class="text-[#0a1428] text-sm border border-[#b88d3a] rounded-lg overflow-hidden relative">
+            <div id="revisionSheetLoading" class="modal-loading-box absolute inset-0 bg-white/90 backdrop-blur-sm z-10 rounded-lg">
+                <div class="spinner-sm"></div>
+                <p>Loading revision sheet…</p>
+            </div>
+
+            <table class="w-full border-collapse text-sm">
+                <tr>
+                    <td class="border border-[#b88d3a] p-2 align-top" style="width:50%;">
+                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Name of Proponents</p>
+                        <ol id="sheetProponents" class="list-decimal list-inside space-y-0.5"><li class="text-[#5b6375] italic">Loading...</li></ol>
+                    </td>
+                    <td class="border border-[#b88d3a] p-2 align-top" style="width:50%;">
+                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Name of Capstone Project</p>
+                        <p id="sheetProjectTitle" class="font-medium">—</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="border border-[#b88d3a] p-2">
+                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Chapter / Document Findings</p>
+                        <table class="w-full border-collapse text-xs">
+                            <thead><tr class="bg-[#faf8f4]">
+                                <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Chapter</th>
+                                <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Document Findings</th>
+                                <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
+                            </tr></thead>
+                            <tbody id="sheetChapterRows"><tr><td colspan="3" class="p-2 text-center text-[#5b6375] italic">Loading...</td></tr></tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="border border-[#b88d3a] p-2">
+                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">System or IoT Findings / Enhancements / Recommendations</p>
+                        <table class="w-full border-collapse text-xs">
+                            <thead><tr class="bg-[#faf8f4]">
+                                <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Finding / Enhancement</th>
+                                <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
+                            </tr></thead>
+                            <tbody id="sheetIotRows"><tr><td colspan="2" class="p-2 text-center text-[#5b6375] italic">Loading...</td></tr></tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="border border-[#b88d3a] p-2">
+                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Additional Objectives for Capstone Project 2</p>
+                        <table class="w-full border-collapse text-xs">
+                            <thead><tr class="bg-[#faf8f4]">
+                                <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Objective</th>
+                                <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
+                            </tr></thead>
+                            <tbody id="sheetObjectivesList"><tr><td colspan="2" class="p-2 text-center text-[#5b6375] italic">Loading...</td></tr></tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="border border-[#b88d3a] p-2">
+                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Overall Remarks / Instructions</p>
+                        <p id="sheetOverallRemarks" class="text-sm text-[#0a1428] whitespace-pre-line">—</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="border border-[#b88d3a] p-2">
+                        <p class="text-xs font-bold uppercase tracking-wider text-[#5b6375]">Approved by:</p>
+                        <p id="sheetApprovedBy" class="text-sm font-semibold mt-1 border-b-2 border-[#b88d3a] inline-block min-w-[200px]">_________________________</p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
+            <button type="button" onclick="printModalContent('revisionSheetModal')" class="btn-outline text-xs py-2 px-4"><i class="fas fa-print mr-1"></i> Print</button>
+            <button type="button" onclick="closeModal('revisionSheetModal')" class="btn-primary text-xs py-2 px-4">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ RECOMMENDATION SHEET MODAL ═══════════ -->
+<div id="recommendationSheetModal" class="modal-overlay">
+    <div class="modal-box wide recommendation-sheet-modal" style="max-width: 52rem;">
+        <div class="recommendation-document">
+            <div class="rec-header-image">
+                <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header">
+            </div>
+            <h2 class="rec-title">Recommendation Sheet</h2>
+
+            <div class="rec-body" id="recommendationSheetContent">
+                <div id="recommendationSheetLoading" class="modal-loading-box absolute inset-0 bg-white/90 backdrop-blur-sm z-10 rounded-lg">
+                    <div class="spinner-sm"></div>
+                    <p>Loading recommendation sheet…</p>
+                </div>
+
+                <p>This <strong>Capstone Project</strong> hereto entitled:</p>
+                <p class="rec-capstone-title" id="recommendationTitle">—</p>
+                <p>prepared and submitted by <span class="rec-members" id="recommendationProponents">—</span></p>
+                <p>
+                    in partial fulfillment of the requirements for the degree of
+                    <strong>Bachelor of Science in Information Technology</strong>
+                    has been examined, accepted, and recommended for Oral Presentation.
+                </p>
+                <div class="rec-signature">
+                    <span class="rec-sig-name" id="recommendationAdviser">—</span>
+                    <span class="rec-sig-label">Capstone Adviser</span>
+                </div>
+            </div>
+
+            <div class="rec-footer">
+                <div class="rec-footer-block">
+                    <div class="rec-footer-value" id="recommendationDate">—</div>
+                    <div class="rec-footer-label">Date Issued</div>
+                </div>
+                <div class="rec-footer-block">
+                    <div class="rec-footer-value" id="recommendationSerial">—</div>
+                    <div class="rec-footer-label">Serial Number</div>
+                </div>
+                <div class="rec-footer-block">
+                    <div class="rec-footer-value" id="recommendationGroup">—</div>
+                    <div class="rec-footer-label">Group</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
+            <button type="button" onclick="printModalContent('recommendationSheetModal')" class="btn-outline text-xs py-2 px-4"><i class="fas fa-print mr-1"></i> Print</button>
+            <button type="button" onclick="closeModal('recommendationSheetModal')" class="btn-primary text-xs py-2 px-4">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ APPROVAL SHEET MODAL ═══════════ -->
+<div id="approvalSheetModal" class="modal-overlay">
+    <div class="modal-box wide approval-sheet-modal-box" style="max-width: 52rem; padding: 1.5rem;">
+        <div class="approval-paper">
+            <div class="text-center mb-4 approval-header-image">
+                <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header" class="w-full max-h-24 object-contain">
+            </div>
+            <h2 id="approvalSheetHeading" class="text-center text-2xl font-bold tracking-widest text-[#0a1428] mb-4" style="font-family:'Cormorant Garamond',serif;">APPROVAL SHEET</h2>
+            <p class="print-serial text-center text-xs tracking-widest mt-1" id="approvalSerial" style="font-family:'Courier New', monospace; color:#8b6914;">&nbsp;</p>
+
+            <div id="approvalSheetContent" class="approval-sheet-doc relative">
+                <div id="approvalSheetLoading" class="modal-loading-box absolute inset-0 bg-white/90 backdrop-blur-sm z-10 rounded-lg">
+                    <div class="spinner-sm"></div>
+                    <p>Loading approval sheet…</p>
+                </div>
+
+                <p class="approval-intro">This Capstone Project 2 hereto entitled:</p>
+                <p id="approvalTitle" class="approval-title">—</p>
+
+                <p class="approval-body">
+                    prepared and submitted by <span id="approvalProponents">—</span>
+                    in partial fulfillment of the requirements for the degree of
+                    <strong>Bachelor of Science in Information Technology</strong>
+                    has been examined, accepted and recommended for Oral Presentation.
+                </p>
+
+                <div class="approval-signature">
+                    <span id="approvalAdviser" class="approval-sig-line">—</span>
+                    <div class="approval-sig-role">Adviser</div>
+                </div>
+
+                <p class="approval-panel-heading">Panel of Examiners</p>
+                <div id="approvalPanelists" class="approval-panel-grid">
+                    <div class="approval-signature"><span class="approval-sig-line">Loading...</span><div class="approval-sig-role">Member</div></div>
+                </div>
+
+                <div id="approvalChairmanBlock" class="approval-signature" style="display:none;">
+                    <span id="approvalChairman" class="approval-sig-line">—</span>
+                    <div class="approval-sig-role">Chairman, Board of Panels</div>
+                </div>
+
+                <p class="approval-accepted">
+                    <strong>ACCEPTED AND APPROVED</strong> in partial fulfillment of the requirements for the degree of
+                    <strong>BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY</strong>.
+                </p>
+
+                <div class="approval-oral-results">
+                    <span><span class="oral-label">Oral Examination:</span><span id="approvalOralResult" class="oral-value">—</span></span>
+                    <span><span class="oral-label">Date of Oral Examination:</span><span id="approvalOralDate" class="oral-value">—</span></span>
+                </div>
+
+                <p class="approval-approved-label">Approved:</p>
+                <div class="approval-signature">
+                    <span id="approvalPresident" class="approval-sig-line">DR. FLORIPIS A. MONTECILLO, Ed.D.</span>
+                    <div class="approval-sig-role">School President</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
+            <button type="button" onclick="printModalContent('approvalSheetModal')" class="btn-outline text-xs py-2 px-4"><i class="fas fa-print mr-1"></i> Print</button>
+            <button type="button" onclick="closeModal('approvalSheetModal')" class="btn-primary text-xs py-2 px-4">Close</button>
+        </div>
+    </div>
+</div>
 <script>
 // ══════════════════════════════════════════════════════════════
 // PROFESSIONAL LOADING SYSTEM  — splash · top bar · overlay · skeleton
@@ -6051,149 +6547,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    window.openViewRevisionModal = function (groupId) {
-        const modal = document.getElementById('viewRevisionModal');
-        const content = document.getElementById('viewRevisionContent');
-        if (!modal || !content) return;
-        modal.classList.add('active');
-        renderRevisionSheet(content, groupId, true);
-    };
-    // ── TEACHER: open Revision Sheet (uses existing viewRevisionModal) ──
-window.openTeacherRevisionSheet = function (groupId) {
-    if (!groupId) return;
-    // Reuse the existing read-only revision modal
-    window.openViewRevisionModal(groupId);
-};
-
-// ── TEACHER: open Recommendation Sheet ──
-window.openTeacherRecommendationSheet = function (groupId) {
-    if (!groupId) return;
-
-    const loading = document.getElementById('tchRecommendationLoading');
-    const title   = document.getElementById('tchRecommendationTitle');
-    const props   = document.getElementById('tchRecommendationProponents');
-    const adviser = document.getElementById('tchRecommendationAdviser');
-    const dateEl  = document.getElementById('tchRecommendationDate');
-    const grpEl   = document.getElementById('tchRecommendationGroup');
-    const serial  = document.getElementById('tchRecommendationSerial');
-
-    if (loading) loading.style.display = 'flex';
-    title.textContent   = '—';
-    props.textContent   = 'Loading...';
-    adviser.textContent = '—';
-    dateEl.textContent  = '—';
-    grpEl.textContent   = '—';
-    serial.textContent  = ' ';
-
-    openModal('teacherRecommendationSheetModal');
-
-    fetch(`/teacher/get-recommendation-sheet/${groupId}`, { __silent: true })
-        .then(r => r.json())
-        .then(data => {
-            title.textContent = data.capstone_title || '—';
-
-            const members = data.members || [];
-            if (members.length === 0) {
-                props.textContent = '—';
-            } else if (members.length === 1) {
-                props.textContent = members[0];
-            } else if (members.length === 2) {
-                props.textContent = `${members[0]} and ${members[1]}`;
-            } else {
-                props.textContent =
-                    `${members.slice(0, -1).join(', ')}, and ${members[members.length - 1]}`;
-            }
-
-            adviser.textContent = data.adviser || '—';
-            grpEl.textContent   = data.group_name || '—';
-
-            if (data.date_issued) {
-                const d = new Date(data.date_issued);
-                dateEl.textContent = d.toLocaleDateString('en-US',
-                    { month: 'long', day: 'numeric', year: 'numeric' });
-            }
-
-            serial.textContent = data.serial_number ? 'Serial No. ' + data.serial_number : ' ';
-        })
-        .catch(() => {
-            props.textContent = 'Unable to load data.';
-            adviser.textContent = '—';
-        })
-        .finally(() => { if (loading) loading.style.display = 'none'; });
-};
-
-// ── TEACHER: open Approval Sheet ──
-window.openTeacherApprovalSheet = function (groupId) {
-    if (!groupId) return;
-
-    const loading      = document.getElementById('tchApprovalLoading');
-    const title        = document.getElementById('tchApprovalTitle');
-    const proponents   = document.getElementById('tchApprovalProponents');
-    const adviser      = document.getElementById('tchApprovalAdviser');
-    const panelists    = document.getElementById('tchApprovalPanelists');
-    const chairmanBlk  = document.getElementById('tchApprovalChairmanBlock');
-    const chairman     = document.getElementById('tchApprovalChairman');
-    const oralResult   = document.getElementById('tchApprovalOralResult');
-    const oralDate     = document.getElementById('tchApprovalOralDate');
-    const president    = document.getElementById('tchApprovalPresident');
-    const serial       = document.getElementById('tchApprovalSerial');
-
-    const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
-                                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    const personName = p => typeof p === 'string' ? p : (p?.name || 'Panelist');
-    const joinNames = names => {
-        const list = (names || []).map(personName).filter(Boolean);
-        if (!list.length) return '—';
-        if (list.length === 1) return list[0];
-        if (list.length === 2) return `${list[0]} and ${list[1]}`;
-        return `${list.slice(0, -1).join(', ')}, and ${list[list.length - 1]}`;
-    };
-
-    title.textContent      = '—';
-    proponents.textContent = 'Loading...';
-    adviser.textContent    = '—';
-    panelists.innerHTML    = '<div class="approval-signature"><span class="approval-sig-line">Loading...</span><div class="approval-sig-role">Member</div></div>';
-    if (chairmanBlk) chairmanBlk.style.display = 'none';
-    if (chairman) chairman.textContent = '—';
-    oralResult.textContent = '—';
-    oralDate.textContent   = '—';
-    president.textContent  = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
-    serial.textContent     = ' ';
-
-    if (loading) loading.style.display = 'flex';
-    openModal('teacherApprovalSheetModal');
-
-    fetch(`/teacher/get-approval-sheet/${groupId}`, { __silent: true })
-        .then(r => r.json())
-        .then(data => {
-            title.textContent      = data.capstone_title || '—';
-            proponents.textContent = joinNames(data.members);
-            adviser.textContent    = data.adviser || '—';
-
-            const all = Array.isArray(data.panelists) ? data.panelists : [];
-            const chairmanEntry = all.find(p => /chair/i.test(String(p?.role || p?.type || '')))
-                || (data.chairman ? { name: data.chairman } : null);
-            const membersOnly = chairmanEntry ? all.filter(p => p !== chairmanEntry) : all;
-
-            panelists.innerHTML = membersOnly.length
-                ? membersOnly.map(p => `<div class="approval-signature"><span class="approval-sig-line">${esc(personName(p))}</span><div class="approval-sig-role">Member</div></div>`).join('')
-                : '<div class="approval-signature"><span class="approval-sig-line">No panelists assigned</span><div class="approval-sig-role">Member</div></div>';
-
-            if (chairmanEntry && chairmanBlk && chairman) {
-                chairmanBlk.style.display = 'block';
-                chairman.textContent = personName(chairmanEntry);
-            }
-            oralResult.textContent = data.oral_exam_result || '—';
-            oralDate.textContent   = data.oral_exam_date || '—';
-            president.textContent  = data.school_president || 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
-            serial.textContent     = data.serial_number ? 'Serial No. ' + data.serial_number : ' ';
-        })
-        .catch(err => {
-            console.error('Teacher approval sheet error:', err);
-            proponents.textContent = 'Unable to load approval data.';
-        })
-        .finally(() => { if (loading) loading.style.display = 'none'; });
-};
+ 
 
     window.openViewEvaluationModal = function (groupId) {
         window.openEvaluationModal(groupId);
@@ -6217,6 +6571,228 @@ window.openTeacherApprovalSheet = function (groupId) {
     }, false);
 
 });
+</script>
+<script>
+(function () {
+    'use strict';
+
+    const PRINT_CLASS_MAP = {
+        revisionSheetModal: 'print-revision',
+        recommendationSheetModal: 'print-recommendation',
+        approvalSheetModal: 'print-approval'
+    };
+    const PRINTABLE_PX = 9.5 * 96 * 0.9;
+    const PRINT_WIDTH_PX = 7.5 * 96;
+
+    const esc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    const personName = p => typeof p === 'string' ? p : (p?.name || 'Panelist');
+    const joinNames = names => {
+        const list = (names || []).map(personName).filter(Boolean);
+        if (!list.length) return '—';
+        if (list.length === 1) return list[0];
+        if (list.length === 2) return `${list[0]} and ${list[1]}`;
+        return `${list.slice(0, -1).join(', ')}, and ${list[list.length - 1]}`;
+    };
+    const fetchJson = url => fetch(url, { __silent: true }).then(r => r.json().catch(() => ({})));
+
+    // ── PRINT: one document at a time, scaled to a single page ──
+    window.printModalContent = function (modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        const printClass = PRINT_CLASS_MAP[modalId];
+        const box = modal.querySelector('.modal-box');
+
+        let previousZoom = '';
+        if (box && printClass !== 'print-recommendation') {
+            previousZoom = box.style.zoom || '';
+            const previousWidth = box.style.width || '';
+            box.classList.add('print-measure');
+            box.style.zoom = '1';
+            box.style.width = PRINT_WIDTH_PX + 'px';
+            const naturalHeight = box.scrollHeight;
+            box.style.width = previousWidth;
+            box.classList.remove('print-measure');
+            if (naturalHeight > PRINTABLE_PX) {
+                const scale = Math.max(0.45, PRINTABLE_PX / naturalHeight);
+                box.style.zoom = String(Math.floor(scale * 100) / 100);
+            }
+        }
+
+        Object.values(PRINT_CLASS_MAP).forEach(c => document.body.classList.remove(c));
+        if (printClass) document.body.classList.add(printClass);
+
+        const cleanup = () => {
+            if (printClass) document.body.classList.remove(printClass);
+            if (box) box.style.zoom = previousZoom;
+            window.removeEventListener('afterprint', cleanup);
+        };
+        window.addEventListener('afterprint', cleanup);
+        window.print();
+        setTimeout(cleanup, 2000);
+    };
+
+    // ── RECOMMENDATION SHEET ──
+    window.openRecommendationSheet = function (groupId) {
+        if (!groupId) return;
+        const $ = id => document.getElementById(id);
+        const title = $('recommendationTitle'), props = $('recommendationProponents'),
+              adviser = $('recommendationAdviser'), dateEl = $('recommendationDate'),
+              serialEl = $('recommendationSerial'), groupEl = $('recommendationGroup'),
+              loading = $('recommendationSheetLoading');
+
+        title.textContent = '—'; props.textContent = 'Loading...'; adviser.textContent = '—';
+        dateEl.textContent = '—'; serialEl.textContent = '—'; groupEl.textContent = '—';
+        if (loading) loading.style.display = 'flex';
+        openModal('recommendationSheetModal');
+
+        fetchJson(`/teacher/get-recommendation-sheet/${groupId}`)
+            .then(data => {
+                title.textContent = data.capstone_title || '—';
+                props.textContent = joinNames(data.members);
+                adviser.textContent = data.adviser || '—';
+                groupEl.textContent = data.group_name || '—';
+                serialEl.textContent = data.serial_number || '—';
+                const issued = data.issued_date || data.date_issued;
+                if (issued) {
+                    dateEl.textContent = new Date(issued).toLocaleDateString('en-US',
+                        { month: 'long', day: 'numeric', year: 'numeric' });
+                }
+            })
+            .catch(() => { props.textContent = 'Error loading data'; adviser.textContent = 'Error loading data'; })
+            .finally(() => { if (loading) loading.style.display = 'none'; });
+    };
+
+    // ── APPROVAL SHEET ──
+    window.openApprovalSheet = function (groupId) {
+        if (!groupId) return;
+        const $ = id => document.getElementById(id);
+        const title = $('approvalTitle'), proponents = $('approvalProponents'), adviser = $('approvalAdviser'),
+              panelists = $('approvalPanelists'), chairmanBlock = $('approvalChairmanBlock'), chairman = $('approvalChairman'),
+              oralResult = $('approvalOralResult'), oralDate = $('approvalOralDate'), president = $('approvalPresident'),
+              serialEl = $('approvalSerial'), loading = $('approvalSheetLoading');
+        const defaultPresident = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
+
+        title.textContent = '—'; proponents.textContent = 'Loading...'; adviser.textContent = '—';
+        panelists.innerHTML = '<div class="approval-signature"><span class="approval-sig-line">Loading...</span><div class="approval-sig-role">Member</div></div>';
+        chairmanBlock.style.display = 'none'; chairman.textContent = '—';
+        oralResult.textContent = '—'; oralDate.textContent = '—';
+        president.textContent = defaultPresident; serialEl.textContent = ' ';
+        if (loading) loading.style.display = 'flex';
+        openModal('approvalSheetModal');
+
+        fetch(`/teacher/get-approval-sheet/${groupId}`, { __silent: true })
+            .then(async r => {
+                if (!r.ok) throw new Error(`Server returned ${r.status}`);
+                return r.json();
+            })
+            .then(data => {
+                title.textContent = data.capstone_title || '—';
+                proponents.textContent = joinNames(data.members);
+                adviser.textContent = data.adviser || '—';
+
+                const all = Array.isArray(data.panelists) ? data.panelists : [];
+                const chairmanEntry = all.find(p => /chair/i.test(String(p?.role || p?.type || '')))
+                    || (data.chairman ? { name: data.chairman } : null);
+                const members = chairmanEntry ? all.filter(p => p !== chairmanEntry) : all;
+
+                panelists.innerHTML = members.length
+                    ? members.map(p => `<div class="approval-signature"><span class="approval-sig-line">${esc(personName(p))}</span><div class="approval-sig-role">Member</div></div>`).join('')
+                    : '<div class="approval-signature"><span class="approval-sig-line">No panelists assigned</span><div class="approval-sig-role">Member</div></div>';
+
+                if (chairmanEntry) {
+                    chairmanBlock.style.display = 'block';
+                    chairman.textContent = personName(chairmanEntry);
+                }
+                oralResult.textContent = data.oral_exam_result || '—';
+                oralDate.textContent = data.oral_exam_date || '—';
+                president.textContent = data.school_president || defaultPresident;
+                serialEl.textContent = data.serial_number || ' ';
+            })
+            .catch(err => {
+                console.error('Approval sheet error:', err);
+                proponents.textContent = 'Unable to load approval data';
+                panelists.innerHTML = `<div class="approval-signature"><span class="approval-sig-line">Error loading panel</span><div class="approval-sig-role">${esc(err.message)}</div></div>`;
+            })
+            .finally(() => { if (loading) loading.style.display = 'none'; });
+    };
+
+    // ── REVISION SHEET ──
+    window.openRevisionSheet = function (groupId) {
+        if (!groupId) return;
+        const $ = id => document.getElementById(id);
+        const serialEl = $('revisionSheetSerial'), proponents = $('sheetProponents'), title = $('sheetProjectTitle'),
+              chapterRows = $('sheetChapterRows'), iotRows = $('sheetIotRows'), objectiveRows = $('sheetObjectivesList'),
+              overall = $('sheetOverallRemarks'), approvedBy = $('sheetApprovedBy'), loading = $('revisionSheetLoading');
+        const myName = @json(trim(($teacher->teacher_first_name ?? '') . ' ' . ($teacher->teacher_last_name ?? '')));
+
+        proponents.innerHTML = '<li class="text-[#5b6375] italic">Loading...</li>';
+        title.textContent = '—';
+        chapterRows.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-[#5b6375] italic">Loading...</td></tr>';
+        iotRows.innerHTML = '<tr><td colspan="2" class="p-3 text-center text-[#5b6375] italic">Loading...</td></tr>';
+        objectiveRows.innerHTML = '<tr><td colspan="2" class="p-3 text-center text-[#5b6375] italic">Loading...</td></tr>';
+        overall.textContent = '—';
+        approvedBy.textContent = myName || '_________________________';
+        serialEl.textContent = ' ';
+        if (loading) loading.style.display = 'flex';
+        openModal('revisionSheetModal');
+
+        const badge = remarks => {
+            const done = String(remarks || 'Pending').toLowerCase() === 'completed';
+            return `<span class="badge ${done ? 'badge-green' : 'badge-amber'}">${done ? 'Completed' : 'Pending'}</span>`;
+        };
+        const empty = (cols, msg) => `<tr><td colspan="${cols}" class="p-3 text-center text-[#5b6375] italic">${msg}</td></tr>`;
+
+        Promise.all([
+            fetchJson(`/teacher/get-group/${groupId}`),
+            fetchJson(`/teacher/get-revision-details/${groupId}`)
+        ])
+        .then(([groupData, rev]) => {
+            proponents.innerHTML = (groupData.members && groupData.members.length)
+                ? groupData.members.map(m => `<li>${esc(m.name)}</li>`).join('')
+                : '<li class="text-[#5b6375] italic">No members.</li>';
+            title.textContent = groupData.capstone_title || '—';
+
+            chapterRows.innerHTML = (rev.chapters && rev.chapters.length)
+                ? rev.chapters.map(ch => `<tr>
+                    <td class="border border-[#b88d3a] p-2 font-semibold">${esc(ch.chapter)}</td>
+                    <td class="border border-[#b88d3a] p-2">${esc(ch.findings)}</td>
+                    <td class="border border-[#b88d3a] p-2 text-center">${badge(ch.remarks)}</td></tr>`).join('')
+                : empty(3, 'No chapter findings.');
+
+            iotRows.innerHTML = (rev.iot_findings && rev.iot_findings.length)
+                ? rev.iot_findings.map(i => `<tr>
+                    <td class="border border-[#b88d3a] p-2">${esc(i.finding)}</td>
+                    <td class="border border-[#b88d3a] p-2 text-center">${badge(i.remarks)}</td></tr>`).join('')
+                : empty(2, 'No System / IoT findings.');
+
+            objectiveRows.innerHTML = (rev.additional_objectives && rev.additional_objectives.length)
+                ? rev.additional_objectives.map(o => {
+                    const text = typeof o === 'object' ? o.objective : o;
+                    const rem = typeof o === 'object' ? o.remarks : 'Pending';
+                    return `<tr><td class="border border-[#b88d3a] p-2">${esc(text)}</td>
+                        <td class="border border-[#b88d3a] p-2 text-center">${badge(rem)}</td></tr>`;
+                }).join('')
+                : empty(2, 'No additional objectives.');
+
+            overall.textContent = rev.overall_remarks || 'No overall remarks.';
+            const sn = rev.serial_number || groupData.serial_number;
+            serialEl.textContent = sn ? sn : ' ';
+            if (rev.panelist_name || rev.approved_by) approvedBy.textContent = rev.panelist_name || rev.approved_by;
+        })
+        .catch(err => {
+            console.error('Revision sheet error:', err);
+            proponents.innerHTML = `<li class="text-red-500">${esc(err.message)}</li>`;
+        })
+        .finally(() => { if (loading) loading.style.display = 'none'; });
+    };
+
+    // ── Hooks used by the existing teacher buttons ──
+    window.openTeacherRecommendationSheet = window.openRecommendationSheet;
+    window.openTeacherApprovalSheet       = window.openApprovalSheet;
+    window.openTeacherRevisionSheet       = window.openRevisionSheet;
+    window.openViewRevisionModal          = window.openRevisionSheet;
+})();
 </script>
 </body>
     </html> 

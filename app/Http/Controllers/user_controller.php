@@ -825,8 +825,10 @@ if ($groups) {
         $group = $gc->group;
         return [
             'id'                 => $gc->id,
+            'group_id'           => $gc->group_id,                                 // NEW
             'serial_number'      => $gc->serial_number ?? '—',
             'certificate_title'  => $gc->certificate->certificate_title ?? 'Document',
+            'document_type'      => $gc->certificate->document_type ?? null,        // NEW
             'group_name'         => $group->group_name ?? 'Unknown Group',
             'section_name'       => optional($group?->students->first())->section ?? 'N/A',
             'issued_date'        => $gc->issued_date,
@@ -866,6 +868,70 @@ if ($groups) {
         'groupProgressList',
         'issuedDocuments'
     ));
+}
+/**
+ * Admin-side: return every revision sheet for a group.
+ */
+public function adminGetGroupRevisions($groupId)
+{
+    $user = Auth::user();
+    if (!$user || $user->role !== 'admin') {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    $group = Group::with(['team_members.student', 'adviser'])->findOrFail($groupId);
+
+    $members = $group->team_members->map(function ($tm) {
+        $s = $tm->student;
+        return trim(($s->student_first_name ?? '') . ' ' . ($s->student_last_name ?? ''));
+    })->filter()->values()->all();
+
+    $revisions = \App\Models\Revision::with(['documentation', 'enhancements', 'objectives', 'panelist'])
+        ->where('group_id', $groupId)
+        ->orderByDesc('created_at')
+        ->get()
+        ->map(function ($rev) {
+            return [
+                'id'            => $rev->id,
+                'panelist_name' => $rev->panelist
+                    ? trim($rev->panelist->teacher_first_name . ' ' . $rev->panelist->teacher_last_name)
+                    : 'Panelist',
+                'created_at'    => $rev->created_at ? $rev->created_at->format('M d, Y') : null,
+                'overall_remarks' => $rev->overall_remarks,
+                'chapters'      => $rev->documentation->map(fn($d) => [
+                    'chapter'  => $d->chapter,
+                    'findings' => $d->findings,
+                    'remarks'  => $d->remarks ?: 'Pending',
+                ]),
+                'iot_findings'  => $rev->enhancements->map(fn($e) => [
+                    'finding' => $e->enhancement,
+                    'remarks' => $e->remarks ?: 'Pending',
+                ]),
+                'additional_objectives' => $rev->objectives->map(fn($o) => [
+                    'objective' => $o->objective,
+                    'remarks'   => $o->remarks ?: 'Pending',
+                ]),
+            ];
+        });
+
+    $serial = GroupCertificate::where('group_id', $groupId)
+        ->where(function ($q) {
+            $q->whereHas('certificate', fn($c) => $c->where('document_type', 'revision'))
+              ->orWhere('serial_number', 'like', 'MCC-DOC-%');
+        })
+        ->latest('issued_date')
+        ->value('serial_number');
+
+    return response()->json([
+        'group_name'     => $group->group_name,
+        'capstone_title' => $group->capstone_title,
+        'adviser'        => $group->adviser
+            ? trim($group->adviser->teacher_first_name . ' ' . $group->adviser->teacher_last_name)
+            : null,
+        'members'        => $members,
+        'serial_number'  => $serial,
+        'revisions'      => $revisions,
+    ]);
 }
 
 
@@ -1677,27 +1743,34 @@ public function updateMilestoneRemark(Request $request)
             'role'    => $tm->role,
         ]),
     ]);
-}// ── TEACHER: recommendation sheet payload ──
+}
+// ── TEACHER: recommendation sheet payload ──
 public function teacherGetRecommendationSheet($groupId)
 {
     $user = Auth::user();
-    if (!$user || $user->role !== 'teacher') {
+    if (!$user || !in_array($user->role, ['teacher', 'admin'], true)) {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
-    $teacher = Teacher::where('user_id', $user->user_id)->firstOrFail();
-    $group   = Group::with(['team_members.student', 'adviser'])->findOrFail($groupId);
+    $group = Group::with(['team_members.student', 'adviser'])->findOrFail($groupId);
 
-    $isAdviser = (int) $group->adviser_id === (int) $teacher->id;
-    $assignedRoomIds = $teacher->evaluationRooms()->pluck('evaluation_rooms.id')->toArray();
-    $isPanelist = $group->room_id && in_array($group->room_id, $assignedRoomIds);
-    $isSectionTeacher = $group->section_id && \App\Models\Section::where('id', $group->section_id)
-        ->where('user_id', $teacher->user_id)->exists();
+    // Only teachers go through the room / section authorization gate.
+    // Admins have full read access.
+    if ($user->role === 'teacher') {
+        $teacher = Teacher::where('user_id', $user->user_id)->firstOrFail();
 
-    if (!$isAdviser && !$isPanelist && !$isSectionTeacher) {
-        return response()->json(['error' => 'Unauthorized'], 403);
+        $isAdviser = (int) $group->adviser_id === (int) $teacher->id;
+        $assignedRoomIds = $teacher->evaluationRooms()->pluck('evaluation_rooms.id')->toArray();
+        $isPanelist = $group->room_id && in_array($group->room_id, $assignedRoomIds);
+        $isSectionTeacher = $group->section_id && \App\Models\Section::where('id', $group->section_id)
+            ->where('user_id', $teacher->user_id)->exists();
+
+        if (!$isAdviser && !$isPanelist && !$isSectionTeacher) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
     }
 
+    // ── everything below runs identically for admin and authorised teachers ──
     $members = $group->team_members->map(function ($tm) {
         $s = $tm->student;
         return trim(($s->student_first_name ?? '') . ' ' . ($s->student_last_name ?? ''));
@@ -1707,7 +1780,6 @@ public function teacherGetRecommendationSheet($groupId)
         ? trim($group->adviser->teacher_first_name . ' ' . $group->adviser->teacher_last_name)
         : null;
 
-    // Look up the issued GroupCertificate so we can surface the serial + date
     $record = GroupCertificate::where('group_id', $groupId)
         ->whereHas('certificate', fn($q) =>
             $q->where('document_type', 'recommendation')
@@ -1729,23 +1801,28 @@ public function teacherGetRecommendationSheet($groupId)
 public function teacherGetApprovalSheet($groupId)
 {
     $user = Auth::user();
-    if (!$user || $user->role !== 'teacher') {
+    if (!$user || !in_array($user->role, ['teacher', 'admin'], true)) {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
-    $teacher = Teacher::where('user_id', $user->user_id)->firstOrFail();
-    $group   = Group::with(['team_members.student', 'adviser', 'room.panelists'])->findOrFail($groupId);
+    $group = Group::with(['team_members.student', 'adviser', 'room.panelists'])->findOrFail($groupId);
 
-    $isAdviser = (int) $group->adviser_id === (int) $teacher->id;
-    $assignedRoomIds = $teacher->evaluationRooms()->pluck('evaluation_rooms.id')->toArray();
-    $isPanelist = $group->room_id && in_array($group->room_id, $assignedRoomIds);
-    $isSectionTeacher = $group->section_id && \App\Models\Section::where('id', $group->section_id)
-        ->where('user_id', $teacher->user_id)->exists();
+    // Only teachers are gated here; admin reads pass straight through.
+    if ($user->role === 'teacher') {
+        $teacher = Teacher::where('user_id', $user->user_id)->firstOrFail();
 
-    if (!$isAdviser && !$isPanelist && !$isSectionTeacher) {
-        return response()->json(['error' => 'Unauthorized'], 403);
+        $isAdviser = (int) $group->adviser_id === (int) $teacher->id;
+        $assignedRoomIds = $teacher->evaluationRooms()->pluck('evaluation_rooms.id')->toArray();
+        $isPanelist = $group->room_id && in_array($group->room_id, $assignedRoomIds);
+        $isSectionTeacher = $group->section_id && \App\Models\Section::where('id', $group->section_id)
+            ->where('user_id', $teacher->user_id)->exists();
+
+        if (!$isAdviser && !$isPanelist && !$isSectionTeacher) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
     }
 
+    // ... rest of the existing method unchanged from here down
     $members = $group->team_members->map(function ($tm) {
         $s = $tm->student;
         return trim(($s->student_first_name ?? '') . ' ' . ($s->student_last_name ?? ''));
@@ -1765,7 +1842,6 @@ public function teacherGetApprovalSheet($groupId)
         }
     }
 
-    // Oral exam result
     $oralExamResult = '—';
     $oralExamDate   = null;
     $oralMilestone = \App\Models\Milestone::where('milestone_title', 'like', '%Oral Presentation%')->first();
@@ -1780,13 +1856,13 @@ public function teacherGetApprovalSheet($groupId)
         }
     }
 
-   $record = GroupCertificate::where('group_id', $groupId)
-    ->whereHas('certificate', function ($q) {
-        $q->where('document_type', 'approval')
-          ->orWhere('certificate_title', 'like', '%Approval%');
-    })
-    ->latest('issued_date')
-    ->first();
+    $record = GroupCertificate::where('group_id', $groupId)
+        ->whereHas('certificate', function ($q) {
+            $q->where('document_type', 'approval')
+              ->orWhere('certificate_title', 'like', '%Approval%');
+        })
+        ->latest('issued_date')
+        ->first();
 
     return response()->json([
         'capstone_title'   => $group->capstone_title,

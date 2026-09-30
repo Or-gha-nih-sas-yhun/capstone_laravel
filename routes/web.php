@@ -142,6 +142,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/capstone/archive-year/{id}', [admin_controller::class, 'archiveCapstoneYear'])->name('admin.archive_capstone_year');
         Route::post('/capstone/update-year/{id}', [admin_controller::class, 'updateCapstoneYear'])->name('admin.update_capstone_year');
         Route::post('/capstone/delete-year/{id}', [admin_controller::class, 'deleteCapstoneYear'])->name('admin.delete_capstone_year');
+        Route::get('/get-group-revisions/{groupId}',[user_controller::class, 'adminGetGroupRevisions'])->name('admin.get_group_revisions');
+        Route::get('/get-recommendation-sheet/{groupId}',
+    [user_controller::class, 'teacherGetRecommendationSheet'])
+    ->name('admin.get_recommendation_sheet');
+
+Route::get('/get-approval-sheet/{groupId}',
+    [user_controller::class, 'teacherGetApprovalSheet'])
+    ->name('admin.get_approval_sheet');
     });
 
     /*
