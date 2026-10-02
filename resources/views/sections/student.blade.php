@@ -1112,9 +1112,10 @@
             margin-bottom: 1.25rem;
         }
 
-/* ── RECOMMENDATION SHEET — SCREEN (mirrors print layout) ──
-   Paper is a true 8.5x11 page. Every size is expressed in "inches" that
-   scale with the modal width, so it looks identical to print on any screen. */
+
+/* ═══════════════════════════════════════════════════════════════
+   RECOMMENDATION SHEET — SCREEN (mirrors print layout, same as teacher)
+   ═══════════════════════════════════════════════════════════════ */
 @media screen {
     .recommendation-sheet-modal {
         container-type: inline-size;
@@ -1149,7 +1150,6 @@
         color: #1a1a1a;
     }
 
-    /* Header image */
     .recommendation-sheet-modal .rec-header-image {
         margin: 0 0 calc(var(--in) * 0.22);
         text-align: center;
@@ -1163,7 +1163,6 @@
         object-fit: contain;
     }
 
-    /* Title */
     .recommendation-sheet-modal .rec-title {
         font-family: 'Times New Roman', serif;
         font-size: calc(var(--pt) * 18);
@@ -1178,7 +1177,6 @@
         max-width: 90%;
     }
 
-    /* Body */
     .recommendation-sheet-modal .rec-body {
         flex: 1 1 auto;
         display: flex;
@@ -1197,7 +1195,6 @@
         color: #1a1a1a;
     }
 
-    /* Capstone title */
     .recommendation-sheet-modal .rec-capstone-title {
         font-family: 'Times New Roman', serif;
         font-size: calc(var(--pt) * 15.5);
@@ -1220,7 +1217,6 @@
         margin: calc(var(--in) * 0.1) auto;
     }
 
-    /* Members */
     .recommendation-sheet-modal .rec-members {
         font-size: calc(var(--pt) * 12);
         line-height: 1.6;
@@ -1228,7 +1224,6 @@
         color: #0a1428;
     }
 
-    /* Adviser signature */
     .recommendation-sheet-modal .rec-signature {
         margin: auto 0 calc(var(--in) * 0.35);
         padding-top: calc(var(--in) * 0.35);
@@ -1255,7 +1250,6 @@
         color: #5b6375;
     }
 
-    /* Footer */
     .recommendation-sheet-modal .rec-footer {
         display: flex;
         flex-direction: row;
@@ -1284,183 +1278,6 @@
     }
 }
 
-
-/* The paper-like document */
-.recommendation-document {
-    flex: 1;
-    background: #fffdf8;
-    border: 2px solid #0a1428;
-    border-radius: 4px;
-    padding: 2rem 2.75rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    position: relative;
-    overflow-y: auto;
-    box-shadow: inset 0 0 0 1px rgba(10, 20, 40, 0.05);
-}
-
-/* Header image */
-.recommendation-document .rec-header-image {
-    text-align: center;
-    margin-bottom: 1.1rem;
-}
-.recommendation-document .rec-header-image img {
-    max-width: 55%;
-    height: auto;
-    display: inline-block;
-}
-
-/* Title with underline */
-.recommendation-document .rec-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.75rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #0a1428;
-    border-bottom: 2px solid #0a1428;
-    padding-bottom: 0.6rem;
-    margin: 0 auto 0.4rem;
-    max-width: 90%;
-}
-
-/* Serial line under the title */
-.recommendation-document .rec-serial {
-    font-family: 'Courier New', monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.12em;
-    color: #8b6914;
-    margin-bottom: 1.5rem;
-    min-height: 1em;
-}
-
-/* Body block */
-.recommendation-document .rec-body {
-    flex: 1;
-    font-size: 1rem;
-    line-height: 1.75;
-    color: #171e2c;
-    max-width: 640px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.65rem;
-}
-
-.recommendation-document .rec-body p {
-    margin: 0;
-    font-size: 1rem;
-    line-height: 1.75;
-    color: #171e2c;
-}
-
-/* Capstone title in italic serif */
-.recommendation-document .rec-capstone-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.45rem;
-    font-weight: 600;
-    font-style: italic;
-    line-height: 1.35;
-    color: #0a1428;
-    margin: 0.6rem auto 1.1rem;
-    max-width: 620px;
-    padding: 0 1rem;
-    position: relative;
-}
-.recommendation-document .rec-capstone-title::before,
-.recommendation-document .rec-capstone-title::after {
-    content: '';
-    display: block;
-    width: 55px;
-    height: 1px;
-    background: #d9cda6;
-    margin: 0.6rem auto;
-}
-.recommendation-document .rec-capstone-title::before { margin-top: 0; }
-.recommendation-document .rec-capstone-title::after  { margin-bottom: 0; }
-
-/* Members (inline) */
-.recommendation-document .rec-members {
-    font-weight: 600;
-    color: #0a1428;
-}
-
-/* Adviser signature block */
-.recommendation-document .rec-signature {
-    margin: 2.25rem auto 1rem;
-    text-align: center;
-    min-width: 320px;
-}
-.recommendation-document .rec-signature .rec-sig-name {
-    display: inline-block;
-    min-width: 260px;
-    padding: 0 0.5rem 0.3rem;
-    border-bottom: 1.5px solid #0a1428;
-    font-size: 1.05rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #0a1428;
-}
-.recommendation-document .rec-signature .rec-sig-label {
-    display: block;
-    margin-top: 0.4rem;
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #5b6375;
-}
-
-/* Footer: date + group */
-.recommendation-document .rec-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 2rem;
-    margin-top: auto;
-    padding-top: 1.1rem;
-    border-top: 1px solid #e2dacf;
-}
-.recommendation-document .rec-footer-block {
-    text-align: center;
-    min-width: 150px;
-}
-.recommendation-document .rec-footer-value {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #171e2c;
-}
-.recommendation-document .rec-footer-label {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #9a9385;
-    margin-top: 0.15rem;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 640px) {
-    .recommendation-document {
-        padding: 1.25rem 1rem;
-    }
-    .recommendation-document .rec-title {
-        font-size: 1.35rem;
-        letter-spacing: 0.05em;
-    }
-    .recommendation-document .rec-capstone-title {
-        font-size: 1.15rem;
-    }
-    .recommendation-document .rec-header-image img {
-        max-width: 80%;
-    }
-    .recommendation-document .rec-footer {
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-    }
-}
 /* ── APPROVAL SHEET — SCREEN (mirrors print layout) ── */
 @media screen {
     #approvalSheetModal .approval-sheet-modal-box {
@@ -1662,6 +1479,8 @@
         box-shadow: none;
     }
 }
+
+
 
         /* ── APPROVAL SHEET DOCUMENT (screen) ── */
         .approval-sheet-doc {
@@ -2013,164 +1832,7 @@
     }
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   PRINT — REVISION SHEET  (1 page, letter)
-   ══════════════════════════════════════════════════════════════════ */
-@media print {
-    body.print-revision #revisionSheetModal .modal-box {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        overflow: visible !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        animation: none !important;
-        background: #fff !important;
-        font-family: 'Times New Roman', serif !important;
-        color: #1a1a1a !important;
-    }
 
-    /* Header image */
-    body.print-revision #revisionSheetModal .text-center.mb-4 {
-        margin: 0 0 0.15in !important;
-        text-align: center !important;
-    }
-    body.print-revision #revisionSheetModal .text-center.mb-4 img {
-        display: block !important;
-        margin: 0 auto !important;
-        width: auto !important;
-        max-width: 6.2in !important;
-        max-height: 0.85in !important;
-        object-fit: contain !important;
-        filter: grayscale(0) !important;
-    }
-
-    /* Document title */
-    body.print-revision #revisionSheetModal h2 {
-        font-family: 'Times New Roman', serif !important;
-        font-size: 17pt !important;
-        font-weight: 700 !important;
-        line-height: 1 !important;
-        margin: 0.08in 0 0.02in !important;
-        letter-spacing: 0.22em !important;
-        text-align: center !important;
-        color: #0a1428 !important;
-    }
-    /* Under-title accent bar */
-    body.print-revision #revisionSheetModal h2::after {
-        content: '' !important;
-        display: block !important;
-        width: 1.6in !important;
-        height: 2px !important;
-        background: #b88d3a !important;
-        margin: 0.08in auto 0.16in !important;
-    }
-
-    /* Serial number pill under the title */
-    body.print-revision #revisionSheetModal .print-serial {
-        display: block !important;
-        text-align: center !important;
-        font-family: 'Courier New', monospace !important;
-        font-size: 9pt !important;
-        letter-spacing: 0.08em !important;
-        color: #8b6914 !important;
-        margin: 0 0 0.18in !important;
-    }
-
-    /* Main table */
-    body.print-revision #revisionSheetContent {
-        font-family: 'Times New Roman', serif !important;
-        font-size: 9.5pt !important;
-        line-height: 1.35 !important;
-        border: 1.5px solid #8b6914 !important;
-        border-radius: 0 !important;
-        overflow: visible !important;
-        background: #fff !important;
-    }
-    body.print-revision #revisionSheetContent > table,
-    body.print-revision #revisionSheetContent table {
-        font-size: 9.5pt !important;
-        width: 100% !important;
-        border-collapse: collapse !important;
-    }
-    body.print-revision #revisionSheetContent td,
-    body.print-revision #revisionSheetContent th {
-        padding: 0.05in 0.09in !important;
-        line-height: 1.32 !important;
-        vertical-align: top !important;
-        border: 1px solid #8b6914 !important;
-    }
-    body.print-revision #revisionSheetContent thead th,
-    body.print-revision #revisionSheetContent tr.bg-\[\#faf8f4\] th {
-        background: #f3ead1 !important;
-        color: #0a1428 !important;
-        font-weight: 700 !important;
-        text-transform: uppercase !important;
-        font-size: 8pt !important;
-        letter-spacing: 0.06em !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    body.print-revision #revisionSheetContent .font-bold.text-xs.uppercase.tracking-wider {
-        font-size: 8pt !important;
-        font-weight: 700 !important;
-        color: #5b6375 !important;
-        letter-spacing: 0.07em !important;
-        text-transform: uppercase !important;
-    }
-    body.print-revision #revisionSheetContent .badge {
-        display: inline-block !important;
-        font-size: 7.5pt !important;
-        font-weight: 700 !important;
-        padding: 1px 7px !important;
-        border-radius: 999px !important;
-        border: 1px solid currentColor !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    body.print-revision #revisionSheetContent .badge-green {
-        background: #e6f4ea !important;
-        color: #1e6b3a !important;
-    }
-    body.print-revision #revisionSheetContent .badge-amber {
-        background: #fef7e6 !important;
-        color: #8a5d0b !important;
-    }
-    body.print-revision #revisionSheetContent p {
-        margin: 0 !important;
-    }
-    body.print-revision #revisionSheetContent .whitespace-pre-line {
-        white-space: pre-line !important;
-        font-size: 9.5pt !important;
-        line-height: 1.4 !important;
-    }
-
-    /* Hide interactive controls */
-    body.print-revision #revisionSheetModal .btn-outline,
-    body.print-revision #revisionSheetModal .btn-primary,
-    body.print-revision #revisionSheetModal .btn-ghost,
-    body.print-revision #revisionSheetModal .flex.justify-end {
-        display: none !important;
-    }
-
-    /* Approved-by signature line spans page nicely */
-    body.print-revision #sheetApprovedBy {
-        display: inline-block !important;
-        min-width: 2.6in !important;
-        border-bottom: 1px solid #333 !important;
-        font-weight: 700 !important;
-        color: #0a1428 !important;
-        padding: 0 0.06in 0.02in !important;
-    }
-
-    /* Force single-page if content is small */
-    body.print-revision #revisionSheetModal { page-break-after: avoid !important; }
-    body.print-revision #revisionSheetContent { page-break-inside: avoid !important; }
-}
 
 /* ══════════════════════════════════════════════════════════════════
    PRINT — RECOMMENDATION SHEET  (1 page, letter)
@@ -2596,6 +2258,196 @@
         display: none !important;
     }
 }
+
+/* ═══════ REVISION SHEET — matches MCC form (screen + print) ═══════ */
+@media screen {
+    #revisionSheetModal .revision-sheet-modal-box {
+        container-type: inline-size;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: calc(8.5in + 3rem) !important;
+        max-height: 92vh;
+        padding: 1.5rem !important;
+        background: #e9e5db;
+        overflow-y: auto;
+    }
+    #revisionSheetModal .revision-paper {
+        --in: calc(100cqw / 8.5);
+        --pt: calc(var(--in) / 72);
+        min-height: calc(var(--in) * 11);
+        padding: calc(var(--in) * 0.6) calc(var(--in) * 0.7) calc(var(--in) * 0.55);
+        background: #fff;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    }
+}
+@media print {
+    body.print-revision #revisionSheetModal .revision-sheet-modal-box {
+        display: block !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        animation: none !important;
+        background: #fff !important;
+    }
+
+    /* True print size: 1in = 1in, 1pt = 1pt — all calc()s resolve to real units. */
+    body.print-revision #revisionSheetModal .revision-paper {
+        --in: 1in;
+        --pt: 1pt;
+        padding: 0.5in 0.55in 0.5in !important;
+        min-height: 0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Hide interactive controls and loader. */
+    body.print-revision #revisionSheetModal .rv-actions,
+    body.print-revision #revisionSheetModal #revisionSheetLoading {
+        display: none !important;
+    }
+
+    /* Keep the header image inside the printable column. */
+    body.print-revision #revisionSheetModal .rv-header {
+        margin: 0 0 0.1in !important;
+    }
+    body.print-revision #revisionSheetModal .rv-header img {
+        max-width: 100% !important;
+        max-height: 0.9in !important;
+        width: auto !important;
+    }
+
+    /* Never split a table row across pages. */
+    body.print-revision #revisionSheetModal .rv-table tr,
+    body.print-revision #revisionSheetModal .rv-table td,
+    body.print-revision #revisionSheetModal .rv-table th {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+}
+
+/* shared (uses --in / --pt so screen == print) */
+#revisionSheetModal .revision-paper,
+#revisionSheetModal .revision-paper * {
+    font-family: 'Courier New', Courier, monospace;
+}
+#revisionSheetModal .revision-paper {
+    box-sizing: border-box;
+    position: relative;
+    color: #000;
+}
+#revisionSheetModal .rv-header {
+    text-align: center;
+    margin: 0 0 calc(var(--in) * 0.1);
+}
+#revisionSheetModal .rv-header img {
+    display: block;
+    margin: 0 auto;
+    width: auto;
+    max-width: calc(var(--in) * 6.2);
+    max-height: calc(var(--in) * 0.9);
+    object-fit: contain;
+}
+#revisionSheetModal .rv-title {
+    font-size: calc(var(--pt) * 10);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    text-align: center;
+    color: #000;
+    margin: calc(var(--in) * 0.05) 0 calc(var(--in) * 0.08);
+    padding: 0;
+    border: 0;
+}
+#revisionSheetModal .rv-serial {
+    text-align: center;
+    font-size: calc(var(--pt) * 7.5);
+    letter-spacing: 0.08em;
+    color: #000;
+    margin: 0 0 calc(var(--in) * 0.08);
+}
+#revisionSheetModal .rv-content { position: relative; }
+#revisionSheetModal .rv-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+#revisionSheetModal .rv-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin: 0 0 calc(var(--in) * 0.2);
+    font-size: calc(var(--pt) * 8.5);
+    color: #000;
+}
+#revisionSheetModal .rv-table th,
+#revisionSheetModal .rv-table td {
+    border: 1px solid #000;
+    padding: calc(var(--in) * 0.03) calc(var(--in) * 0.07);
+    height: calc(var(--in) * 0.21);
+    vertical-align: middle;
+    text-align: left;
+    line-height: 1.25;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-line;
+    background: #fff;
+}
+#revisionSheetModal .rv-table th {
+    font-weight: 700;
+    text-align: center;
+    font-size: calc(var(--pt) * 8.5);
+}
+#revisionSheetModal .rv-table th.rv-muted {
+    font-weight: 400;
+    color: #777;
+}
+#revisionSheetModal .rv-table td.rv-project { vertical-align: top; }
+#revisionSheetModal .rv-table td.rv-c {
+    text-align: center;
+    font-size: calc(var(--pt) * 7.5);
+}
+#revisionSheetModal .rv-table tr.rv-tall td { height: calc(var(--in) * 0.27); }
+
+#revisionSheetModal .rv-approved {
+    font-weight: 700;
+    font-size: calc(var(--pt) * 9);
+    margin: calc(var(--in) * 0.05) 0 0;
+}
+#revisionSheetModal .rv-signature {
+    display: inline-block;
+    min-width: calc(var(--in) * 2.4);
+    margin-top: calc(var(--in) * 0.3);
+}
+#revisionSheetModal #sheetApprovedBy {
+    display: block;
+    min-height: calc(var(--in) * 0.2);
+    border-bottom: 1px solid #000;
+    padding: 0 calc(var(--in) * 0.05) calc(var(--in) * 0.02);
+    font-size: calc(var(--pt) * 9);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000;
+}
+#revisionSheetModal .rv-sig-label {
+    font-weight: 700;
+    font-size: calc(var(--pt) * 8.5);
+    margin-top: calc(var(--in) * 0.04);
+}
+#revisionSheetModal .rv-footer-note {
+    margin-top: calc(var(--in) * 0.3);
+    font-size: calc(var(--pt) * 6.5);
+    color: #333;
+}
+#revisionSheetModal .rv-footer-note strong { font-weight: 700; }
+
     </style>
 </head>
 <body class="bg-[#f8f6f0] text-[#171e2c]">
@@ -3293,7 +3145,12 @@
 <br>
 <div class="flex gap-3 mb-6 text-sm">
     @php
-    $capstone2AvailableCount = $isCapstone2Complete ? 2 : 0;
+        // Count each Capstone 2 document independently:
+        //   • Recommendation Sheet unlocks via $isRecommendationUnlocked
+        //   • Approval Sheet unlocks via $approvalLetterUnlocked
+        $capstone2AvailableCount =
+            (int) ($isRecommendationUnlocked ?? false) +
+            (int) ($approvalLetterUnlocked   ?? false);
     @endphp
     <span class="badge badge-green">
         Available: <strong>{{ $capstone2AvailableCount }}/2</strong>
@@ -3486,136 +3343,107 @@
 
 <!-- ═══════════════ REVISION SHEET MODAL ═══════════════ -->
 <div id="revisionSheetModal" class="modal-overlay">
-    <div class="modal-box wide" style="max-width: 52rem; padding: 1.5rem;">
+    <div class="modal-box wide revision-sheet-modal-box" style="max-width: 52rem; padding: 1.5rem;">
 
-        <!-- Header Image -->
-        <div class="text-center mb-4">
-            <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header" class="w-full max-h-24 object-contain">
-        </div>
+        <div class="revision-paper">
 
-        <!-- Title -->
-        <h2 class="text-center text-2xl font-bold tracking-widest text-[#0a1428] mb-4" style="font-family:'Cormorant Garamond',serif;">
-            REVISION SHEET
-        </h2>
-        <p class="print-serial text-center text-xs tracking-widest mt-1" id="revisionSheetSerial"
-   style="font-family:'Courier New', monospace; color:#8b6914;">&nbsp;</p>
-        <!-- Main Table (static placeholders, populated by JS) -->
-        <div id="revisionSheetContent" class="text-[#0a1428] text-sm border border-[#b88d3a] rounded-lg overflow-hidden relative">
-
-            <!-- In-modal loading overlay (only inside the modal) -->
-            <div id="revisionSheetLoading" class="modal-loading-box absolute inset-0 bg-white/90 backdrop-blur-sm z-10 rounded-lg">
-                <div class="spinner-sm"></div>
-                <p>Loading revision sheet…</p>
-                <span class="hint">Fetching panel feedback and group details</span>
+            <div class="rv-header">
+                <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header">
             </div>
 
-            <table class="w-full border-collapse text-sm">
-                <!-- Proponents & Project -->
-                <tr>
-                    <td class="border border-[#b88d3a] p-2 align-top" style="width:50%;">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Name of Proponents</p>
-                        <ol id="sheetProponents" class="list-decimal list-inside space-y-0.5">
-                            <li class="text-[#5b6375] italic">Loading...</li>
-                        </ol>
-                    </td>
-                    <td class="border border-[#b88d3a] p-2 align-top" style="width:50%;">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Name of Capstone Project</p>
-                        <p id="sheetProjectTitle" class="font-medium">—</p>
-                    </td>
-                </tr>
+            <h2 class="rv-title">REVISION SHEET</h2>
+            <p class="rv-serial" id="revisionSheetSerial">&nbsp;</p>
+
+            <div id="revisionSheetContent" class="rv-content">
+
+                <div id="revisionSheetLoading" class="modal-loading-box rv-loading">
+                    <div class="spinner-sm"></div>
+                    <p>Loading revision sheet…</p>
+                    <span class="hint">Fetching panel feedback and group details</span>
+                </div>
+
+                <!-- Proponents / Project -->
+                <table class="rv-table">
+                    <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+                    <thead>
+                        <tr><th>Name of Proponents</th><th>Name of Capstone Project</th></tr>
+                    </thead>
+                    <tbody id="sheetProponents">
+                        <tr><td>1.</td><td id="sheetProjectTitle" class="rv-project" rowspan="5"></td></tr>
+                        <tr><td>2.</td></tr>
+                        <tr><td>3.</td></tr>
+                        <tr><td>4.</td></tr>
+                        <tr><td>5.</td></tr>
+                    </tbody>
+                </table>
 
                 <!-- Chapter / Document Findings -->
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Chapter / Document Findings</p>
-                        <table class="w-full border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-[#faf8f4]">
-                                    <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Chapter</th>
-                                    <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Document Findings</th>
-                                    <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sheetChapterRows">
-                                <tr><td colspan="3" class="p-2 text-center text-[#5b6375] italic">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
+                <table class="rv-table">
+                    <colgroup><col style="width:17%"><col style="width:66%"><col style="width:17%"></colgroup>
+                    <thead>
+                        <tr>
+                            <th class="rv-muted">Chapter</th>
+                            <th>Document Findings</th>
+                            <th class="rv-muted">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sheetChapterRows">
+                        <tr><td></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td></tr>
+                        <tr><td></td><td></td><td></td></tr>
+                    </tbody>
+                </table>
 
-                <!-- System / IoT Findings -->
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">System or IoT Findings / Enhancements / Recommendations</p>
-                        <table class="w-full border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-[#faf8f4]">
-                                    <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Finding / Enhancement</th>
-                                    <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sheetIotRows">
-                                <tr><td colspan="2" class="p-2 text-center text-[#5b6375] italic">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
+                <!-- System / IoT -->
+                <table class="rv-table">
+                    <colgroup><col style="width:83%"><col style="width:17%"></colgroup>
+                    <thead>
+                        <tr>
+                            <th>System or IoT Findings/ Enhancements<br>/ Recommendations</th>
+                            <th class="rv-muted">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sheetIotRows">
+                        <tr class="rv-tall"><td></td><td></td></tr>
+                    </tbody>
+                </table>
 
                 <!-- Additional Objectives -->
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Additional Objectives for Capstone Project 2</p>
-                        <table class="w-full border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-[#faf8f4]">
-                                    <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Objective</th>
-                                    <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sheetObjectivesList">
-                                <tr><td colspan="2" class="p-2 text-center text-[#5b6375] italic">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-                <!-- Overall Remarks -->
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
+                <table class="rv-table">
+                    <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+                    <thead>
+                        <tr><th colspan="2">Additional Objectives for Capstone Project 2</th></tr>
+                    </thead>
+                    <tbody id="sheetObjectivesList">
+                        <tr class="rv-tall"><td>1.</td><td>3.</td></tr>
+                        <tr class="rv-tall"><td>2.</td><td>4.</td></tr>
+                    </tbody>
+                </table>
 
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">
-                            Overall Remarks / Instructions
-                        </p>
-
-                        <p
-                            id="sheetOverallRemarks"
-                            class="text-sm text-[#0a1428] whitespace-pre-line"
-                        >
-                            —
-                        </p>
-
-                    </td>
-                </tr>
                 <!-- Approved by -->
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
-                        <p class="text-xs font-bold uppercase tracking-wider text-[#5b6375]">Approved by:</p>
-                        <p id="sheetApprovedBy" class="text-sm font-semibold mt-1 border-b-2 border-[#b88d3a] inline-block min-w-[200px]">_________________________</p>
-                    </td>
-                </tr>
-            </table>
+                <p class="rv-approved">Approved by:</p>
+                <div class="rv-signature">
+                    <span id="sheetApprovedBy"></span>
+                    <div class="rv-sig-label">Panel's Name &amp; Signature</div>
+                </div>
 
-        </div> <!-- end content -->
+                <p class="rv-footer-note">
+                    Please always bring this document during the checking of your <strong>Capstone Project 2.</strong>
+                </p>
+            </div>
+        </div><!-- /.revision-paper -->
 
-        <!-- Buttons -->
-        <div class="flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
+        <div class="rv-actions flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
             <button type="button" onclick="window.printModalContent('revisionSheetModal')" class="btn-outline text-xs py-2 px-4">
                 <i class="fas fa-print mr-1"></i> Print
             </button>
             <button type="button" onclick="closeModal('revisionSheetModal')" class="btn-primary text-xs py-2 px-4">Close</button>
         </div>
-
     </div>
 </div>
+
+
+
 
 <!-- ── RECOMMENDATION SHEET MODAL (Formal Document Style) ── -->
 <div id="recommendationSheetModal" class="modal-overlay">
@@ -3670,7 +3498,7 @@
             <div class="rec-footer">
                 <div class="rec-footer-block">
                     <div class="rec-footer-value" id="recommendationDate">
-                        {{ now()->format('F d, Y') }}
+                        {{ $dateIssued ?? '—' }}
                     </div>
                     <div class="rec-footer-label">Date Issued</div>
                 </div>
@@ -4305,7 +4133,16 @@ window.printModalContent = function (modalId) {
                         chairman.textContent = personName(chairmanEntry);
                     }
                     oralResult.textContent = data.oral_exam_result || '—';
-                    oralDate.textContent = data.oral_exam_date || '—';
+                    // Prefer the certificate issued_date; fall back to the evaluation date.
+const examDateRaw = data.issued_date || data.oral_exam_date;
+if (examDateRaw) {
+    const d = new Date(examDateRaw);
+    oralDate.textContent = isNaN(d.getTime())
+        ? examDateRaw
+        : d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+} else {
+    oralDate.textContent = '—';
+}
                     president.textContent = data.school_president || 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
                     if (serialEl) {
                         serialEl.textContent = data.serial_number
@@ -4387,114 +4224,98 @@ window.printModalContent = function (modalId) {
                     });
         };
 
-        // ── Open Revision Sheet Modal ──
-        // Loading is scoped INSIDE the modal — no global overlay.
-        window.openRevisionSheet = function(groupId, revisionId, panelistName) {
-            const serialEl = document.getElementById('revisionSheetSerial');
-            const proponents = document.getElementById('sheetProponents');
-            const title = document.getElementById('sheetProjectTitle');
-            const chapterRows = document.getElementById('sheetChapterRows');
-            const iotRows = document.getElementById('sheetIotRows');
-            const objectiveRows = document.getElementById('sheetObjectivesList');
-            const overallRemarks = document.getElementById('sheetOverallRemarks');
-            const approvedBy = document.getElementById('sheetApprovedBy');
-            const loadingBox = document.getElementById('revisionSheetLoading');
+    window.openRevisionSheet = function(groupId, revisionId, panelistName) {
+        const $ = id => document.getElementById(id);
+        const serialEl     = $('revisionSheetSerial');
+        const proponents   = $('sheetProponents');
+        const chapterRows  = $('sheetChapterRows');
+        const iotRows      = $('sheetIotRows');
+        const objectiveRows= $('sheetObjectivesList');
+        const approvedBy   = $('sheetApprovedBy');
+        const loadingBox   = $('revisionSheetLoading');
 
-            if (!proponents || !title || !chapterRows || !iotRows || !objectiveRows || !approvedBy) {
-                console.error('Revision Sheet modal elements are missing.');
-                return;
+        if (!proponents || !chapterRows || !iotRows || !objectiveRows || !approvedBy) {
+            console.error('Revision Sheet modal elements are missing.');
+            return;
+        }
+
+        const esc = v => String(v ?? '')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const remarkText = v => String(v || 'Pending').toLowerCase() === 'completed' ? 'Completed' : 'Pending';
+        const blankRow = cols => `<tr class="rv-tall">${'<td></td>'.repeat(cols)}</tr>`;
+
+        const renderProponents = (members, title) => {
+            const n = Math.max(5, members.length);
+            let html = '';
+            for (let i = 0; i < n; i++) {
+                const name = members[i] ? esc(members[i].name ?? members[i]) : '';
+                html += `<tr><td>${i + 1}. ${name}</td>` +
+                    (i === 0 ? `<td id="sheetProjectTitle" class="rv-project" rowspan="${n}">${esc(title)}</td>` : '') +
+                    `</tr>`;
             }
-
-            // Show in-modal loading spinner
-            if (loadingBox) loadingBox.style.display = 'flex';
-
-            openModal('revisionSheetModal');
-
-            // Loading states
-            proponents.innerHTML = `<li class="text-[#5b6375] italic">Loading...</li>`;
-            title.textContent = '—';
-            chapterRows.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-[#5b6375] italic">Loading...</td></tr>`;
-            iotRows.innerHTML = `<tr><td colspan="2" class="p-3 text-center text-[#5b6375] italic">Loading...</td></tr>`;
-            objectiveRows.innerHTML = `<tr><td colspan="2" class="p-3 text-center text-[#5b6375] italic">Loading...</td></tr>`;
-            overallRemarks.textContent = '—';
-
-            approvedBy.textContent = panelistName || '_________________________';
-
-            Promise.all([
-                fetch(`/student/get-group/${groupId}`, { __silent: true }).then(r => r.json()),
-                fetch(`/student/get-revision/${groupId}/${revisionId}`, { __silent: true }).then(r => r.json())
-            ])
-            .then(([groupData, revData]) => {
-                if (groupData.members && groupData.members.length) {
-                    proponents.innerHTML = groupData.members.map(m => `<li>${m.name}</li>`).join('');
-                } else {
-                    proponents.innerHTML = `<li class="text-[#5b6375] italic">No members.</li>`;
-                }
-
-                title.textContent = groupData.capstone_title || '—';
-
-                if (revData.chapters && revData.chapters.length) {
-                    chapterRows.innerHTML = revData.chapters.map(ch => {
-                        const completed = String(ch.remarks || 'Pending').toLowerCase() === 'completed';
-                        return `<tr>
-                            <td class="border border-[#b88d3a] p-2 font-semibold">${ch.chapter || ''}</td>
-                            <td class="border border-[#b88d3a] p-2">${ch.findings || ''}</td>
-                            <td class="border border-[#b88d3a] p-2 text-center">
-                                <span class="badge ${completed ? 'badge-green' : 'badge-amber'}">
-                                    ${completed ? 'Completed' : 'Pending'}
-                                </span>
-                            </td>
-                        </tr>`;
-                    }).join('');
-                } else {
-                    chapterRows.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-[#5b6375] italic">No chapter findings.</td></tr>`;
-                }
-
-                if (revData.iot_findings && revData.iot_findings.length) {
-                    iotRows.innerHTML = revData.iot_findings.map(iot => {
-                        const completed = String(iot.remarks || 'Pending').toLowerCase() === 'completed';
-                        return `<tr>
-                            <td class="border border-[#b88d3a] p-2">${iot.finding || ''}</td>
-                            <td class="border border-[#b88d3a] p-2 text-center">
-                                <span class="badge ${completed ? 'badge-green' : 'badge-amber'}">
-                                    ${completed ? 'Completed' : 'Pending'}
-                                </span>
-                            </td>
-                        </tr>`;
-                    }).join('');
-                } else {
-                    iotRows.innerHTML = `<tr><td colspan="2" class="p-3 text-center text-[#5b6375] italic">No System / IoT findings.</td></tr>`;
-                }
-
-                if (revData.additional_objectives && revData.additional_objectives.length) {
-                    objectiveRows.innerHTML = revData.additional_objectives.map(obj => {
-                        const completed = String(obj.remarks || 'Pending').toLowerCase() === 'completed';
-                        return `<tr>
-                            <td class="border border-[#b88d3a] p-2">${obj.objective || ''}</td>
-                            <td class="border border-[#b88d3a] p-2 text-center">
-                                <span class="badge ${completed ? 'badge-green' : 'badge-amber'}">
-                                    ${completed ? 'Completed' : 'Pending'}
-                                </span>
-                            </td>
-                        </tr>`;
-                    }).join('');
-                } else {
-                    objectiveRows.innerHTML = `<tr><td colspan="2" class="p-3 text-center text-[#5b6375] italic">No additional objectives.</td></tr>`;
-                }
-                if (serialEl) {
-                    const sn = revData.serial_number || groupData.serial_number;
-                    serialEl.textContent = sn ? ' ' + sn : ' ';
-                }
-                overallRemarks.textContent = revData.overall_remarks || 'No overall remarks.';
-            })
-            .catch(error => {
-                console.error('Revision loading error:', error);
-                proponents.innerHTML = `<li class="text-red-500">${error.message}</li>`;
-            })
-            .finally(() => {
-                if (loadingBox) loadingBox.style.display = 'none';
-            });
+            proponents.innerHTML = html;
         };
+
+        // reset + show in-modal loader
+        if (loadingBox) loadingBox.style.display = 'flex';
+        openModal('revisionSheetModal');
+        renderProponents([], '');
+        chapterRows.innerHTML = blankRow(3).repeat(3);
+        iotRows.innerHTML = blankRow(2).repeat(8);
+        objectiveRows.innerHTML = '<tr class="rv-tall"><td>1.</td><td>3.</td></tr><tr class="rv-tall"><td>2.</td><td>4.</td></tr>';
+        approvedBy.textContent = panelistName || '';
+        if (serialEl) serialEl.innerHTML = '&nbsp;';
+
+        Promise.all([
+            fetch(`/student/get-group/${groupId}`, { __silent: true }).then(r => r.json()),
+            fetch(`/student/get-revision/${groupId}/${revisionId}`, { __silent: true }).then(r => r.json())
+        ])
+        .then(([groupData, revData]) => {
+            renderProponents(groupData.members || [], groupData.capstone_title || '');
+
+            // Chapters (min 3 rows)
+            const chapters = revData.chapters || [];
+            let html = chapters.map(ch =>
+                `<tr><td class="rv-c">${esc(ch.chapter)}</td><td>${esc(ch.findings)}</td><td class="rv-c">${remarkText(ch.remarks)}</td></tr>`
+            ).join('');
+            for (let i = chapters.length; i < 3; i++) html += blankRow(3);
+            chapterRows.innerHTML = html;
+
+            // System / IoT (min 8 rows)
+            const iots = revData.iot_findings || [];
+            html = iots.map(iot =>
+                `<tr class="rv-tall"><td>${esc(iot.finding)}</td><td class="rv-c">${remarkText(iot.remarks)}</td></tr>`
+            ).join('');
+            for (let i = iots.length; i < 8; i++) html += blankRow(2);
+            iotRows.innerHTML = html;
+
+            // Additional objectives: 2-column grid, numbered down the left then right
+            const objs = revData.additional_objectives || [];
+            const rows = Math.max(2, Math.ceil(objs.length / 2));
+            html = '';
+            for (let i = 0; i < rows; i++) {
+                const l = objs[i], r = objs[i + rows];
+                html += `<tr class="rv-tall">
+                    <td>${i + 1}.${l ? ' ' + esc(l.objective) : ''}</td>
+                    <td>${i + rows + 1}.${r ? ' ' + esc(r.objective) : ''}</td>
+                </tr>`;
+            }
+            objectiveRows.innerHTML = html;
+
+            if (serialEl) {
+                const sn = revData.serial_number || groupData.serial_number;
+                serialEl.textContent = sn ? sn : '\u00A0';
+            }
+        })
+        .catch(error => {
+            console.error('Revision loading error:', error);
+            chapterRows.innerHTML = `<tr><td colspan="3">${esc(error.message)}</td></tr>`;
+        })
+        .finally(() => {
+            if (loadingBox) loadingBox.style.display = 'none';
+        });
+    };
     </script>
 
 </body>

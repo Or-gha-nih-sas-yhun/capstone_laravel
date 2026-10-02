@@ -628,8 +628,30 @@
     body.print-approval .modal-overlay:not(#approvalSheetModal) { display:none !important; }
     /* admin revision modal */
 body.print-admin-revision #adminRevisionSheetModal,
+    body.print-admin-revision #adminRevisionSheetModal .revision-paper {
+        --in: 1in !important;
+        --pt: 1pt !important;
+        padding: 0.5in 0.55in 0.5in !important;
+        min-height: 0 !important;
+        box-shadow: none !important;
+    }
+    body.print-admin-revision #adminRevisionSheetModal .rv-table tr,
+    body.print-admin-revision #adminRevisionSheetModal .rv-table td,
+    body.print-admin-revision #adminRevisionSheetModal .rv-table th {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+    body.print-admin-revision #adminRevisionSheetModal .rv-revision-block {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+    body.print-admin-revision #adminRevisionSheetModal .rv-revision-block + .rv-revision-block {
+        page-break-before: always !important;
+    }
 body.print-admin-revision #adminRevisionSheetModal * {
     visibility: visible !important;
+    
+    
 }
 body.print-admin-revision #adminRevisionSheetModal {
     position: absolute !important;
@@ -724,6 +746,149 @@ body.print-admin-revision #adminRevisionSheetModal th {
     body.print-approval #approvalSheetContent > .approval-signature:last-child { margin-bottom:0 !important; }
     body.print-approval #approvalPresident { min-width:2.9in !important; font-size:10.5pt !important; letter-spacing:.03em !important; }
     body.print-approval #approvalSheetModal .flex.justify-end { display:none !important; }
+}
+/* ═══════ ADMIN REVISION SHEET — same document format as the student ═══════ */
+@media screen {
+    #adminRevisionSheetModal .revision-sheet-modal-box {
+        container-type: inline-size;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: calc(8.5in + 3rem) !important;
+        max-height: 92vh;
+        padding: 1.5rem !important;
+        background: #e9e5db;
+        overflow-y: auto;
+    }
+    #adminRevisionSheetModal .revision-paper {
+        --in: calc(100cqw / 8.5);
+        --pt: calc(var(--in) / 72);
+        box-sizing: border-box;
+        position: relative;
+        min-height: calc(var(--in) * 11);
+        padding: calc(var(--in) * 0.6) calc(var(--in) * 0.7) calc(var(--in) * 0.55);
+        background: #fff;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        color: #000;
+        font-family: 'Courier New', Courier, monospace;
+    }
+}
+#adminRevisionSheetModal .revision-paper,
+#adminRevisionSheetModal .revision-paper * {
+    font-family: 'Courier New', Courier, monospace;
+}
+#adminRevisionSheetModal .rv-header {
+    text-align: center;
+    margin: 0 0 calc(var(--in) * 0.1);
+}
+#adminRevisionSheetModal .rv-header img {
+    display: block;
+    margin: 0 auto;
+    width: auto;
+    max-width: calc(var(--in) * 6.2);
+    max-height: calc(var(--in) * 0.9);
+    object-fit: contain;
+}
+#adminRevisionSheetModal .rv-title {
+    font-size: calc(var(--pt) * 10);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    text-align: center;
+    color: #000;
+    margin: calc(var(--in) * 0.05) 0 calc(var(--in) * 0.08);
+}
+#adminRevisionSheetModal .rv-serial {
+    text-align: center;
+    font-size: calc(var(--pt) * 7.5);
+    letter-spacing: 0.08em;
+    color: #000;
+    margin: 0 0 calc(var(--in) * 0.08);
+}
+#adminRevisionSheetModal .rv-panelist-tag {
+    text-align: right;
+    font-size: calc(var(--pt) * 8);
+    color: #444;
+    margin: 0 0 calc(var(--in) * 0.04);
+    letter-spacing: 0.04em;
+}
+#adminRevisionSheetModal .rv-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin: 0 0 calc(var(--in) * 0.2);
+    font-size: calc(var(--pt) * 8.5);
+    color: #000;
+}
+#adminRevisionSheetModal .rv-table th,
+#adminRevisionSheetModal .rv-table td {
+    border: 1px solid #000;
+    padding: calc(var(--in) * 0.03) calc(var(--in) * 0.07);
+    height: calc(var(--in) * 0.21);
+    vertical-align: middle;
+    text-align: left;
+    line-height: 1.25;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-line;
+    background: #fff;
+}
+#adminRevisionSheetModal .rv-table th {
+    font-weight: 700;
+    text-align: center;
+    font-size: calc(var(--pt) * 8.5);
+}
+#adminRevisionSheetModal .rv-table th.rv-muted {
+    font-weight: 400;
+    color: #777;
+}
+#adminRevisionSheetModal .rv-table td.rv-project { vertical-align: top; }
+#adminRevisionSheetModal .rv-table td.rv-c {
+    text-align: center;
+    font-size: calc(var(--pt) * 7.5);
+}
+#adminRevisionSheetModal .rv-table tr.rv-tall td { height: calc(var(--in) * 0.27); }
+#adminRevisionSheetModal .rv-approved {
+    font-weight: 700;
+    font-size: calc(var(--pt) * 9);
+    margin: calc(var(--in) * 0.05) 0 0;
+}
+#adminRevisionSheetModal .rv-signature {
+    display: inline-block;
+    min-width: calc(var(--in) * 2.4);
+    margin-top: calc(var(--in) * 0.3);
+}
+#adminRevisionSheetModal .rv-sig-name {
+    display: block;
+    min-height: calc(var(--in) * 0.2);
+    border-bottom: 1px solid #000;
+    padding: 0 calc(var(--in) * 0.05) calc(var(--in) * 0.02);
+    font-size: calc(var(--pt) * 9);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #000;
+}
+#adminRevisionSheetModal .rv-sig-label {
+    font-weight: 700;
+    font-size: calc(var(--pt) * 8.5);
+    margin-top: calc(var(--in) * 0.04);
+}
+#adminRevisionSheetModal .rv-footer-note {
+    margin-top: calc(var(--in) * 0.3);
+    font-size: calc(var(--pt) * 6.5);
+    color: #333;
+}
+#adminRevisionSheetModal .rv-footer-note strong { font-weight: 700; }
+#adminRevisionSheetModal .rv-revision-block + .rv-revision-block {
+    margin-top: calc(var(--in) * 0.55);
+    padding-top: calc(var(--in) * 0.55);
+    border-top: 2px dashed #b88d3a;
+}
+#adminRevisionSheetModal .rv-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: calc(var(--pt) * 9);
+    color: #666;
+    font-style: italic;
 }
     </style>
 </head>
@@ -1465,21 +1630,20 @@ body.print-admin-revision #adminRevisionSheetModal th {
                             @if(!empty($section->groups))
                                 <p class="text-[10px] uppercase tracking-wider font-semibold text-[#5b6375] mb-2">Groups in this section</p>
                                 @foreach($section->groups as $group)
-                                <div class="flex items-center justify-between py-1.5 text-sm live-group-row"
-                                     data-group-id="{{ $group->id }}"
-                                     data-group-name="{{ $group->name }}"
-                                     data-section="{{ $section->name }}"
-                                     data-progress="{{ $group->progress }}">
-                                    <span class="text-[#171e2c] font-medium">{{ $group->name }}</span>
-                                    <div class="flex items-center gap-3">
-                                        <div class="progress-bar-bg h-1.5 w-20">
-                                            <div class="progress-fill live-progress-bar h-full" data-base-color="{{ $group->color }}" style="width:{{ $group->progress }}%; background:{{ $group->color }};"></div>
-                                        </div>
-                                        <span class="text-xs font-bold live-progress-pct" style="color:{{ $group->color }};">{{ $group->progress }}%</span>
-                                        <span class="badge text-[10px] live-progress-badge" style="background:{{ $group->color }}20; color:{{ $group->color }}; border:1px solid {{ $group->color }}40;">
-                                            {{ $group->status }}
-                                        </span>
+                                <div class="grid items-center gap-3 py-1.5 text-sm live-group-row"
+                                    style="grid-template-columns: minmax(0,1fr) 80px 48px 96px;"
+                                    data-group-id="{{ $group->id }}"
+                                    data-group-name="{{ $group->name }}"
+                                    data-section="{{ $section->name }}"
+                                    data-progress="{{ $group->progress }}">
+                                    <span class="text-[#171e2c] font-medium truncate">{{ $group->name }}</span>
+                                    <div class="progress-bar-bg h-1.5 w-full">
+                                        <div class="progress-fill live-progress-bar h-full" data-base-color="{{ $group->color }}" style="width:{{ $group->progress }}%; background:{{ $group->color }};"></div>
                                     </div>
+                                    <span class="text-xs font-bold live-progress-pct text-right" style="color:{{ $group->color }};">{{ $group->progress }}%</span>
+                                    <span class="badge text-[10px] live-progress-badge text-center justify-center" style="background:{{ $group->color }}20; color:{{ $group->color }}; border:1px solid {{ $group->color }}40;">
+                                        {{ $group->status }}
+                                    </span>
                                 </div>
                                 @endforeach
                             @else
@@ -2202,7 +2366,7 @@ body.print-admin-revision #adminRevisionSheetModal th {
                 <h2 style="font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:600; color:var(--navy);">Add Milestone</h2>
                 <button type="button" onclick="closeModal('milestone_modal')" class="text-[#5b6375] hover:text-[#0a1428] transition text-lg">&times;</button>
             </div>
-            <form action="{{ route('admin.add_milestone') }}" method="POST" class="space-y-3" onsubmit="return validateMilestoneForm()">
+            <form action="{{ route('admin.add_milestone') }}" method="POST" class="space-y-3">
                 @csrf
                 <div><label class="form-label">Milestone Name</label><input type="text" name="milestone_title" class="form-input" placeholder="e.g. title hearing" required></div>
                 <div><label class="form-label">Capstone Stage</label><select name="capstone_stage" class="form-select" required>
@@ -2234,10 +2398,13 @@ body.print-admin-revision #adminRevisionSheetModal th {
                     </div>
                     <div>
                         <div class="flex justify-between items-end mb-2">
-                            <label class="form-label !mb-0">Criteria <span class="text-[#9a9385] font-normal normal-case">(weights must total 100%)</span></label>
                             <button type="button" onclick="addCriteriaRow('milestone-criteria-list')" class="text-xs text-[#d6b15c] hover:text-[#b88d3a] transition font-medium"><i class="fas fa-plus mr-1"></i>Add criteria</button>
                         </div>
-                        <div class="grid grid-cols-12 gap-2 mb-1 text-[11px] text-[#5b6375]"><span class="col-span-6">Criteria</span><span class="col-span-2">Weight %</span><span class="col-span-3">Max score</span><span class="col-span-1"></span></div>
+                        <div class="flex items-center gap-2 mb-1 text-[11px] text-[#5b6375]">
+                            <span class="flex-1">Criteria</span>
+                            <span class="text-center" style="width:70px;">Max</span>
+                            <span class="flex-shrink-0" style="width:1.25rem;"></span>
+                        </div>
                         <div id="milestone-criteria-list" class="space-y-2"></div>
                         <div id="milestone-error-message" class="text-red-500 text-xs mt-1 hidden"></div>
                     </div>
@@ -2337,10 +2504,14 @@ body.print-admin-revision #adminRevisionSheetModal th {
                     </div>
                     <div>
                         <div class="flex justify-between items-end mb-2">
-                            <label class="form-label !mb-0">Criteria <span class="text-[#9a9385] font-normal normal-case">(weights must total 100%)</span></label>
+                            <label class="form-label !mb-0">Criteria</label>
                             <button type="button" onclick="addCriteriaRow('edit-milestone-criteria-list')" class="text-xs text-[#d6b15c] hover:text-[#b88d3a] transition font-medium"><i class="fas fa-plus mr-1"></i>Add criteria</button>
                         </div>
-                        <div class="grid grid-cols-12 gap-2 mb-1 text-[11px] text-[#5b6375]"><span class="col-span-6">Criteria</span><span class="col-span-2">Weight %</span><span class="col-span-3">Max score</span><span class="col-span-1"></span></div>
+                        <div class="flex items-center gap-2 mb-1 text-[11px] text-[#5b6375]">
+                            <span class="flex-1">Criteria</span>
+                            <span class="text-center" style="width:70px;">Max</span>
+                            <span class="flex-shrink-0" style="width:1.25rem;"></span>
+                        </div>
                         <div id="edit-milestone-criteria-list" class="space-y-2"></div>
                         <div id="edit-milestone-error-message" class="text-red-500 text-xs mt-1 hidden"></div>
                     </div>
@@ -2379,10 +2550,14 @@ body.print-admin-revision #adminRevisionSheetModal th {
                 </div>
                 <div>
                     <div class="flex justify-between items-end mb-2">
-                        <label class="form-label !mb-0">Criteria <span class="text-[#9a9385] font-normal normal-case">(weights must total 100%)</span></label>
+                        <label class="form-label !mb-0">Criteria</label>
                         <button type="button" onclick="addCriteriaRow('edit_criteria_list')" class="text-xs text-[#d6b15c] hover:text-[#b88d3a] transition font-medium"><i class="fas fa-plus mr-1"></i>Add criteria</button>
                     </div>
-                    <div class="grid grid-cols-12 gap-2 mb-1 text-[11px] text-[#5b6375]"><span class="col-span-6">Criteria</span><span class="col-span-2">Weight %</span><span class="col-span-3">Max score</span><span class="col-span-1"></span></div>
+                    <div class="flex items-center gap-2 mb-1 text-[11px] text-[#5b6375]">
+                        <span class="flex-1">Criteria</span>
+                        <span class="text-center" style="width:70px;">Max</span>
+                        <span class="flex-shrink-0" style="width:1.25rem;"></span>
+                    </div>
                     <div id="edit_criteria_list" class="space-y-2"></div>
                     <div id="edit_error_message" class="text-red-500 text-xs mt-1 hidden"></div>
                 </div>
@@ -3224,51 +3399,30 @@ body.print-admin-revision #adminRevisionSheetModal th {
         </div>
     </div>
 </div>
-<!-- ============ ADMIN REVISION SHEET MODAL ============ -->
+<!-- ============ ADMIN REVISION SHEET MODAL (official document format) ============ -->
 <div id="adminRevisionSheetModal" class="modal-overlay" style="z-index:60;">
-    <div class="modal-box wide" style="max-width: 52rem; padding: 1.5rem;">
+    <div class="modal-box wide revision-sheet-modal-box" style="max-width: 52rem; padding: 1.5rem;">
 
-        <div class="text-center mb-4">
-            <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header"
-                 class="w-full max-h-24 object-contain">
-        </div>
+        <div class="revision-paper">
 
-        <h2 class="text-center text-2xl font-bold tracking-widest text-[#0a1428] mb-2"
-            style="font-family:'Cormorant Garamond',serif;">
-            REVISION SHEET
-        </h2>
-        <p id="adminRevisionSerial"
-           class="text-center text-xs tracking-widest mb-4"
-           style="font-family:'Courier New', monospace; color:#8b6914;">&nbsp;</p>
+            <div class="rv-header">
+                <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header">
+            </div>
 
-        <!-- Top card: group + capstone -->
-        <div class="border border-[#b88d3a] rounded-lg p-4 mb-4 text-sm">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                    <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Name of Proponents</p>
-                    <ol id="adminRevisionProponents" class="list-decimal list-inside space-y-0.5">
-                        <li class="text-[#5b6375] italic">Loading…</li>
-                    </ol>
-                </div>
-                <div>
-                    <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Name of Capstone Project</p>
-                    <p id="adminRevisionProjectTitle" class="font-medium">—</p>
-                    <p class="text-xs text-[#5b6375] mt-2">
-                        Adviser: <strong id="adminRevisionAdviser">—</strong>
-                    </p>
+            <h2 class="rv-title">REVISION SHEET</h2>
+            <p class="rv-serial" id="adminRevisionSerial">&nbsp;</p>
+
+            <div id="adminRevisionSheets" class="rv-content">
+                <div id="adminRevisionSheetLoading" class="modal-loading-box">
+                    <div class="spinner-sm"></div>
+                    <p>Loading revision sheets…</p>
+                    <span class="hint">Fetching every panelist's feedback</span>
                 </div>
             </div>
-        </div>
 
-        <!-- Container where every revision sheet is stacked -->
-        <div id="adminRevisionSheets" class="space-y-5 max-h-[55vh] overflow-y-auto pr-1">
-            <div id="adminRevisionSheetLoading" class="modal-loading-box">
-                <div class="spinner-sm"></div>
-                <p>Loading revision sheets…</p>
-            </div>
-        </div>
+        </div><!-- /.revision-paper -->
 
-        <div class="flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
+        <div class="rv-actions flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
             <button type="button" onclick="window.printModalContent('adminRevisionSheetModal')"
                     class="btn-outline text-xs py-2 px-4">
                 <i class="fas fa-print mr-1"></i> Print
@@ -3615,12 +3769,11 @@ function addCriteriaRow(listId = 'criteria-list', values = null) {
     const list = document.getElementById(listId);
     if (!list) return;
     const row = document.createElement('div');
-    row.className = 'criteria-row grid grid-cols-12 gap-2';
+    row.className = 'criteria-row flex items-center gap-2';
     row.innerHTML = `
-        <input type="text" name="criteria_name[]" placeholder="Criteria name" class="form-input col-span-6" required value="${values?.criteria_name ?? ''}">
-        <input type="number" name="weight[]" min="0" max="100" step="0.01" placeholder="Weight %" class="form-input col-span-2" required value="${values?.weight ?? ''}">
-        <input type="number" name="score[]" min="0" placeholder="Max score" class="form-input col-span-3" required value="${values?.max_score ?? 4}" readonly>
-        <button type="button" onclick="this.closest('.criteria-row').remove()" class="col-span-1 text-[#5b6375] hover:text-red-500 flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>`;
+        <input type="text" name="criteria_name[]" placeholder="Criteria name" class="form-input flex-1 min-w-0" required value="${values?.criteria_name ?? ''}">
+        <input type="number" name="score[]" min="0" placeholder="4" class="form-input text-center flex-shrink-0" style="width:70px;padding-left:0.25rem;padding-right:0.25rem;" required value="${values?.max_score ?? 4}" readonly>
+        <button type="button" onclick="this.closest('.criteria-row').remove()" class="flex-shrink-0 text-[#5b6375] hover:text-red-500 transition flex items-center justify-center" style="width:1.25rem;"><i class="fas fa-trash text-xs"></i></button>`;
     list.appendChild(row);
 }
 
@@ -3635,23 +3788,7 @@ function toggleRubricSection(checked) {
     }
 }
 
-function validateMilestoneForm() {
-    const chk = document.getElementById('add_rubric_chk');
-    if (chk && chk.checked) {
-        const errorEl = document.getElementById('milestone-error-message');
-        errorEl.classList.add('hidden');
-        const weights = document.querySelectorAll('#milestone-criteria-list input[name="weight[]"]');
-        let total = 0;
-        weights.forEach(w => total += parseFloat(w.value) || 0);
-        total = Math.round(total * 100) / 100;
-        if (total !== 100) {
-            errorEl.textContent = `Total weight must equal 100%. Current total: ${total}%`;
-            errorEl.classList.remove('hidden');
-            return false;
-        }
-    }
-    return true;
-}
+
 
 // ---- EDIT MILESTONE ----
 function openEditMilestoneModal(milestoneId) {
@@ -3724,20 +3861,6 @@ document.getElementById('edit_milestone_form').addEventListener('submit', functi
     const errorsBox = document.getElementById('edit_milestone_errors');
     errorsBox.classList.add('hidden');
     errorsBox.innerHTML = '';
-    const rubricChk = document.getElementById('edit_add_rubric_chk');
-    if (rubricChk && rubricChk.checked) {
-        const errorEl = document.getElementById('edit-milestone-error-message');
-        errorEl.classList.add('hidden');
-        const weights = document.querySelectorAll('#edit-milestone-criteria-list input[name="weight[]"]');
-        let total = 0;
-        weights.forEach(w => total += parseFloat(w.value) || 0);
-        total = Math.round(total * 100) / 100;
-        if (total !== 100) {
-            errorEl.textContent = `Total weight must equal 100%. Current total: ${total}%`;
-            errorEl.classList.remove('hidden');
-            return;
-        }
-    }
     fetch(form.action, {
         method: 'POST',
         headers: {
@@ -3810,16 +3933,8 @@ function syncDocTitle(sel) {
 
 document.getElementById('edit_rubric_form').addEventListener('submit', function (e) {
     e.preventDefault();
-    const weights = document.querySelectorAll('#edit_criteria_list input[name="weight[]"]');
-    let total = 0; weights.forEach(w => total += parseFloat(w.value) || 0);
-    total = Math.round(total * 100) / 100;
     const errorEl = document.getElementById('edit_error_message');
-    if (total !== 100) {
-        errorEl.textContent = `Total weight must equal 100%. Current total: ${total}%`;
-        errorEl.classList.remove('hidden');
-        return;
-    }
-    errorEl.classList.add('hidden');
+    if (errorEl) errorEl.classList.add('hidden');
     const form = this;
     const errorsBox = document.getElementById('edit_rubric_errors');
     errorsBox.classList.add('hidden');
@@ -4874,6 +4989,7 @@ function refreshLiveGroupProgress() {
                     badge.style.background = color + '20';
                     badge.style.color = color;
                     badge.style.border = '1px solid ' + color + '40';
+                    badge.style.justifyContent = 'center';
                 }
             })
             .catch(() => {});
@@ -5290,7 +5406,15 @@ window.addEventListener('pageshow', e => {
                 : '<div class="approval-signature"><span class="approval-sig-line">No panelists assigned</span><div class="approval-sig-role">Member</div></div>';
             if (chair) { chBlk.style.display = 'block'; ch.textContent = personName(chair); }
             oRes.textContent = d.oral_exam_result || '—';
-            oDate.textContent = d.oral_exam_date || '—';
+            const examDateRaw = d.issued_date || d.oral_exam_date;
+if (examDateRaw) {
+    const dt = new Date(examDateRaw);
+    oDate.textContent = isNaN(dt.getTime())
+        ? examDateRaw
+        : dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+} else {
+    oDate.textContent = '—';
+}
             pres.textContent = d.school_president || DEF;
             serial.textContent = d.serial_number || ' ';
         }).catch(() => { prop.textContent = 'Unable to load approval data'; })
@@ -5313,149 +5437,198 @@ window.openIssuedDocument = function (groupId, docTitle, docType) {
 };
 
 window.openAdminRevisionSheet = function (groupId) {
-    const proponents = document.getElementById('adminRevisionProponents');
-    const projTitle  = document.getElementById('adminRevisionProjectTitle');
-    const adviser    = document.getElementById('adminRevisionAdviser');
-    const serialEl   = document.getElementById('adminRevisionSerial');
-    const sheetsBox  = document.getElementById('adminRevisionSheets');
+    const serialEl  = document.getElementById('adminRevisionSerial');
+    const sheetsBox = document.getElementById('adminRevisionSheets');
 
-    proponents.innerHTML = '<li class="text-[#5b6375] italic">Loading…</li>';
-    projTitle.textContent = '—';
-    adviser.textContent   = '—';
-    serialEl.textContent  = ' ';
+    if (!sheetsBox) return;
+
+    // reset
+    if (serialEl) serialEl.innerHTML = '&nbsp;';
     sheetsBox.innerHTML = `
         <div class="modal-loading-box">
             <div class="spinner-sm"></div>
             <p>Loading revision sheets…</p>
+            <span class="hint">Fetching every panelist's feedback</span>
         </div>`;
 
     openModal('adminRevisionSheetModal');
 
-    const esc = (v) => String(v ?? '')
+    // ── small helpers ──
+    const esc = v => String(v ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const remarkText = v =>
+        String(v || 'Pending').toLowerCase() === 'completed' ? 'Completed' : 'Pending';
+    const blankRow = cols =>
+        `<tr class="rv-tall">${'<td></td>'.repeat(cols)}</tr>`;
 
+    // ── Proponents table ──
+    const proponentsTable = (members, projectTitle) => {
+        const list = (members || []).slice(0, 5);
+        const rows = Math.max(5, list.length);
+        let html = `
+            <table class="rv-table">
+                <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+                <thead>
+                    <tr><th>Name of Proponents</th><th>Name of Capstone Project</th></tr>
+                </thead>
+                <tbody>`;
+        for (let i = 0; i < rows; i++) {
+            const name = list[i] ? esc(list[i]) : '';
+            html += `<tr><td>${i + 1}. ${name}</td>` +
+                (i === 0
+                    ? `<td class="rv-project" rowspan="${rows}">${esc(projectTitle || '')}</td>`
+                    : '') +
+                `</tr>`;
+        }
+        return html + `</tbody></table>`;
+    };
+
+    // ── Chapters table (min 3 rows) ──
+    const chaptersTable = chapters => {
+        let html = `
+            <table class="rv-table">
+                <colgroup><col style="width:17%"><col style="width:66%"><col style="width:17%"></colgroup>
+                <thead>
+                    <tr>
+                        <th class="rv-muted">Chapter</th>
+                        <th>Document Findings</th>
+                        <th class="rv-muted">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        const list = chapters || [];
+        list.forEach(ch => {
+            html += `<tr>
+                <td class="rv-c">${esc(ch.chapter)}</td>
+                <td>${esc(ch.findings)}</td>
+                <td class="rv-c">${remarkText(ch.remarks)}</td>
+            </tr>`;
+        });
+        for (let i = list.length; i < 3; i++) html += blankRow(3);
+        return html + `</tbody></table>`;
+    };
+
+    // ── IoT table (min 8 rows) ──
+    const iotTable = iots => {
+        let html = `
+            <table class="rv-table">
+                <colgroup><col style="width:83%"><col style="width:17%"></colgroup>
+                <thead>
+                    <tr>
+                        <th>System or IoT Findings / Enhancements / Recommendations</th>
+                        <th class="rv-muted">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        const list = iots || [];
+        list.forEach(iot => {
+            html += `<tr class="rv-tall">
+                <td>${esc(iot.finding)}</td>
+                <td class="rv-c">${remarkText(iot.remarks)}</td>
+            </tr>`;
+        });
+        for (let i = list.length; i < 8; i++) html += blankRow(2);
+        return html + `</tbody></table>`;
+    };
+
+    // ── Additional objectives table (two-column grid) ──
+    const objectivesTable = objectives => {
+        const list = objectives || [];
+        const rows = Math.max(2, Math.ceil(list.length / 2));
+        let html = `
+            <table class="rv-table">
+                <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+                <thead>
+                    <tr><th colspan="2">Additional Objectives for Capstone Project 2</th></tr>
+                </thead>
+                <tbody>`;
+        for (let i = 0; i < rows; i++) {
+            const l = list[i];
+            const r = list[i + rows];
+            html += `<tr class="rv-tall">
+                <td>${i + 1}.${l ? ' ' + esc(l.objective) : ''}</td>
+                <td>${i + rows + 1}.${r ? ' ' + esc(r.objective) : ''}</td>
+            </tr>`;
+        }
+        return html + `</tbody></table>`;
+    };
+
+    // ── Fetch and render ──
     fetch(`/admin/get-group-revisions/${groupId}`, {
         headers: { 'Accept': 'application/json' }
     })
-    .then(r => r.json())
+    .then(async r => {
+        if (!r.ok) {
+            const text = await r.text();
+            throw new Error(`Server returned ${r.status}: ${text.slice(0, 120)}`);
+        }
+        return r.json();
+    })
     .then(data => {
-        projTitle.textContent = data.capstone_title || '—';
-        adviser.textContent   = data.adviser || '—';
-        serialEl.textContent  = data.serial_number ? ' ' + data.serial_number : ' ';
+        if (serialEl) {
+            serialEl.textContent = data.serial_number
+                ? ' ' + data.serial_number
+                : '\u00A0';
+        }
 
-        proponents.innerHTML = (data.members && data.members.length)
-            ? data.members.map(m => `<li>${esc(m)}</li>`).join('')
-            : '<li class="text-[#5b6375] italic">No members.</li>';
+        const members = data.members || [];
+        const title   = data.capstone_title || '';
+        const revisions = data.revisions || [];
 
-        if (!data.revisions || data.revisions.length === 0) {
+        if (!revisions.length) {
             sheetsBox.innerHTML = `
-                <div class="p-6 text-center text-[#5b6375] italic border border-dashed border-[#b88d3a] rounded-lg">
+                <div class="rv-empty">
                     No revision sheets have been issued for this group.
                 </div>`;
             return;
         }
 
-        sheetsBox.innerHTML = data.revisions.map((rev, i) => `
-            <div class="border border-[#b88d3a] rounded-lg overflow-hidden">
-                <div class="bg-[#faf8f4] px-4 py-2 flex justify-between items-center border-b border-[#b88d3a]">
-                    <span class="text-xs font-bold uppercase tracking-wider text-[#5b6375]">
-                        Revision #${i + 1} — from ${esc(rev.panelist_name)}
-                    </span>
-                    <span class="text-[10px] text-[#8b6914] font-mono">${esc(rev.created_at || '')}</span>
+        // One complete Revision Sheet per panelist, stacked vertically
+        sheetsBox.innerHTML = revisions.map(rev => `
+            <div class="rv-revision-block">
+                <p class="rv-panelist-tag">
+                    Issued by: <strong>${esc(rev.panelist_name || 'Panelist')}</strong>
+                    ${rev.created_at ? '&nbsp;·&nbsp;' + esc(rev.created_at) : ''}
+                </p>
+
+                ${proponentsTable(members, title)}
+                ${chaptersTable(rev.chapters)}
+                ${iotTable(rev.iot_findings)}
+                ${objectivesTable(rev.additional_objectives)}
+
+                ${rev.overall_remarks ? `
+                    <table class="rv-table">
+                        <thead>
+                            <tr><th>Overall Remarks / Instructions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>${esc(rev.overall_remarks)}</td></tr>
+                        </tbody>
+                    </table>` : ''}
+
+                <p class="rv-approved">Approved by:</p>
+                <div class="rv-signature">
+                    <span class="rv-sig-name">${esc(rev.panelist_name || '')}</span>
+                    <div class="rv-sig-label">Panel's Name &amp; Signature</div>
                 </div>
 
-                <table class="w-full border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-[#faf8f4]">
-                            <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Chapter</th>
-                            <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Findings</th>
-                            <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rev.chapters && rev.chapters.length
-                            ? rev.chapters.map(ch => {
-                                const ok = String(ch.remarks || 'Pending').toLowerCase() === 'completed';
-                                return `<tr>
-                                    <td class="border border-[#b88d3a] p-2 font-semibold">${esc(ch.chapter)}</td>
-                                    <td class="border border-[#b88d3a] p-2">${esc(ch.findings)}</td>
-                                    <td class="border border-[#b88d3a] p-2 text-center">
-                                        <span class="badge ${ok ? 'badge-green' : 'badge-amber'}">
-                                            ${ok ? 'Completed' : 'Pending'}
-                                        </span>
-                                    </td>
-                                </tr>`;
-                            }).join('')
-                            : `<tr><td colspan="3" class="p-2 text-center text-[#5b6375] italic">No chapter findings.</td></tr>`
-                        }
-                    </tbody>
-                </table>
-
-                <table class="w-full border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-[#faf8f4]">
-                            <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">IoT / Enhancements</th>
-                            <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rev.iot_findings && rev.iot_findings.length
-                            ? rev.iot_findings.map(iot => {
-                                const ok = String(iot.remarks || 'Pending').toLowerCase() === 'completed';
-                                return `<tr>
-                                    <td class="border border-[#b88d3a] p-2">${esc(iot.finding)}</td>
-                                    <td class="border border-[#b88d3a] p-2 text-center">
-                                        <span class="badge ${ok ? 'badge-green' : 'badge-amber'}">
-                                            ${ok ? 'Completed' : 'Pending'}
-                                        </span>
-                                    </td>
-                                </tr>`;
-                            }).join('')
-                            : `<tr><td colspan="2" class="p-2 text-center text-[#5b6375] italic">No IoT findings.</td></tr>`
-                        }
-                    </tbody>
-                </table>
-
-                <table class="w-full border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-[#faf8f4]">
-                            <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Additional Objectives</th>
-                            <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rev.additional_objectives && rev.additional_objectives.length
-                            ? rev.additional_objectives.map(o => {
-                                const ok = String(o.remarks || 'Pending').toLowerCase() === 'completed';
-                                return `<tr>
-                                    <td class="border border-[#b88d3a] p-2">${esc(o.objective)}</td>
-                                    <td class="border border-[#b88d3a] p-2 text-center">
-                                        <span class="badge ${ok ? 'badge-green' : 'badge-amber'}">
-                                            ${ok ? 'Completed' : 'Pending'}
-                                        </span>
-                                    </td>
-                                </tr>`;
-                            }).join('')
-                            : `<tr><td colspan="2" class="p-2 text-center text-[#5b6375] italic">No additional objectives.</td></tr>`
-                        }
-                    </tbody>
-                </table>
-
-                <div class="p-3 border-t border-[#b88d3a] bg-white">
-                    <p class="text-xs font-bold uppercase tracking-wider text-[#5b6375] mb-1">Overall Remarks</p>
-                    <p class="text-sm text-[#0a1428] whitespace-pre-line">${esc(rev.overall_remarks || '—')}</p>
-                </div>
+                <p class="rv-footer-note">
+                    Please always bring this document during the checking of your
+                    <strong>Capstone Project 2.</strong>
+                </p>
             </div>
         `).join('');
     })
     .catch(err => {
-        console.error(err);
+        console.error('Admin revision sheet error:', err);
         sheetsBox.innerHTML = `
-            <div class="p-4 text-red-600 text-sm">Failed to load revision sheets.</div>`;
+            <div class="rv-empty" style="color:#a12b2b;">
+                Failed to load revision sheets: ${esc(err.message)}
+            </div>`;
     });
 };
 })();
 </script>
 </body>
-</html> 
+</html>

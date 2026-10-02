@@ -1,25 +1,55 @@
 <IfModule mod_rewrite.c>
-    <IfModule mod_negotiation.c>
-        Options -MultiViews -Indexes
-    </IfModule>
-
     RewriteEngine On
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
-
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+    # Block cURL, culr, xcurl, wget, and automated hacking/scraping tools via User-Agent
+    RewriteCond %{HTTP_USER_AGENT} (curl|culr|xcurl|wget|sqlmap|acunetix|nikto|python-requests|libwww-perl|go-http-client) [NC]
+    RewriteRule .* - [F,L]
+    
+    # Silently redirect all requests to the public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L,QSA]
 </IfModule>
+
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase User-Agent "curl" bad_bot
+    SetEnvIfNoCase User-Agent "culr" bad_bot
+    SetEnvIfNoCase User-Agent "xcurl" bad_bot
+    SetEnvIfNoCase User-Agent "wget" bad_bot
+    SetEnvIfNoCase User-Agent "sqlmap" bad_bot
+    SetEnvIfNoCase User-Agent "acunetix" bad_bot
+    SetEnvIfNoCase User-Agent "nikto" bad_bot
+    SetEnvIfNoCase User-Agent "python-requests" bad_bot
+    SetEnvIfNoCase User-Agent "libwww-perl" bad_bot
+    SetEnvIfNoCase User-Agent "go-http-client" bad_bot
+</IfModule>
+
+<IfModule mod_authz_core.c>
+    <RequireAll>
+        Require all granted
+        Require not env bad_bot
+    </RequireAll>
+</IfModule>
+
+<IfModule mod_deflate.c>
+    # Prevent Gzip/Deflate compression for Android APKs
+    SetEnvIfNoCase Request_URI \.apk$ no-gzip dont-vary
+</IfModule>
+
+<IfModule mod_headers.c>
+    # HTTP Security Headers
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "accelerometer=(), camera=(), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), fullscreen=(self), interest-cohort=()"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    Header always set Cross-Origin-Resource-Policy "same-origin"
+    # NOTE: no Cross-Origin-Embedder-Policy here. "require-corp" blocks every
+    # cross-origin subresource that does not send Cross-Origin-Resource-Policy,
+    # which silently hid the Cloudinary-hosted announcement images (Cloudinary
+    # sends Access-Control-Allow-Origin but no CORP header). Nothing in this app
+    # needs cross-origin isolation, so the policy only cost us working images.
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline' https: https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com https://www.recaptcha.net; img-src 'self' data: blob: https:; font-src 'self' data: https: https://fonts.gstatic.com https://cdn.jsdelivr.net; frame-src 'self' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://recaptcha.google.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+</IfModule>
+

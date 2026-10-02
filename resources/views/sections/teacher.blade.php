@@ -1024,79 +1024,7 @@
     .splash-ring, .splash-ring::after, .splash-mark, .spinner, .spinner-sm,
     .skeleton::after, .btn-primary.is-loading i { animation: none !important; }
 }
-/* ── RECOMMENDATION SHEET DOCUMENT ── */
-.recommendation-sheet-modal {
-    display: flex; flex-direction: column;
-    min-height: 85vh; max-height: 92vh;
-    background: var(--white); padding: 1.5rem !important;
-}
-.recommendation-document {
-    flex: 1; background: #fffdf8;
-    border: 2px solid #0a1428; border-radius: 4px;
-    padding: 2rem 2.75rem 1.5rem;
-    display: flex; flex-direction: column; text-align: center;
-    position: relative; overflow-y: auto;
-    box-shadow: inset 0 0 0 1px rgba(10, 20, 40, 0.05);
-}
-.recommendation-document .rec-header-image { text-align: center; margin-bottom: 1.1rem; }
-.recommendation-document .rec-header-image img { max-width: 55%; height: auto; display: inline-block; }
-.recommendation-document .rec-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.75rem; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #0a1428;
-    border-bottom: 2px solid #0a1428; padding-bottom: 0.6rem;
-    margin: 0 auto 0.4rem; max-width: 90%;
-}
-.recommendation-document .rec-serial {
-    font-family: 'Courier New', monospace; font-size: 0.78rem;
-    letter-spacing: 0.12em; color: #8b6914; margin-bottom: 1.5rem; min-height: 1em;
-}
-.recommendation-document .rec-body {
-    flex: 1; font-size: 1rem; line-height: 1.75;
-    color: #171e2c; max-width: 640px; margin: 0 auto;
-    display: flex; flex-direction: column; justify-content: center; gap: 0.65rem;
-}
-.recommendation-document .rec-body p { margin: 0; font-size: 1rem; line-height: 1.75; color: #171e2c; }
-.recommendation-document .rec-capstone-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 1.45rem;
-    font-weight: 600; font-style: italic; line-height: 1.35;
-    color: #0a1428; margin: 0.6rem auto 1.1rem; max-width: 620px; padding: 0 1rem;
-}
-.recommendation-document .rec-capstone-title::before,
-.recommendation-document .rec-capstone-title::after {
-    content: ''; display: block; width: 55px; height: 1px;
-    background: #d9cda6; margin: 0.6rem auto;
-}
-.recommendation-document .rec-capstone-title::before { margin-top: 0; }
-.recommendation-document .rec-capstone-title::after  { margin-bottom: 0; }
-.recommendation-document .rec-members { font-weight: 600; color: #0a1428; }
-.recommendation-document .rec-signature { margin: 2.25rem auto 1rem; text-align: center; min-width: 320px; }
-.recommendation-document .rec-signature .rec-sig-name {
-    display: inline-block; min-width: 260px; padding: 0 0.5rem 0.3rem;
-    border-bottom: 1.5px solid #0a1428; font-size: 1.05rem;
-    font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #0a1428;
-}
-.recommendation-document .rec-signature .rec-sig-label {
-    display: block; margin-top: 0.4rem; font-size: 0.72rem;
-    letter-spacing: 0.14em; text-transform: uppercase; color: #5b6375;
-}
-.recommendation-document .rec-footer {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    gap: 2rem; margin-top: auto; padding-top: 1.1rem; border-top: 1px solid #e2dacf;
-}
-.recommendation-document .rec-footer-block { text-align: center; min-width: 150px; }
-.recommendation-document .rec-footer-value { font-size: 0.9rem; font-weight: 600; color: #171e2c; }
-.recommendation-document .rec-footer-label {
-    font-size: 0.65rem; text-transform: uppercase;
-    letter-spacing: 0.12em; color: #9a9385; margin-top: 0.15rem;
-}
-@media (max-width: 640px) {
-    .recommendation-document { padding: 1.25rem 1rem; }
-    .recommendation-document .rec-title { font-size: 1.35rem; letter-spacing: 0.05em; }
-    .recommendation-document .rec-capstone-title { font-size: 1.15rem; }
-    .recommendation-document .rec-header-image img { max-width: 80%; }
-    .recommendation-document .rec-footer { flex-direction: column; align-items: center; gap: 1rem; }
-}
+
 
 /* ── APPROVAL SHEET DOCUMENT ── */
 .approval-sheet-doc {
@@ -4245,9 +4173,31 @@ function openViewModal(groupId) {
         dataDiv.classList.remove('hidden');
         const members = groupData.members || [];
 
-        document.getElementById('view_modal_title').textContent = `Progress: ${data.group_name}`;
-        document.getElementById('view_progress_label').textContent = data.overall_progress;
-        document.getElementById('view_overall_progress').style.width = data.overall_progress + '%';
+       document.getElementById('view_modal_title').textContent = `Progress: ${data.group_name}`;
+document.getElementById('view_progress_label').textContent = data.overall_progress;
+
+// ── Color-code the progress bar + pill by percentage ──
+const pct = Number(data.overall_progress) || 0;
+const progressColor =
+    pct >= 75 ? '#1e6b3a' :      // green — On Track
+    pct >= 40 ? '#b88d3a' :      // gold  — At Risk
+                '#a12b2b';       // red   — Delayed
+
+const progressBar = document.getElementById('view_overall_progress');
+progressBar.style.width = pct + '%';
+progressBar.style.background = progressColor;
+
+// Recolor the "X% complete" pill to match
+const progressLabel = document.getElementById('view_progress_label');
+if (progressLabel) {
+    progressLabel.style.color = progressColor;
+    const pill = progressLabel.parentElement;
+    if (pill) {
+        pill.style.background = progressColor + '1a';   // ~10% tint
+        pill.style.color = progressColor;
+        pill.style.border = '1px solid ' + progressColor + '40';
+    }
+}
 
         const tbody = document.getElementById('view_milestones_tbody');
         tbody.innerHTML = '';
@@ -6224,12 +6174,11 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(data => {
                 const criteriaRows = (data.criteria || []).map(c => `
-                    <tr class="border-b border-[#e2dacf]">
-                        <td class="py-2">${c.criteria_name}</td>
-                        <td class="text-center">${c.weight}%</td>
-                        <td class="text-center">${c.max_score}</td>
-                        <td class="text-center font-bold text-[#1e6b3a]">${c.given_score}</td>
-                    </tr>`).join('');
+                <tr class="border-b border-[#e2dacf]">
+                    <td class="py-2">${c.criteria_name}</td>
+                    <td class="text-center">${c.max_score}</td>
+                    <td class="text-center font-bold text-[#1e6b3a]">${c.given_score}</td>
+                </tr>`).join('');
 
                 content.innerHTML = `
                     <div class="space-y-3">
@@ -6242,7 +6191,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                         ${criteriaRows ? `
                             <table class="w-full text-sm">
-                                <thead><tr class="text-[#5b6375] border-b border-[#e2dacf]"><th class="text-left py-2">Criteria</th><th class="text-center py-2">Weight</th><th class="text-center py-2">Max</th><th class="text-center py-2">Score</th></tr></thead>
+                                <thead><tr class="text-[#5b6375] border-b border-[#e2dacf]"><th class="text-left py-2">Criteria</th><th class="text-center py-2">Max</th><th class="text-center py-2">Score</th></tr></thead>
                                 <tbody>${criteriaRows}</tbody>
                             </table>` : ''}
                         ${data.feedback ? `<div class="p-3 bg-[#faf8f4] border border-[#e2dacf] rounded-lg text-sm italic text-[#5b6375]">"${data.feedback}"</div>` : ''}
@@ -6705,7 +6654,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     chairman.textContent = personName(chairmanEntry);
                 }
                 oralResult.textContent = data.oral_exam_result || '—';
-                oralDate.textContent = data.oral_exam_date || '—';
+                
+                // Prefer the certificate issued_date; fall back to the evaluation date.
+                const examDateRaw = data.issued_date || data.oral_exam_date;
+                if (examDateRaw) {
+                    const dt = new Date(examDateRaw);
+                    oralDate.textContent = isNaN(dt.getTime())
+                        ? examDateRaw
+                        : dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                } else {
+                    oralDate.textContent = '—';
+                }
                 president.textContent = data.school_president || defaultPresident;
                 serialEl.textContent = data.serial_number || ' ';
             })
