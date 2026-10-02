@@ -10,6 +10,14 @@ use App\Http\Controllers\admin_controller;
 | Home Route – Guest only, redirects logged‑in users to their dashboard
 |--------------------------------------------------------------------------
 */
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/migrate', function () {
+    Artisan::call('migrate', ['--force' => true]);
+
+    return '<pre>' . e(Artisan::output()) . '</pre>';
+});
+
 Route::get('/', function () {
     if (Auth::check()) {
         return match (Auth::user()->role) {
