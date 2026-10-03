@@ -201,6 +201,7 @@ class user_controller extends Controller
         $request->validate(['id' => 'required']);
 
         $user = User::where('user_id', $request->id)->first();
+        
 
         if (!$user) {
             return back()->withErrors(['id' => 'User ID not found.']);
@@ -210,33 +211,96 @@ class user_controller extends Controller
         return redirect('/');
     }
     
-    /**
-     * If a certificate is configured for this milestone, issue it to the group
-     * (idempotent — won't create a duplicate if it's already been issued).
-     */
+
+/**
+ * If a certificate is configured for this milestone, issue it to the group
+ * (idempotent — won't duplicate an existing issuance).
+ */
 private function autoIssueCertificateIfEligible($groupId, $milestoneId)
 {
+    $milestone = Milestone::find($milestoneId);
+    if (!$milestone) return;
+
+    $title = strtolower($milestone->milestone_title ?? '');
+    $type = str_contains($title, 'recommendation sheet') ? 'recommendation'
+          : (str_contains($title, 'approval sheet') ? 'approval' : null);
+
     $certificate = Certificate::where('milestone_id', $milestoneId)->first();
-    if (!$certificate) {
-        return;
+
+    // Auto-create for recommendation/approval milestones with no seeded certificate
+    if (!$certificate && $type) {
+        $certificate = Certificate::create([
+            'certificate_title'       => $type === 'recommendation' ? 'Recommendation Sheet' : 'Approval Sheet',
+            'document_type'           => $type,
+            'certificate_description' => 'partial fulfillment of the requirements for the degree of '
+                . 'Bachelor of Science in Information Technology has been examined, '
+                . 'accepted, and recommended for Oral Presentation.',
+            'milestone_id'            => $milestoneId,
+            'is_locked'               => 1,
+        ]);
+    }
+
+    if (!$certificate) return;
+
+    // Backfill a missing document_type
+    if (!$certificate->document_type && $type) {
+        $certificate->document_type = $type;
+        $certificate->save();
     }
 
     $alreadyIssued = GroupCertificate::where('group_id', $groupId)
         ->where('certificate_id', $certificate->id)
         ->exists();
-
-    if ($alreadyIssued) {
-        return; // idempotent — don't touch its existing serial
-    }
+    if ($alreadyIssued) return;
 
     GroupCertificate::create([
         'group_id'       => $groupId,
         'certificate_id' => $certificate->id,
         'issued_date'    => now()->toDateString(),
-        'serial_number'  => $this->generateSerialNumber($certificate->document_type ?? 'approval'), // ← changed
+        'serial_number'  => $this->generateSerialNumber($certificate->document_type ?? $type),
     ]);
 }
 
+
+/**
+ * Issue a "Revision Sheet" certificate for a group.
+ * Idempotent — never issues the same certificate twice for one group.
+ *
+ * Serial format: MCC-REV-YYYY-0001, MCC-REV-YYYY-0002, ...
+ */
+private function issueRevisionCertificate(Group $group): ?GroupCertificate
+{
+    // Reuse (or create) a single "Revision Sheet" certificate template.
+    // milestone_id is NULL because revisions are not tied to a milestone.
+    $certificate = Certificate::where('document_type', 'revision')
+        ->whereNull('milestone_id')
+        ->first();
+
+    if (!$certificate) {
+        $certificate = Certificate::create([
+            'certificate_title'       => 'Revision Sheet',
+            'document_type'           => 'revision',
+            'certificate_description' => 'Official revision sheet issued by the panel.',
+            'milestone_id'            => null,
+            'is_locked'               => 1,
+        ]);
+    }
+
+    // Idempotency: don't issue the same revision sheet twice for one group.
+    $already = GroupCertificate::where('group_id', $group->id)
+        ->where('certificate_id', $certificate->id)
+        ->exists();
+    if ($already) {
+        return null;
+    }
+
+    return GroupCertificate::create([
+        'group_id'       => $group->id,
+        'certificate_id' => $certificate->id,
+        'issued_date'    => now()->toDateString(),
+        'serial_number'  => $this->generateSerialNumber('revision'),
+    ]);
+}
 
     // ── STUDENT DASHBOARD ─────────────────────────────────────────
     public function dashboard()
@@ -917,7 +981,7 @@ public function adminGetGroupRevisions($groupId)
     $serial = GroupCertificate::where('group_id', $groupId)
         ->where(function ($q) {
             $q->whereHas('certificate', fn($c) => $c->where('document_type', 'revision'))
-              ->orWhere('serial_number', 'like', 'MCC-DOC-%');
+              ->orWhere('serial_number', 'like', 'MCC-REV-%');
         })
         ->latest('issued_date')
         ->value('serial_number');
@@ -1231,7 +1295,6 @@ public function adminGetGroupRevisions($groupId)
                 return [
                     'id'            => $c->id,
                     'criteria_name' => $c->criteria_name,
-                    'weight'        => $c->weight,
                     'max_score'     => $c->max_score,
                 ];
             }),
@@ -1676,7 +1739,6 @@ public function updateMilestoneRemark(Request $request)
         foreach ($rubric->criteria as $c) {
             $criteria[] = [
                 'criteria_name' => $c->criteria_name,
-                'weight'        => $c->weight,
                 'max_score'     => $c->max_score,
                 'given_score'   => $rubricScores[$c->id] ?? 0,
             ];
@@ -2066,7 +2128,6 @@ public function getGroupProgress($groupId)
                 foreach ($rubric->criteria as $criterion) {
                     $criteriaData[] = [
                         'criteria_name' => $criterion->criteria_name,
-                        'weight'        => $criterion->weight,
                         'max_score'     => $criterion->max_score,
                         'given_score'   => $rubricScores[$criterion->id] ?? 0,
                     ];
@@ -2239,6 +2300,7 @@ private function generateSerialNumber(?string $documentType): string
     $prefix = match ($documentType) {
         'recommendation' => 'MCC-REC',
         'approval'       => 'MCC-APR',
+        'revision'       => 'MCC-REV',
         default          => 'MCC-DOC',
     };
 
@@ -2579,19 +2641,19 @@ public function showResetConfirmation()
  */
 public function requestGroupRevision(Request $request, $groupId)
 {
-
-    
     $teacher = Teacher::where('user_id', Auth::user()->user_id)->firstOrFail();
-    $group = Group::findOrFail($groupId);
-        $alreadyRequested = \App\Models\Revision::where('group_id', $groupId)
-                                                ->where('panelist_id', $teacher->id)
-                                                ->exists();
-        if ($alreadyRequested) {
-            if ($request->ajax()) {
-                return response()->json(['error' => 'You have already requested a revision for this group.'], 422);
-            }
-            return back()->with('error', 'You have already requested a revision for this group.');
+    $group   = Group::findOrFail($groupId);
+
+    $alreadyRequested = \App\Models\Revision::where('group_id', $groupId)
+        ->where('panelist_id', $teacher->id)
+        ->exists();
+    if ($alreadyRequested) {
+        if ($request->ajax()) {
+            return response()->json(['error' => 'You have already requested a revision for this group.'], 422);
         }
+        return back()->with('error', 'You have already requested a revision for this group.');
+    }
+
     $assignedRoomIds = $teacher->evaluationRooms()->pluck('evaluation_rooms.id')->toArray();
     if (!in_array($group->room_id, $assignedRoomIds)) {
         if ($request->ajax()) {
@@ -2601,54 +2663,83 @@ public function requestGroupRevision(Request $request, $groupId)
     }
 
     $validated = $request->validate([
-        'revision_description'      => 'required|string|max:2000',
-        'chapters'                  => 'nullable|array',
-        'chapters.*.chapter'        => 'required|string|max:255',
-        'chapters.*.findings'       => 'required|string|max:1000',
-        'chapters.*.remarks'        => 'nullable|string|max:1000',
-        'iot_findings'               => 'nullable|array',
-        'iot_findings.*.finding'    => 'required|string|max:1000',
-        'iot_findings.*.remarks'    => 'nullable|string|max:1000',
-        'additional_objectives'     => 'nullable|array',
-        'additional_objectives.*'   => 'required|string|max:500',
+        'revision_description'    => 'required|string|max:2000',
+        'chapters'                => 'nullable|array',
+        'chapters.*.chapter'      => 'required|string|max:255',
+        'chapters.*.findings'     => 'required|string|max:1000',
+        'chapters.*.remarks'      => 'nullable|string|max:1000',
+        'iot_findings'            => 'nullable|array',
+        'iot_findings.*.finding'  => 'required|string|max:1000',
+        'iot_findings.*.remarks'  => 'nullable|string|max:1000',
+        'additional_objectives'   => 'nullable|array',
+        'additional_objectives.*' => 'required|string|max:500',
     ]);
 
-    DB::transaction(function () use ($validated, $teacher, $group) {
-        $revision = \App\Models\Revision::create([
-            'group_id'        => $group->id,
-            'panelist_id'     => $teacher->id,
-            'overall_remarks' => $validated['revision_description'],
+    // ── 1. Save the revision (transaction ONLY wraps the revision rows) ──
+    try {
+        DB::transaction(function () use ($validated, $teacher, $group) {
+            $revision = \App\Models\Revision::create([
+                'group_id'        => $group->id,
+                'panelist_id'     => $teacher->id,
+                'overall_remarks' => $validated['revision_description'],
+            ]);
+
+            foreach ($validated['chapters'] ?? [] as $ch) {
+                $revision->documentation()->create([
+                    'chapter'  => $ch['chapter'],
+                    'findings' => $ch['findings'],
+                    'remarks'  => $ch['remarks'] ?? null,
+                ]);
+            }
+            foreach ($validated['iot_findings'] ?? [] as $iot) {
+                $revision->enhancements()->create([
+                    'enhancement' => $iot['finding'],
+                    'remarks'     => $iot['remarks'] ?? null,
+                ]);
+            }
+            foreach ($validated['additional_objectives'] ?? [] as $obj) {
+                $revision->objectives()->create([
+                    'objective' => $obj,
+                ]);
+            }
+
+            $group->update([
+                'revision_status'      => 'needs_revision',
+                'revision_description' => $validated['revision_description'],
+                'revision_id'          => $revision->id,
+            ]);
+        });
+    } catch (\Throwable $e) {
+        Log::error('Revision save failed', [
+            'group_id' => $groupId,
+            'teacher_id' => $teacher->id,
+            'error'    => $e->getMessage(),
+            'trace'    => $e->getTraceAsString(),
         ]);
-
-        foreach ($validated['chapters'] ?? [] as $ch) {
-            $revision->documentation()->create([
-                'chapter'  => $ch['chapter'],
-                'findings' => $ch['findings'],
-                'remarks'  => $ch['remarks'] ?? null,
-            ]);
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Could not save revision: ' . $e->getMessage(),
+            ], 500);
         }
+        return back()->with('error', 'Could not save revision: ' . $e->getMessage());
+    }
 
-        foreach ($validated['iot_findings'] ?? [] as $iot) {
-            $revision->enhancements()->create([
-                'enhancement' => $iot['finding'],
-                'remarks'     => $iot['remarks'] ?? null,
-            ]);
-        }
-
-        foreach ($validated['additional_objectives'] ?? [] as $obj) {
-            $revision->objectives()->create([
-                'objective' => $obj,
-            ]);
-        }
-
-        $group->update([
-            'revision_status'      => 'needs_revision',
-            'revision_description' => $validated['revision_description'],
-            'revision_id'          => $revision->id,
+    // ── 2. Auto-issue the Revision Certificate — SEPARATE from the transaction ──
+    //      If this fails, the revision is still safely saved.
+    try {
+        $this->issueRevisionCertificate($group);
+    } catch (\Throwable $e) {
+        Log::error('Auto-issue revision certificate failed', [
+            'group_id'    => $groupId,
+            'teacher_id'  => $teacher->id,
+            'error'       => $e->getMessage(),
+            'trace'       => $e->getTraceAsString(),
         ]);
-    });
+        // Do NOT abort — the revision itself was saved successfully.
+    }
 
-    if ($request->ajax()) {
+    if ($request->ajax() || $request->wantsJson()) {
         return response()->json(['success' => true, 'message' => 'Revision request submitted successfully!']);
     }
     return back()->with('success', 'Revision request submitted successfully!');
@@ -3369,7 +3460,8 @@ public function getApprovalSheet($groupId)
     // School President – you can store in settings or hardcode
     $president = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
 
-  $approvalRecord = GroupCertificate::where('group_id', $groupId)
+
+$approvalRecord = GroupCertificate::where('group_id', $groupId)
     ->where(function ($q) {
         $q->whereHas('certificate', function ($c) {
             $c->where('document_type', 'approval')
@@ -3379,7 +3471,7 @@ public function getApprovalSheet($groupId)
     })
     ->latest('issued_date')
     ->first();
-
+    
     return response()->json([
         'capstone_title'     => $group->capstone_title,
         'members'            => $members,
@@ -3388,7 +3480,8 @@ public function getApprovalSheet($groupId)
         'oral_exam_result'   => $oralExamResult,
         'oral_exam_date'     => $oralExamDate,
         'school_president'   => $president,
-        'serial_number'      => $approvalRecord?->serial_number,    
+        'serial_number'      => $approvalRecord?->serial_number,   
+         'issued_date'        => $approvalRecord?->issued_date,    
     ]);
 }
 
@@ -3456,21 +3549,27 @@ public function getRecommendationSheet($groupId)
         ? trim(($group->adviser->teacher_first_name ?? '') . ' ' . ($group->adviser->teacher_last_name ?? ''))
         : null;
 
-    // Date issued – we can use the current date or a stored date (adjust as needed)
-    $dateIssued = now()->format('Y-m-d');
-$recRecord = GroupCertificate::where('group_id', $groupId)
-    ->whereHas('certificate', fn($q) =>
-        $q->where('document_type', 'recommendation')
-          ->orWhere('certificate_title', 'like', '%Recommendation%'))
-    ->latest('issued_date')
-    ->first();
+    // Look up the actual issued GroupCertificate so the date + serial reflect reality
+    $recRecord = GroupCertificate::where('group_id', $groupId)
+        ->whereHas('certificate', fn($q) =>
+            $q->where('document_type', 'recommendation')
+              ->orWhere('certificate_title', 'like', '%Recommendation%'))
+        ->latest('issued_date')
+        ->first();
+
+    // Use the real issued date when it exists; otherwise fall back to today
+    $dateIssued = $recRecord?->issued_date
+        ? \Carbon\Carbon::parse($recRecord->issued_date)->toDateString()
+        : now()->toDateString();
+
     return response()->json([
         'capstone_title' => $group->capstone_title,
         'members'        => $members,
         'adviser'        => $adviser,
         'date_issued'    => $dateIssued,
+        'issued_date'    => $dateIssued,   // ← alias so the JS key match works too
         'group_name'     => $group->group_name,
-          'serial_number'  => $recRecord?->serial_number, 
+        'serial_number'  => $recRecord?->serial_number,
     ]);
 }
 
@@ -3646,7 +3745,7 @@ public function getSheetStatus(Request $request, $groupId)
     $prefixMap = [
         'recommendation' => 'MCC-REC-%',
         'approval'       => 'MCC-APR-%',
-        'revision'       => 'MCC-DOC-%',   // or whatever revision uses
+        'revision'       => 'MCC-REV-%',   // or whatever revision uses
     ];
     $titleMap = [
         'recommendation' => '%Recommendation%',

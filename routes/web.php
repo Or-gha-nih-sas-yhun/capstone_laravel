@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\user_controller;
 use App\Http\Controllers\admin_controller;
-
 /*
 |--------------------------------------------------------------------------
 | Home Route – Guest only, redirects logged‑in users to their dashboard

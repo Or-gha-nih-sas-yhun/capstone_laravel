@@ -201,6 +201,7 @@ class user_controller extends Controller
         $request->validate(['id' => 'required']);
 
         $user = User::where('user_id', $request->id)->first();
+        
 
         if (!$user) {
             return back()->withErrors(['id' => 'User ID not found.']);
