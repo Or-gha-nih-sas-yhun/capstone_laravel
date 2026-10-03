@@ -34,7 +34,7 @@ Route::redirect('/login', '/');
 Route::post('/register',   [user_controller::class, 'register']);
 Route::post('/login',      [user_controller::class, 'login']);
 Route::post('/logout',     [user_controller::class, 'logout'])->name('logout');
-Route::post('/id',         [user_controller::class, 'id']);
+Route::post('/id',         [user_controller::class, 'id'])->name('id.check');
 Route::post('/destroy',    [user_controller::class, 'destroy'])->name('destroy.session');
 Route::post('/send-code',  [user_controller::class, 'sendVerificationCode'])
     ->name('send_code')
