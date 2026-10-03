@@ -28,6 +28,23 @@ class ExampleTest extends TestCase
         $response->assertSee('Please input Your School ID');
     }
 
+    public function test_school_id_confirmation_uses_the_registered_route(): void
+    {
+        User::create([
+            'user_id' => '2023-1234',
+            'role' => 'student',
+        ]);
+
+        $this->get('/')
+            ->assertStatus(200)
+            ->assertSee('action="' . route('id.check') . '"', false);
+
+        $this->post(route('id.check'), ['id' => '2023-1234'])
+            ->assertRedirect('/');
+
+        $this->assertSame('2023-1234', session('user_id'));
+    }
+
     /**
      * Test home page when user has already registered (password is not null).
      * It should show only the Sign In form.

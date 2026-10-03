@@ -463,7 +463,7 @@
                 <p>Please enter your School ID to continue</p>
             </div>
             <div class="tab-pane active" id="tab-login">
-                <form action="/id" method="POST">
+                <form action="{{ route('id.check') }}" method="POST">
                     @csrf
 
                     <div class="form-group">
