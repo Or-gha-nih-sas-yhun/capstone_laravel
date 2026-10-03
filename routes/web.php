@@ -4,12 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\user_controller;
 use App\Http\Controllers\admin_controller;
-use Illuminate\Support\Facades\Artisan;
 
-Route::get('/clear-cache', function() {
-    Artisan::call('optimize:clear');
-    return 'Cache cleared!';
-});
 /*
 |--------------------------------------------------------------------------
 | Home Route – Guest only, redirects logged‑in users to their dashboard
