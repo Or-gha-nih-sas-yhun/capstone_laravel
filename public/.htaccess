@@ -5,9 +5,12 @@
     RewriteCond %{HTTP_USER_AGENT} (curl|culr|xcurl|wget|sqlmap|acunetix|nikto|python-requests|libwww-perl|go-http-client) [NC]
     RewriteRule .* - [F,L]
     
-    # Silently redirect all requests to the public folder
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteRule ^(.*)$ public/$1 [L,QSA]
+    # Forward application routes to Laravel's front controller.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
 </IfModule>
 
 <IfModule mod_setenvif.c>
@@ -52,4 +55,3 @@
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline' https: https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com https://www.recaptcha.net; img-src 'self' data: blob: https:; font-src 'self' data: https: https://fonts.gstatic.com https://cdn.jsdelivr.net; frame-src 'self' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://recaptcha.google.com; object-src 'none'; base-uri 'self'; form-action 'self';"
 </IfModule>
-
