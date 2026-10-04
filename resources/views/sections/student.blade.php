@@ -4317,6 +4317,6 @@ if (examDateRaw) {
         });
     };
     </script>
-
+<script src="{{ asset('js/idle-logout.js') }}"></script>
 </body>
 </html>

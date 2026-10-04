@@ -5630,5 +5630,6 @@ window.openAdminRevisionSheet = function (groupId) {
 };
 })();
 </script>
+<script src="{{ asset('js/idle-logout.js') }}"></script>
 </body>
 </html>

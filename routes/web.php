@@ -30,18 +30,19 @@ Route::redirect('/login', '/');
 | Authentication Routes – Public
 |--------------------------------------------------------------------------
 */
-Route::post('/register',   [user_controller::class, 'register']);
+Route::post('/register',   [user_controller::class, 'register'])
+->middleware('throttle:10,1');
 Route::post('/login',      [user_controller::class, 'login']);
 Route::post('/logout',     [user_controller::class, 'logout'])->name('logout');
-Route::post('/id',         [user_controller::class, 'id'])->name('id.check');
+Route::post('/id',         [user_controller::class, 'id'])->name('id.check')->middleware('throttle:10,1');
 Route::post('/destroy',    [user_controller::class, 'destroy'])->name('destroy.session');
 Route::post('/send-code',  [user_controller::class, 'sendVerificationCode'])
     ->name('send_code')
     ->middleware('throttle:5,1');
 
 Route::get('/forgot-password',          [user_controller::class, 'showForgotPasswordForm'])->name('password.request');
-Route::post('/forgot-password/send',    [user_controller::class, 'sendForgotPasswordCode'])->name('password.email');
-Route::post('/forgot-password/reset',   [user_controller::class, 'resetPasswordWithCode'])->name('password.update');
+Route::post('/forgot-password/send',    [user_controller::class, 'sendForgotPasswordCode'])->name('password.email')->middleware('throttle:3,10');
+Route::post('/forgot-password/reset',   [user_controller::class, 'resetPasswordWithCode'])->name('password.update')->middleware('throttle:10,10');
 Route::get('/password/reset-confirmation', [user_controller::class, 'showResetConfirmation'])->name('password.reset.confirmation');
 
 /*
@@ -56,9 +57,10 @@ Route::middleware('auth')->group(function () {
     | Global Routes (accessible by any authenticated user)
     |--------------------------------------------------------------------------
     */
+    Route::get('/keep-alive', fn () => response()->noContent())->name('keep.alive');
     Route::get('/verify-email',          [user_controller::class, 'showVerifyEmailForm'])->name('verification.notice');
-    Route::post('/verify-email/send',    [user_controller::class, 'sendVerificationCodeAfterLogin'])->name('verification.send_code');
-    Route::post('/verify-email/confirm', [user_controller::class, 'confirmVerificationCode'])->name('verification.confirm');
+    Route::post('/verify-email/send',    [user_controller::class, 'sendVerificationCodeAfterLogin'])->name('verification.send_code')->middleware('throttle:3,10');
+    Route::post('/verify-email/confirm', [user_controller::class, 'confirmVerificationCode'])->name('verification.confirm')->middleware('throttle:10,10');
 
     Route::get('/certificate/{groupId}/{certificateId}', [user_controller::class, 'showCertificate'])->name('certificate.show');
     Route::get('/group/{groupId}/certificates',          [user_controller::class, 'getGroupCertificates'])->name('group.certificates');

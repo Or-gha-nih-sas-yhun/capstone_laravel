@@ -35,6 +35,8 @@ use App\Services\Mailer;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\RateLimiter;
 
 
 class user_controller extends Controller
@@ -142,38 +144,52 @@ class user_controller extends Controller
     }
 
     // ── LOGIN ─────────────────────────────────────────────────────
-    public function login(Request $request)
-    {
-        // Block if already logged in
-        if (Auth::check()) {
-            return $this->redirectByRole();
-        }
+  public function login(Request $request)
+{
+    if (Auth::check()) {
+        return $this->redirectByRole();
+    }
 
-        if (!session('user_id')) {
-            return redirect('/')->withErrors(['id' => 'Please enter your ID first.']);
-        }
+    if (!session('user_id')) {
+        return redirect('/')->withErrors(['id' => 'Please enter your ID first.']);
+    }
 
-        
-     
+    $incomingdata = $request->validate([
+        'logname'     => 'required',
+        'logpassword' => 'required',
+    ]);
 
-        $incomingdata = $request->validate([
-                'logname'     => 'required',
-                'logpassword' => 'required'
-            ]);
+    // 5 attempts per ID + IP, then locked out for 2 minutes
+    $key = 'login|' . Str::lower(session('user_id')) . '|' . $request->ip();
 
-        if (Auth::attempt([
-            'user_id'     => session('user_id'),
-            'name'        => $incomingdata['logname'],
-            'password'    => $incomingdata['logpassword']
-        ])) {
-            $request->session()->regenerate();
-            return $this->redirectByRole()->with('success', 'Log in successful. Welcome back, ' . Auth::user()->role . '!');
-        }
-
+    if (RateLimiter::tooManyAttempts($key, 5)) {
+        $seconds = RateLimiter::availableIn($key);
+        $wait = $seconds >= 60 ? ceil($seconds / 60) . ' minute(s)' : $seconds . ' second(s)';
         return back()->withErrors([
-            'logname' => 'invalid username /password',
+            'logname' => "Too many login attempts. Please try again in {$wait}.",
         ]);
     }
+
+    if (Auth::attempt([
+        'user_id'  => session('user_id'),
+        'name'     => $incomingdata['logname'],
+        'password' => $incomingdata['logpassword'],
+    ])) {
+        RateLimiter::clear($key);
+        $request->session()->regenerate();
+        return $this->redirectByRole()
+            ->with('success', 'Log in successful. Welcome back, ' . Auth::user()->role . '!');
+    }
+
+    RateLimiter::hit($key, 120); // lockout window in seconds
+
+    $left = max(0, 5 - RateLimiter::attempts($key));
+    return back()->withErrors([
+        'logname' => $left > 0
+            ? "Invalid username / password. {$left} attempt(s) left."
+            : 'Too many login attempts. Please try again in 2 minute(s).',
+    ]);
+}
 
     // ── LOGOUT ───────────────────────────────────────────────────
     public function logout(Request $request)
@@ -1320,7 +1336,8 @@ public function adminGetGroupRevisions($groupId)
             'absent_students' => 'nullable|array',
             'absent_students.*' => 'exists:students,user_id',
             'feedback1'       => 'nullable|string',
-            'rubric_scores'   => 'nullable|array',
+            'rubric_scores'   => 'required|array|min:1',
+            'rubric_scores.*' => 'required|integer|between:1,4',
         ]);
 
         $teacher = Teacher::where('user_id', Auth::user()->user_id)->firstOrFail();
@@ -1379,7 +1396,22 @@ if ($revision) {
         }
 
         $milestone = Milestone::findOrFail($validated['milestone_id']);
+        $rubric = Rubric::where('milestone_id', $milestone->id)->with('criteria')->first();
+            if (!$rubric || $rubric->criteria->isEmpty()) {
+                return back()->with('error', 'This milestone has no rubric to score.');
+            }
 
+            $given = $request->input('rubric_scores', []);
+            $total = 0;
+            foreach ($rubric->criteria as $c) {
+                $v = $given[$c->id] ?? null;
+                if ($v === null || !in_array((int) $v, [1, 2, 3, 4], true)) {
+                    return back()->with('error', "Please score every criterion (1–4). Missing: {$c->criteria_name}.");
+                }
+                $total += (int) $v;
+            }
+            $validated['score']     = $total;
+            $validated['max_score'] = $rubric->criteria->count() * 4;
         // Validate group has students
         $firstMember = $group->team_members()->first();
         if (!$firstMember) {
@@ -2013,7 +2045,7 @@ public function teacherGetApprovalSheet($groupId)
         $user->password = Hash::make($request->new_password);
         $user->save();
 
-        return redirect()->route('teacher.page')->with('success', 'Password updated successfully.');
+        return $this->redirectByRole()->with('success', 'Password updated successfully.');
     }
 
 
@@ -2583,40 +2615,48 @@ public function showResetConfirmation()
     return view('reset-confirmation');
 }
     // ── RESET PASSWORD WITH CODE ────────────────────
- public function resetPasswordWithCode(Request $request)
+
+public function resetPasswordWithCode(Request $request)
 {
-    $request->validate([
+    $flash = fn ($r) => $r->with('reset_code_sent', true)
+        ->with('reset_user_id', $request->user_id)
+        ->with('reset_email', $request->reset_email);
+
+    $v = Validator::make($request->all(), [
         'user_id'  => 'required|string',
-        'code'     => 'required|string',
-        'password' => 'required|min:6',
+        'code'     => 'required|digits:6',
+        'password' => 'required|min:6|confirmed',
     ]);
+    if ($v->fails()) {
+        return $flash(back()->withErrors($v)->withInput($request->only('code')));
+    }
 
     $user = User::where('user_id', $request->user_id)->first();
     if (!$user) {
-        return back()->withErrors(['user_id' => 'User ID not found.'])
-                     ->withInput()
-                     ->with('reset_code_sent', true)
-                     ->with('reset_user_id', $request->user_id);
+        return $flash(back()->withErrors(['code' => 'Invalid or expired reset code.']));
     }
 
-    $cachedCode = Cache::get('reset_code_' . $user->user_id);
+    // brute-force protection: 5 tries per code
+    $key = 'reset_attempts_' . $user->user_id;
+    if (Cache::get($key, 0) >= 5) {
+        Cache::forget('reset_code_' . $user->user_id);
+        return $flash(back()->withErrors(['code' => 'Too many attempts. Request a new code.']));
+    }
+    Cache::put($key, Cache::get($key, 0) + 1, now()->addMinutes(10));
 
-    if (!$cachedCode || $cachedCode !== $request->code) {
-        return back()->withErrors(['code' => 'Invalid or expired reset code.'])
-                     ->withInput()
-                     ->with('reset_code_sent', true)
-                     ->with('reset_user_id', $request->user_id);
+    $cached = Cache::get('reset_code_' . $user->user_id);
+    if (!$cached || !hash_equals($cached, (string) $request->code)) {
+        return $flash(back()->withErrors(['code' => 'Invalid or expired reset code.'])
+            ->withInput($request->only('code')));
     }
 
-    // Update password
     $user->password = bcrypt($request->password);
     $user->save();
-
     Cache::forget('reset_code_' . $user->user_id);
+    Cache::forget($key);
 
-    // ✅ Redirect to confirmation page with a success flag
     return redirect()->route('password.reset.confirmation')
-                     ->with('success', 'Your password has been reset successfully!');
+        ->with('success', 'Your password has been reset successfully!');
 }
 
 
@@ -3491,39 +3531,67 @@ $approvalRecord = GroupCertificate::where('group_id', $groupId)
  */
 public function getAllRevisionsForGroup($groupId)
 {
-    $group = Group::findOrFail($groupId);
+    $user  = Auth::user();
+    $group = Group::with(['team_members.student'])->findOrFail($groupId);
+    $myTeacherId = null;
+
+    if ($user->role === 'teacher') {
+        $teacher = Teacher::where('user_id', $user->user_id)->firstOrFail();
+        $myTeacherId = $teacher->id;
+
+        $isAdviser  = (int) $group->adviser_id === (int) $teacher->id;
+        $roomIds    = $teacher->evaluationRooms()->pluck('evaluation_rooms.id')->toArray();
+        $isPanelist = $group->room_id && in_array($group->room_id, $roomIds);
+        $isSection  = $group->section_id && Section::where('id', $group->section_id)
+                        ->where('user_id', $teacher->user_id)->exists();
+
+        if (!$isAdviser && !$isPanelist && !$isSection) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+    } elseif ($user->role !== 'admin') {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    $members = $group->team_members->map(function ($tm) {
+        $s = $tm->student;
+        return trim(($s->student_first_name ?? '') . ' ' . ($s->student_last_name ?? ''));
+    })->filter()->values()->all();
 
     $revisions = \App\Models\Revision::with(['documentation', 'enhancements', 'objectives', 'panelist'])
         ->where('group_id', $groupId)
-        ->orderByDesc('created_at')
+        ->orderBy('created_at')
         ->get()
-        ->map(function ($rev) {
-            return [
-                'id'           => $rev->id,
-                'panelist_name' => $rev->panelist
-                    ? $rev->panelist->teacher_first_name . ' ' . $rev->panelist->teacher_last_name
-                    : 'Panelist',
-                'created_at'   => $rev->created_at,
-                'overall_remarks' => $rev->overall_remarks,
-                'chapters' => $rev->documentation->map(fn($d) => [
-                    'chapter'  => $d->chapter,
-                    'findings' => $d->findings,
-                    'remarks'  => $d->remarks ?: 'Pending',
-                ]),
-                'iot_findings' => $rev->enhancements->map(fn($e) => [
-                    'finding' => $e->enhancement,
-                    'remarks' => $e->remarks ?: 'Pending',
-                ]),
-                'additional_objectives' => $rev->objectives->map(fn($o) => [
-                    'objective' => $o->objective,
-                    'remarks'   => $o->remarks ?: 'Pending',
-                ]),
-            ];
-        });
+        ->map(fn ($rev) => [
+            'id'            => $rev->id,
+            'is_mine'       => $myTeacherId && (int) $rev->panelist_id === (int) $myTeacherId,
+            'panelist_name' => $rev->panelist
+                ? trim($rev->panelist->teacher_first_name . ' ' . $rev->panelist->teacher_last_name)
+                : 'Panelist',
+            'created_at'      => $rev->created_at,
+            'overall_remarks' => $rev->overall_remarks,
+            'chapters' => $rev->documentation->map(fn ($d) => [
+                'chapter' => $d->chapter, 'findings' => $d->findings, 'remarks' => $d->remarks ?: 'Pending',
+            ]),
+            'iot_findings' => $rev->enhancements->map(fn ($e) => [
+                'finding' => $e->enhancement, 'remarks' => $e->remarks ?: 'Pending',
+            ]),
+            'additional_objectives' => $rev->objectives->map(fn ($o) => [
+                'objective' => $o->objective, 'remarks' => $o->remarks ?: 'Pending',
+            ]),
+        ]);
+
+    $serial = GroupCertificate::where('group_id', $groupId)
+        ->where(function ($q) {
+            $q->whereHas('certificate', fn ($c) => $c->where('document_type', 'revision'))
+              ->orWhere('serial_number', 'like', 'MCC-REV-%');
+        })->latest('issued_date')->value('serial_number');
 
     return response()->json([
-        'group_name' => $group->group_name,
-        'revisions'  => $revisions,
+        'group_name'     => $group->group_name,
+        'capstone_title' => $group->capstone_title,
+        'members'        => $members,
+        'serial_number'  => $serial,
+        'revisions'      => $revisions,
     ]);
 }
 public function getRecommendationSheet($groupId)
@@ -3678,6 +3746,57 @@ public function issueSheet(Request $request)
     $type  = $validated['document_type'];
     $title = $titleMap[$type];
 
+    // ══════════════════════════════════════════════════════════════════
+    //  EXTRA GATE FOR APPROVAL SHEET
+    //  Approval Sheet may only be issued when:
+    //    1. The "Issuance of Approval Sheet" milestone is marked complete
+    //    2. Every revision item (chapters / IoT / objectives) across ALL
+    //       revisions for this group is marked "Completed"
+    // ══════════════════════════════════════════════════════════════════
+    if ($type === 'approval') {
+
+        // ── Condition 1: milestone complete ──
+        $approvalMilestoneIds = Milestone::where('milestone_title', 'like', '%Approval Sheet%')
+            ->pluck('id')
+            ->toArray();
+
+        $milestoneComplete = !empty($approvalMilestoneIds)
+            && GroupMilestones::where('group_id', $validated['group_id'])
+                ->whereIn('milestone_id', $approvalMilestoneIds)
+                ->where('status', 'completed')
+                ->exists();
+
+        // ── Condition 2: all revision items cleared ──
+        $revisions = \App\Models\Revision::with(['documentation', 'enhancements', 'objectives'])
+            ->where('group_id', $validated['group_id'])
+            ->get();
+
+        // No revisions yet → treat as "nothing pending" (vacuously true).
+        // Flip `isNotEmpty() &&` in if you want to REQUIRE at least one revision.
+        $allRevisionsCleared = $revisions->every(function ($rev) {
+            $docsDone = $rev->documentation->every(fn($i) =>
+                strtolower(trim($i->remarks ?? '')) === 'completed');
+            $enhDone  = $rev->enhancements->every(fn($i) =>
+                strtolower(trim($i->remarks ?? '')) === 'completed');
+            $objDone  = $rev->objectives->every(fn($i) =>
+                strtolower(trim($i->remarks ?? '')) === 'completed');
+            return $docsDone && $enhDone && $objDone;
+        });
+
+        if (!$milestoneComplete) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'The "Issuance of Approval Sheet" milestone must be marked complete first.',
+            ], 422);
+        }
+
+        if (!$allRevisionsCleared) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'All revision items must be verified as "Completed" before the Approval Sheet can be issued.',
+            ], 422);
+        }
+    }
     // Find or create the matching certificate
     $certificate = Certificate::query()
         ->where('document_type', $type)

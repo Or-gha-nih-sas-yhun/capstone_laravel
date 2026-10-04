@@ -329,7 +329,7 @@
                     <p>Create your account to continue.</p>
                     <p class="sub">Registering for ID <strong>{{ $user->user_id }}</strong></p>
                 @endif
-                <form action="{{ route('destroy.session') }}" method="POST">
+                <form action="{{ route('destroy.session') }}" method="POST" class="js-once">
                     @csrf
                     <button type="submit" class="btn-logout">
                         Change User
@@ -533,6 +533,54 @@
             icon.className = 'fas fa-eye';
         }
     }
+    document.querySelectorAll('form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+        if (form.dataset.submitting === '1') {
+            e.preventDefault();          // block double submit
+            return;
+        }
+        form.dataset.submitting = '1';
+        form.querySelectorAll('button[type="submit"]').forEach(function (btn) {
+            // disable on the next tick so the submit still goes through
+            setTimeout(function () { btn.disabled = true; btn.style.opacity = '.6'; btn.style.cursor = 'not-allowed'; }, 0);
+        });
+    });
+});
+
+// bfcache: re-enable if the user presses Back
+window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+        document.querySelectorAll('form').forEach(function (f) {
+            delete f.dataset.submitting;
+            f.querySelectorAll('button[type="submit"]').forEach(function (b) { b.disabled = false; b.style.opacity = ''; b.style.cursor = ''; });
+        });
+    }
+});
+(function () {
+    const GUEST_IDLE_MS = 5 * 60 * 1000;
+    let timer;
+
+    function resetToHome() {
+        const token = document.querySelector('input[name="_token"]')?.value;
+        const done = () => { window.location.href = '/'; };
+        if (!token) return done();
+        // clears the saved ID from the session; ignore errors (session may be gone)
+        fetch('/destroy', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        }).then(done, done);
+    }
+
+    function arm() {
+        clearTimeout(timer);
+        timer = setTimeout(resetToHome, GUEST_IDLE_MS);
+    }
+
+    ['mousemove', 'keydown', 'click', 'touchstart', 'scroll']
+        .forEach(e => window.addEventListener(e, arm, { passive: true }));
+    arm();
+})();
 </script>
 </x-slot:scripts>
 

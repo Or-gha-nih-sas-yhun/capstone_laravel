@@ -312,7 +312,7 @@
         <form action="{{ route('password.update') }}" method="POST" id="resetForm">
             @csrf
             <input type="hidden" name="user_id" value="{{ session('reset_user_id') }}">
-
+            <input type="hidden" name="reset_email" value="{{ session('reset_email') }}">
             {{-- STEP 2a: code entry --}}
             <div class="step-panel" id="codeStep">
                 <div class="form-group">

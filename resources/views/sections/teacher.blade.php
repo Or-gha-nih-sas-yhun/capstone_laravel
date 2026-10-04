@@ -1265,64 +1265,6 @@
     tr, td, th, .approval-signature, .approval-panel-grid { break-inside: avoid !important; page-break-inside: avoid !important; }
 }
 
-/* ══════════ PRINT — REVISION SHEET ══════════ */
-@media print {
-    body.print-revision #revisionSheetModal .modal-box {
-        width: 100% !important; max-width: 100% !important; min-height: 0 !important; max-height: none !important;
-        overflow: visible !important; margin: 0 !important; padding: 0 !important; border: 0 !important;
-        border-radius: 0 !important; box-shadow: none !important; animation: none !important; background: #fff !important;
-        font-family: 'Times New Roman', serif !important; color: #1a1a1a !important;
-    }
-    body.print-revision #revisionSheetModal .text-center.mb-4 { margin: 0 0 .15in !important; text-align: center !important; }
-    body.print-revision #revisionSheetModal .text-center.mb-4 img {
-        display: block !important; margin: 0 auto !important; width: auto !important;
-        max-width: 6.2in !important; max-height: .85in !important; object-fit: contain !important;
-    }
-    body.print-revision #revisionSheetModal h2 {
-        font-family: 'Times New Roman', serif !important; font-size: 17pt !important; font-weight: 700 !important;
-        line-height: 1 !important; margin: .08in 0 .02in !important; letter-spacing: .22em !important;
-        text-align: center !important; color: #0a1428 !important;
-    }
-    body.print-revision #revisionSheetModal h2::after {
-        content: '' !important; display: block !important; width: 1.6in !important; height: 2px !important;
-        background: #b88d3a !important; margin: .08in auto .16in !important;
-    }
-    body.print-revision #revisionSheetModal .print-serial {
-        display: block !important; text-align: center !important; font-family: 'Courier New', monospace !important;
-        font-size: 9pt !important; letter-spacing: .08em !important; color: #8b6914 !important; margin: 0 0 .18in !important;
-    }
-    body.print-revision #revisionSheetContent {
-        font-family: 'Times New Roman', serif !important; font-size: 9.5pt !important; line-height: 1.35 !important;
-        border: 1.5px solid #8b6914 !important; border-radius: 0 !important; overflow: visible !important; background: #fff !important;
-    }
-    body.print-revision #revisionSheetContent table { font-size: 9.5pt !important; width: 100% !important; border-collapse: collapse !important; }
-    body.print-revision #revisionSheetContent td, body.print-revision #revisionSheetContent th {
-        padding: .05in .09in !important; line-height: 1.32 !important; vertical-align: top !important; border: 1px solid #8b6914 !important;
-    }
-    body.print-revision #revisionSheetContent thead th, body.print-revision #revisionSheetContent tr.bg-\[\#faf8f4\] th {
-        background: #f3ead1 !important; color: #0a1428 !important; font-weight: 700 !important; text-transform: uppercase !important;
-        font-size: 8pt !important; letter-spacing: .06em !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    body.print-revision #revisionSheetContent .font-bold.text-xs.uppercase.tracking-wider {
-        font-size: 8pt !important; font-weight: 700 !important; color: #5b6375 !important; letter-spacing: .07em !important; text-transform: uppercase !important;
-    }
-    body.print-revision #revisionSheetContent .badge {
-        display: inline-block !important; font-size: 7.5pt !important; font-weight: 700 !important; padding: 1px 7px !important;
-        border-radius: 999px !important; border: 1px solid currentColor !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
-    body.print-revision #revisionSheetContent .badge-green { background: #e6f4ea !important; color: #1e6b3a !important; }
-    body.print-revision #revisionSheetContent .badge-amber { background: #fef7e6 !important; color: #8a5d0b !important; }
-    body.print-revision #revisionSheetContent p { margin: 0 !important; }
-    body.print-revision #revisionSheetContent .whitespace-pre-line { white-space: pre-line !important; font-size: 9.5pt !important; line-height: 1.4 !important; }
-    body.print-revision #revisionSheetModal .btn-outline, body.print-revision #revisionSheetModal .btn-primary,
-    body.print-revision #revisionSheetModal .btn-ghost, body.print-revision #revisionSheetModal .flex.justify-end { display: none !important; }
-    body.print-revision #sheetApprovedBy {
-        display: inline-block !important; min-width: 2.6in !important; border-bottom: 1px solid #333 !important;
-        font-weight: 700 !important; color: #0a1428 !important; padding: 0 .06in .02in !important;
-    }
-    body.print-revision #revisionSheetModal { page-break-after: avoid !important; }
-    body.print-revision #revisionSheetContent { page-break-inside: avoid !important; }
-}
 
 /* ══════════ PRINT — RECOMMENDATION SHEET ══════════ */
 @media print {
@@ -1476,6 +1418,68 @@
     body.print-approval #approvalSheetModal .btn-primary, body.print-approval #approvalSheetModal .btn-ghost,
     body.print-approval #approvalSheetModal .flex.justify-end { display: none !important; }
 }
+/* ═══════ REVISION SHEET — MCC form (same as student) ═══════ */
+@media screen {
+    #revisionSheetModal .revision-sheet-modal-box {
+        container-type: inline-size; box-sizing: border-box; width: 100%;
+        max-width: calc(8.5in + 3rem) !important; max-height: 92vh;
+        padding: 1.5rem !important; background: #e9e5db; overflow-y: auto;
+    }
+    #revisionSheetModal .revision-paper {
+        --in: calc(100cqw / 8.5); --pt: calc(var(--in) / 72);
+        min-height: calc(var(--in) * 11);
+        padding: calc(var(--in) * .6) calc(var(--in) * .7) calc(var(--in) * .55);
+        background: #fff; box-shadow: 0 12px 32px rgba(0,0,0,.18);
+    }
+}
+@media print {
+    body.print-revision #revisionSheetModal .revision-sheet-modal-box {
+        display: block !important; width: 100% !important; max-width: none !important;
+        height: auto !important; max-height: none !important; margin: 0 !important; padding: 0 !important;
+        overflow: visible !important; border: 0 !important; border-radius: 0 !important;
+        box-shadow: none !important; animation: none !important; background: #fff !important;
+    }
+    body.print-revision #revisionSheetModal .revision-paper {
+        --in: 1in; --pt: 1pt; padding: .5in .55in .5in !important; min-height: 0 !important; box-shadow: none !important;
+    }
+    body.print-revision #revisionSheetModal .rv-actions,
+    body.print-revision #revisionSheetModal .rv-tabs,
+    body.print-revision #revisionSheetModal #revisionSheetLoading { display: none !important; }
+    body.print-revision #revisionSheetModal .rv-header { margin: 0 0 .1in !important; }
+    body.print-revision #revisionSheetModal .rv-header img { max-width: 100% !important; max-height: .9in !important; width: auto !important; }
+    body.print-revision #revisionSheetModal .rv-table tr,
+    body.print-revision #revisionSheetModal .rv-table td,
+    body.print-revision #revisionSheetModal .rv-table th { break-inside: avoid !important; page-break-inside: avoid !important; }
+}
+#revisionSheetModal .revision-paper, #revisionSheetModal .revision-paper * { font-family: 'Courier New', Courier, monospace; }
+#revisionSheetModal .revision-paper { box-sizing: border-box; position: relative; color: #000; }
+#revisionSheetModal .rv-header { text-align: center; margin: 0 0 calc(var(--in) * .1); }
+#revisionSheetModal .rv-header img { display: block; margin: 0 auto; width: auto; max-width: calc(var(--in) * 6.2); max-height: calc(var(--in) * .9); object-fit: contain; }
+#revisionSheetModal .rv-title { font-size: calc(var(--pt) * 10); font-weight: 700; letter-spacing: .04em; line-height: 1.2; text-align: center; color: #000; margin: calc(var(--in) * .05) 0 calc(var(--in) * .08); padding: 0; border: 0; }
+#revisionSheetModal .rv-serial { text-align: center; font-size: calc(var(--pt) * 7.5); letter-spacing: .08em; color: #000; margin: 0 0 calc(var(--in) * .08); }
+#revisionSheetModal .rv-content { position: relative; }
+#revisionSheetModal .rv-loading { position: absolute; inset: 0; z-index: 10; background: rgba(255,255,255,.92); }
+#revisionSheetModal .rv-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0 0 calc(var(--in) * .2); font-size: calc(var(--pt) * 8.5); color: #000; }
+#revisionSheetModal .rv-table th, #revisionSheetModal .rv-table td { border: 1px solid #000; padding: calc(var(--in) * .03) calc(var(--in) * .07); height: calc(var(--in) * .21); vertical-align: middle; text-align: left; line-height: 1.25; word-wrap: break-word; overflow-wrap: break-word; white-space: pre-line; background: #fff; }
+#revisionSheetModal .rv-table th { font-weight: 700; text-align: center; font-size: calc(var(--pt) * 8.5); }
+#revisionSheetModal .rv-table th.rv-muted { font-weight: 400; color: #777; }
+#revisionSheetModal .rv-table td.rv-project { vertical-align: top; }
+#revisionSheetModal .rv-table td.rv-c { text-align: center; font-size: calc(var(--pt) * 7.5); }
+#revisionSheetModal .rv-table tr.rv-tall td { height: calc(var(--in) * .27); }
+#revisionSheetModal .rv-approved { font-weight: 700; font-size: calc(var(--pt) * 9); margin: calc(var(--in) * .05) 0 0; }
+#revisionSheetModal .rv-signature { display: inline-block; min-width: calc(var(--in) * 2.4); margin-top: calc(var(--in) * .3); }
+#revisionSheetModal #sheetApprovedBy { display: block; min-height: calc(var(--in) * .2); border-bottom: 1px solid #000; padding: 0 calc(var(--in) * .05) calc(var(--in) * .02); font-size: calc(var(--pt) * 9); font-weight: 700; text-transform: uppercase; color: #000; }
+#revisionSheetModal .rv-sig-label { font-weight: 700; font-size: calc(var(--pt) * 8.5); margin-top: calc(var(--in) * .04); }
+#revisionSheetModal .rv-footer-note { margin-top: calc(var(--in) * .3); font-size: calc(var(--pt) * 6.5); color: #333; }
+
+/* panelist tabs (screen only) */
+#revisionSheetModal .rv-tabs { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0 0 .9rem; }
+#revisionSheetModal .rv-tab {
+    font-family: 'DM Sans', sans-serif; font-size: .72rem; font-weight: 600; padding: .4rem .9rem;
+    border-radius: 9999px; border: 1.5px solid var(--gold); background: #fff; color: var(--navy); cursor: pointer; transition: var(--transition);
+}
+#revisionSheetModal .rv-tab:hover { background: rgba(214,177,92,.18); }
+#revisionSheetModal .rv-tab.active { background: var(--navy); color: var(--gold-light); border-color: var(--navy); }    
 </style>
 </head>
 <body class="bg-[#f8f6f0] text-[#171e2c]">
@@ -3559,84 +3563,65 @@
 
 <!-- ═══════════ REVISION SHEET MODAL ═══════════ -->
 <div id="revisionSheetModal" class="modal-overlay">
-    <div class="modal-box wide" style="max-width: 52rem; padding: 1.5rem;">
-        <div class="text-center mb-4">
-            <img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header" class="w-full max-h-24 object-contain">
-        </div>
-        <h2 class="text-center text-2xl font-bold tracking-widest text-[#0a1428] mb-4" style="font-family:'Cormorant Garamond',serif;">REVISION SHEET</h2>
-        <p class="print-serial text-center text-xs tracking-widest mt-1" id="revisionSheetSerial" style="font-family:'Courier New', monospace; color:#8b6914;">&nbsp;</p>
+    <div class="modal-box wide revision-sheet-modal-box" style="max-width: 52rem; padding: 1.5rem;">
 
-        <div id="revisionSheetContent" class="text-[#0a1428] text-sm border border-[#b88d3a] rounded-lg overflow-hidden relative">
-            <div id="revisionSheetLoading" class="modal-loading-box absolute inset-0 bg-white/90 backdrop-blur-sm z-10 rounded-lg">
-                <div class="spinner-sm"></div>
-                <p>Loading revision sheet…</p>
+        <!-- one tab per panelist (hidden when there is only one) -->
+        <div id="revisionPanelistTabs" class="rv-tabs"></div>
+
+        <div class="revision-paper">
+            <div class="rv-header"><img src="{{ asset('pictures/mccheader.jpg') }}" alt="MCC Header"></div>
+            <h2 class="rv-title">REVISION SHEET</h2>
+            <p class="rv-serial" id="revisionSheetSerial">&nbsp;</p>
+
+            <div id="revisionSheetContent" class="rv-content">
+                <div id="revisionSheetLoading" class="modal-loading-box rv-loading">
+                    <div class="spinner-sm"></div>
+                    <p>Loading revision sheets…</p>
+                </div>
+
+                <table class="rv-table">
+                    <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+                    <thead><tr><th>Name of Proponents</th><th>Name of Capstone Project</th></tr></thead>
+                    <tbody id="sheetProponents"></tbody>
+                </table>
+
+                <table class="rv-table">
+                    <colgroup><col style="width:17%"><col style="width:66%"><col style="width:17%"></colgroup>
+                    <thead><tr><th class="rv-muted">Chapter</th><th>Document Findings</th><th class="rv-muted">Remarks</th></tr></thead>
+                    <tbody id="sheetChapterRows"></tbody>
+                </table>
+
+                <table class="rv-table">
+                    <colgroup><col style="width:83%"><col style="width:17%"></colgroup>
+                    <thead><tr><th>System or IoT Findings/ Enhancements<br>/ Recommendations</th><th class="rv-muted">Remarks</th></tr></thead>
+                    <tbody id="sheetIotRows"></tbody>
+                </table>
+
+                <table class="rv-table">
+                    <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+                    <thead><tr><th colspan="2">Additional Objectives for Capstone Project 2</th></tr></thead>
+                    <tbody id="sheetObjectivesList"></tbody>
+                </table>
+
+                <table class="rv-table">
+                    <thead><tr><th>Overall Remarks / Instructions</th></tr></thead>
+                    <tbody><tr><td id="sheetOverallRemarks"></td></tr></tbody>
+                </table>
+
+                <p class="rv-approved">Approved by:</p>
+                <div class="rv-signature">
+                    <span id="sheetApprovedBy"></span>
+                    <div class="rv-sig-label">Panel's Name &amp; Signature</div>
+                </div>
+
+                <p class="rv-footer-note">
+                    Please always bring this document during the checking of your <strong>Capstone Project 2.</strong>
+                </p>
             </div>
-
-            <table class="w-full border-collapse text-sm">
-                <tr>
-                    <td class="border border-[#b88d3a] p-2 align-top" style="width:50%;">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Name of Proponents</p>
-                        <ol id="sheetProponents" class="list-decimal list-inside space-y-0.5"><li class="text-[#5b6375] italic">Loading...</li></ol>
-                    </td>
-                    <td class="border border-[#b88d3a] p-2 align-top" style="width:50%;">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Name of Capstone Project</p>
-                        <p id="sheetProjectTitle" class="font-medium">—</p>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Chapter / Document Findings</p>
-                        <table class="w-full border-collapse text-xs">
-                            <thead><tr class="bg-[#faf8f4]">
-                                <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Chapter</th>
-                                <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Document Findings</th>
-                                <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
-                            </tr></thead>
-                            <tbody id="sheetChapterRows"><tr><td colspan="3" class="p-2 text-center text-[#5b6375] italic">Loading...</td></tr></tbody>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">System or IoT Findings / Enhancements / Recommendations</p>
-                        <table class="w-full border-collapse text-xs">
-                            <thead><tr class="bg-[#faf8f4]">
-                                <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Finding / Enhancement</th>
-                                <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
-                            </tr></thead>
-                            <tbody id="sheetIotRows"><tr><td colspan="2" class="p-2 text-center text-[#5b6375] italic">Loading...</td></tr></tbody>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Additional Objectives for Capstone Project 2</p>
-                        <table class="w-full border-collapse text-xs">
-                            <thead><tr class="bg-[#faf8f4]">
-                                <th class="border border-[#b88d3a] p-1 text-left font-semibold uppercase text-[#5b6375]">Objective</th>
-                                <th class="border border-[#b88d3a] p-1 text-center font-semibold uppercase text-[#5b6375]">Remarks</th>
-                            </tr></thead>
-                            <tbody id="sheetObjectivesList"><tr><td colspan="2" class="p-2 text-center text-[#5b6375] italic">Loading...</td></tr></tbody>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
-                        <p class="font-bold text-xs uppercase tracking-wider text-[#5b6375] mb-1">Overall Remarks / Instructions</p>
-                        <p id="sheetOverallRemarks" class="text-sm text-[#0a1428] whitespace-pre-line">—</p>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" class="border border-[#b88d3a] p-2">
-                        <p class="text-xs font-bold uppercase tracking-wider text-[#5b6375]">Approved by:</p>
-                        <p id="sheetApprovedBy" class="text-sm font-semibold mt-1 border-b-2 border-[#b88d3a] inline-block min-w-[200px]">_________________________</p>
-                    </td>
-                </tr>
-            </table>
         </div>
 
-        <div class="flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
-            <button type="button" onclick="printModalContent('revisionSheetModal')" class="btn-outline text-xs py-2 px-4"><i class="fas fa-print mr-1"></i> Print</button>
+        <div class="rv-actions flex justify-end gap-2 pt-4 border-t border-[#e2dacf] mt-4">
+            <button type="button" onclick="window.printModalContent('revisionSheetModal')" class="btn-outline text-xs py-2 px-4"><i class="fas fa-print mr-1"></i> Print</button>
             <button type="button" onclick="closeModal('revisionSheetModal')" class="btn-primary text-xs py-2 px-4">Close</button>
         </div>
     </div>
@@ -3767,10 +3752,10 @@
     'use strict';
 
     /* ---------------- Configuration ---------------- */
-    const SPLASH_MIN_MS  = 750;    // keep splash visible at least this long
-    const SPLASH_MAX_MS  = 4000;   // hard safety net
-    const OVERLAY_MIN_MS = 350;    // prevents flicker on fast requests
-    const WATCHDOG_MS    = 25000;  // force-close overlay if a request hangs
+    const SPLASH_MIN_MS  = 750;
+    const SPLASH_MAX_MS  = 4000;
+    const OVERLAY_MIN_MS = 350;
+    const WATCHDOG_MS    = 25000;
 
     /* ---------------- 1. Splash ---------------- */
     const splashEl     = document.getElementById('app-splash');
@@ -3869,7 +3854,6 @@
             overlayEl.classList.add('active');
         }
 
-        // Watchdog: never let the overlay get stuck forever
         watchdogTimer = setTimeout(function () {
             overlayRefs = 0;
             overlayEl.classList.remove('active');
@@ -3907,9 +3891,7 @@
         window.fetch = function (input, init) {
             const opts = init || {};
             const silent = opts.__silent === true;
-
             if (silent) return nativeFetch(input, init);
-
             barStart();
             return nativeFetch(input, init).then(
                 function (res) { barFinish(); return res; },
@@ -3919,7 +3901,6 @@
     }
 
     /* ---------------- 5. Helpers ---------------- */
-    // Wrap a promise so the overlay shows while it runs.
     window.trackPromise = function (promise, label) {
         window.showPageLoader(label);
         return promise.then(
@@ -3928,7 +3909,6 @@
         );
     };
 
-    // Professional button loading state.
     window.setButtonLoading = function (btn, label) {
         if (!btn) return function () {};
         if (!btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
@@ -3944,7 +3924,6 @@
         };
     };
 
-    // Skeleton building blocks.
     window.skeletonLines = function (count, widths) {
         widths = widths || [90, 70, 55, 80];
         let html = '<div class="space-y-2.5">';
@@ -4152,13 +4131,11 @@ function fmtDate(d) {
 }
 
 // ── VIEW PROGRESS MODAL ────────────────────────
-// NOTE: Loading indicator for this modal is scoped INSIDE the modal only.
-//       The global overlay loader and top progress bar are NOT triggered here.
 function openViewModal(groupId) {
     const modal = document.getElementById('viewModal');
     const loading = document.getElementById('view_loading');
     const dataDiv = document.getElementById('view_data');
-     window.__viewModalGroupId = groupId;
+    window.__viewModalGroupId = groupId;
     modal.classList.add('active');
     loading.classList.remove('hidden');
     dataDiv.classList.add('hidden');
@@ -4166,38 +4143,54 @@ function openViewModal(groupId) {
     // __silent: true → suppress global top progress bar for in-modal requests
     Promise.all([
         fetch(`/teacher/get-group-progress/${groupId}`, { __silent: true }).then(r => r.json()),
-        fetch(`/teacher/get-group/${groupId}`, { __silent: true }).then(r => r.json())
+        fetch(`/teacher/get-group/${groupId}`, { __silent: true }).then(r => r.json()),
+        fetch(`/teacher/get-all-revisions/${groupId}`, { __silent: true })
+            .then(r => r.ok ? r.json() : null)
+            .catch(() => null)
     ])
-    .then(([data, groupData]) => {
+    .then(([data, groupData, revisionsData]) => {
         loading.classList.add('hidden');
         dataDiv.classList.remove('hidden');
         const members = groupData.members || [];
 
-       document.getElementById('view_modal_title').textContent = `Progress: ${data.group_name}`;
-document.getElementById('view_progress_label').textContent = data.overall_progress;
+        // ══════════════════════════════════════════════════════════════
+        //  APPROVAL GATE — pre-compute whether all revisions are cleared
+        // ══════════════════════════════════════════════════════════════
+        const groupRevisions = revisionsData?.revisions || [];
+        const allRevisionsCleared = groupRevisions.every(rev => {
+            const docsOk = (rev.chapters || []).every(ch =>
+                String(ch.remarks || '').trim().toLowerCase() === 'completed');
+            const iotOk  = (rev.iot_findings || []).every(i =>
+                String(i.remarks || '').trim().toLowerCase() === 'completed');
+            const objOk  = (rev.additional_objectives || []).every(o =>
+                String(o.remarks || '').trim().toLowerCase() === 'completed');
+            return docsOk && iotOk && objOk;
+        });
 
-// ── Color-code the progress bar + pill by percentage ──
-const pct = Number(data.overall_progress) || 0;
-const progressColor =
-    pct >= 75 ? '#1e6b3a' :      // green — On Track
-    pct >= 40 ? '#b88d3a' :      // gold  — At Risk
-                '#a12b2b';       // red   — Delayed
+        document.getElementById('view_modal_title').textContent = `Progress: ${data.group_name}`;
+        document.getElementById('view_progress_label').textContent = data.overall_progress;
 
-const progressBar = document.getElementById('view_overall_progress');
-progressBar.style.width = pct + '%';
-progressBar.style.background = progressColor;
+        // ── Color-code the progress bar + pill by percentage ──
+        const pct = Number(data.overall_progress) || 0;
+        const progressColor =
+            pct >= 75 ? '#1e6b3a' :
+            pct >= 40 ? '#b88d3a' :
+                        '#a12b2b';
 
-// Recolor the "X% complete" pill to match
-const progressLabel = document.getElementById('view_progress_label');
-if (progressLabel) {
-    progressLabel.style.color = progressColor;
-    const pill = progressLabel.parentElement;
-    if (pill) {
-        pill.style.background = progressColor + '1a';   // ~10% tint
-        pill.style.color = progressColor;
-        pill.style.border = '1px solid ' + progressColor + '40';
-    }
-}
+        const progressBar = document.getElementById('view_overall_progress');
+        progressBar.style.width = pct + '%';
+        progressBar.style.background = progressColor;
+
+        const progressLabel = document.getElementById('view_progress_label');
+        if (progressLabel) {
+            progressLabel.style.color = progressColor;
+            const pill = progressLabel.parentElement;
+            if (pill) {
+                pill.style.background = progressColor + '1a';
+                pill.style.color = progressColor;
+                pill.style.border = '1px solid ' + progressColor + '40';
+            }
+        }
 
         const tbody = document.getElementById('view_milestones_tbody');
         tbody.innerHTML = '';
@@ -4226,7 +4219,6 @@ if (progressLabel) {
                 ${statusBadge}
             `;
 
-            // ── Rubric milestone evaluations for THIS milestone ──
             const evaluations   = data.evaluations || [];
             const milestoneEvals = evaluations.filter(e => e.milestone_id == m.id);
 
@@ -4254,25 +4246,58 @@ if (progressLabel) {
 
                 const feedbackHtml = r.feedback ? `<div class="remark-feedback">"${r.feedback}"</div>` : '';
 
-                // ── Detect issuance milestones ──
+                // ══════════════════════════════════════════════════════════════
+                //  ISSUANCE DETECTION + GATING
+                //  - Recommendation: milestone ID 5 or 17 (or matching title)
+                //  - Approval:        milestone ID 7 or 19 (or matching title)
+                //    + Requires: milestone complete AND all revisions cleared
+                // ══════════════════════════════════════════════════════════════
                 const isRecommendationMilestone =
                     /issuance of recommendation/i.test(m.title || '')
                     || m.id === 5
                     || m.id === 17;
 
-            
+                const isApprovalMilestone =
+                    /issuance of approval/i.test(m.title || '')
+                    || m.id === 7
+                    || m.id === 19;
 
-                const issueButtonHtml = (isRecommendationMilestone && data.is_adviser)
-                    ? `<button type="button"
+                let issueButtonHtml = '';
+
+                if (data.is_adviser && isRecommendationMilestone) {
+                    issueButtonHtml = `<button type="button"
                             class="issue-rec-btn text-[#b88d3a] hover:text-[#8b6914] text-[10px]
                                     font-semibold mt-2 ml-3 focus:outline-none inline-flex items-center"
                             data-milestone-id="${m.id}"
                             data-doc-type="recommendation">
                             <i class="fas fa-award mr-1"></i> Issue Recommendation Sheet
-                    </button>`
-                    : '';
+                    </button>`;
+                }
 
-                
+                if (data.is_adviser && isApprovalMilestone) {
+                    const canIssueApproval = m.is_completed && allRevisionsCleared;
+
+                    if (canIssueApproval) {
+                        issueButtonHtml = `<button type="button"
+                                class="issue-rec-btn text-[#b88d3a] hover:text-[#8b6914] text-[10px]
+                                        font-semibold mt-2 ml-3 focus:outline-none inline-flex items-center"
+                                data-milestone-id="${m.id}"
+                                data-doc-type="approval">
+                                <i class="fas fa-file-contract mr-1"></i> Issue Approval Sheet
+                        </button>`;
+                    } else {
+                        const reasons = [];
+                        if (!m.is_completed)      reasons.push('milestone not yet marked complete');
+                        if (!allRevisionsCleared) reasons.push('revision items still pending');
+
+                        issueButtonHtml = `
+                            <span class="inline-flex items-center gap-1 mt-2 ml-3 text-[10px]
+                                         font-semibold text-[#8a5d0b]">
+                                <i class="fas fa-lock"></i>
+                                Approval Sheet locked — ${reasons.join(' & ')}
+                            </span>`;
+                    }
+                }
 
                 const editButtonHtml = data.is_adviser
                     ? `<button type="button"
@@ -4283,9 +4308,9 @@ if (progressLabel) {
                     </button>`
                     : '';
 
-                const isLate     = /late/i.test(statusText);
-                const isEarly    = /early/i.test(statusText);
-                const isOnTime   = /on time/i.test(statusText);
+                const isLate       = /late/i.test(statusText);
+                const isEarly      = /early/i.test(statusText);
+                const isOnTime     = /on time/i.test(statusText);
                 const isConsidered = /considered/i.test(statusText);
 
                 remarksHtml = `
@@ -4299,7 +4324,7 @@ if (progressLabel) {
                             ${absenceTableHtml}
                             ${feedbackHtml}
                             ${editButtonHtml}
-                             ${issueButtonHtml}
+                            ${issueButtonHtml}
                         </div>
 
                         <div class="remark-edit-mode hidden mt-2 p-3 bg-[#faf8f4] border border-[#e2dacf] rounded-lg space-y-2">
@@ -4345,7 +4370,6 @@ if (progressLabel) {
             }
             else if (m.has_rubric) {
                 if (milestoneEvals.length > 0) {
-                    // There IS an evaluation — the card is rendered below via evaluationHtml.
                     remarksHtml = '';
                 } else if (data.is_adviser || data.is_panelist) {
                     remarksHtml = `
@@ -4393,31 +4417,30 @@ if (progressLabel) {
                 remarksHtml = `<span class="remark-empty">Not yet available</span>`;
             }
 
-            // ── Panelist evaluation summary (score + feedback, no rubric breakdown) ──
-let evaluationHtml = '';
+            let evaluationHtml = '';
 
-if (milestoneEvals.length > 0) {
-   
-} else if (m.has_rubric) {
-    evaluationHtml = `
-        <div class="mt-3 text-xs text-[#5b6375] italic bg-[#faf8f4] p-2 border border-[#e2dacf] rounded-lg">
-            <i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1.5"></i>
-            This group has not been evaluated yet for this milestone.
-        </div>`;
-}
+            if (milestoneEvals.length > 0) {
+                // rendered elsewhere
+            } else if (m.has_rubric) {
+                evaluationHtml = `
+                    <div class="mt-3 text-xs text-[#5b6375] italic bg-[#faf8f4] p-2 border border-[#e2dacf] rounded-lg">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1.5"></i>
+                        This group has not been evaluated yet for this milestone.
+                    </div>`;
+            }
 
-row.innerHTML = `<td>${dateHtml}</td><td>${taskHtml}</td><td>${remarksHtml}${evaluationHtml}</td>`;
-tbody.appendChild(row);
+            row.innerHTML = `<td>${dateHtml}</td><td>${taskHtml}</td><td>${remarksHtml}${evaluationHtml}</td>`;
+            tbody.appendChild(row);
 
             // ── Adviser-only remark override wiring ──
             if (m.remarks && data.is_adviser) {
-                const summary   = row.querySelector('.remark-summary');
+                const summary = row.querySelector('.remark-summary');
                 if (summary) {
-                    const viewMode   = summary.querySelector('.remark-view-mode');
-                    const editMode   = summary.querySelector('.remark-edit-mode');
-                    const editBtn    = summary.querySelector('.edit-remark-btn');
-                    const cancelBtn  = summary.querySelector('.remark-edit-cancel');
-                    const saveBtn    = summary.querySelector('.remark-edit-save');
+                    const viewMode  = summary.querySelector('.remark-view-mode');
+                    const editMode  = summary.querySelector('.remark-edit-mode');
+                    const editBtn   = summary.querySelector('.edit-remark-btn');
+                    const cancelBtn = summary.querySelector('.remark-edit-cancel');
+                    const saveBtn   = summary.querySelector('.remark-edit-save');
 
                     editBtn?.addEventListener('click', () => {
                         viewMode.classList.add('hidden');
@@ -4430,10 +4453,10 @@ tbody.appendChild(row);
                     });
 
                     saveBtn?.addEventListener('click', () => {
-                        const status      = summary.querySelector('.remark-edit-status').value;
-                        const deduction   = parseInt(summary.querySelector('.remark-edit-deduction').value, 10) || 0;
-                        const compiled    = summary.querySelector('.remark-edit-compiled').value === '1';
-                        const feedback    = summary.querySelector('.remark-edit-feedback').value || '';
+                        const status    = summary.querySelector('.remark-edit-status').value;
+                        const deduction = parseInt(summary.querySelector('.remark-edit-deduction').value, 10) || 0;
+                        const compiled  = summary.querySelector('.remark-edit-compiled').value === '1';
+                        const feedback  = summary.querySelector('.remark-edit-feedback').value || '';
 
                         const originalHtml = saveBtn.innerHTML;
                         saveBtn.disabled = true;
@@ -4504,7 +4527,6 @@ tbody.appendChild(row);
                 }
             }
 
-
             // ══════════════════════════════════════════════════════════════
             // Issuance wiring (recommendation / approval) — stays inside the loop
             // ══════════════════════════════════════════════════════════════
@@ -4537,7 +4559,7 @@ tbody.appendChild(row);
             });
         }); // ← end of forEach(m => { ... })
 
-               // ── Document cards: Recommendation / Revision / Approval ──
+        // ── Document cards: Recommendation / Revision / Approval ──
         const recBtn = document.getElementById('view_rec_btn');
         const revBtn = document.getElementById('view_rev_btn');
         const aprBtn = document.getElementById('view_apr_btn');
@@ -4545,7 +4567,6 @@ tbody.appendChild(row);
         const revStatus = document.getElementById('view_rev_status');
         const aprStatus = document.getElementById('view_apr_status');
 
-        // Reset to default disabled state
         [recBtn, revBtn, aprBtn].forEach(b => { if (b) b.disabled = true; });
         if (recStatus) recStatus.textContent = 'View the recommendation sheet issued to this group.';
         if (revStatus) revStatus.textContent = 'View the revision sheet submitted for this group.';
@@ -4568,13 +4589,15 @@ tbody.appendChild(row);
             .catch(() => {});
 
         // Revision
-        fetch(`/teacher/get-revision-details/${groupId}`, { __silent: true })
+        fetch(`/teacher/get-all-revisions/${groupId}`, { __silent: true })
             .then(r => r.ok ? r.json() : null)
             .then(data => {
-                if (data && (data.chapters?.length || data.iot_findings?.length || data.objectives?.length)) {
+                const count = data?.revisions?.length || 0;
+                if (count) {
                     if (revBtn) revBtn.disabled = false;
                     if (revStatus) revStatus.innerHTML =
-                        '<span style="color:#1e6b3a;"><i class="fas fa-check-circle mr-1"></i>Revision available</span>';
+                        '<span style="color:#1e6b3a;"><i class="fas fa-check-circle mr-1"></i>' +
+                        count + ' revision sheet' + (count > 1 ? 's' : '') + ' available</span>';
                 } else if (revStatus) {
                     revStatus.innerHTML =
                         '<span style="color:#8a5d0b;"><i class="fas fa-hourglass-half mr-1"></i>No revision submitted yet</span>';
@@ -4640,7 +4663,6 @@ function submitRemarkEvaluation(groupId, milestoneId, btn, row) {
 
 /**
  * Issue the Recommendation Sheet for a group.
- * Only called from the issuance-milestone row in the view modal.
  */
 function issueRecommendationSheet(groupId, milestoneId, btn) {
     if (!confirm('Issue the Recommendation Sheet to this group?\n\nStudents will then be able to view and print it.')) {
@@ -4668,13 +4690,14 @@ function issueRecommendationSheet(groupId, milestoneId, btn) {
     })
     .then(data => {
         showToast(data.message || 'Recommendation sheet issued successfully.');
-        openViewModal(groupId);   // refresh the modal state
+        openViewModal(groupId);
     })
     .catch(err => {
         restore();
         showToast((err && err.error) || 'Failed to issue recommendation sheet.', true);
     });
 }
+
 /**
  * Unified issuance of recommendation / approval / revision sheet.
  */
@@ -4712,7 +4735,7 @@ function issueCertificateSheet(groupId, milestoneId, docType, btn) {
     })
     .then(data => {
         showToast(data.message || `${label} issued successfully.`);
-        openViewModal(groupId);   // refresh modal state
+        openViewModal(groupId);
     })
     .catch(err => {
         restore();
@@ -4749,7 +4772,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ── SECTION SWITCHING ──────────────────────
+    // ── SECTION SWITCHING (WITH PERSISTENCE) ──────────────────────
     const sections = {
         dashboard: document.getElementById('dashboard-section'),
         assignedsections: document.getElementById('assignedsections-section'),
@@ -4760,9 +4783,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const navLinks = document.querySelectorAll('.nav-link');
     const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
 
+    const SECTION_STORAGE_KEY = 'teacher_active_section';
+    const DEFAULT_SECTION     = 'dashboard';
+
+    function persistActiveSection(sectionId) {
+        try { sessionStorage.setItem(SECTION_STORAGE_KEY, sectionId); } catch (e) {}
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', '#' + sectionId);
+        }
+    }
+
+    function resolveInitialSection() {
+        const hash = (window.location.hash || '').replace(/^#/, '');
+        let stored = '';
+        try { stored = sessionStorage.getItem(SECTION_STORAGE_KEY) || ''; } catch (e) {}
+
+        if (hash && sections[hash]) return hash;
+        if (stored && sections[stored]) return stored;
+        return DEFAULT_SECTION;
+    }
+
     function activateSection(sectionId) {
+        if (!sections[sectionId]) sectionId = DEFAULT_SECTION;
+
         Object.values(sections).forEach(s => s && s.classList.add('hidden'));
         if (sections[sectionId]) sections[sectionId].classList.remove('hidden');
+
         navLinks.forEach(link => {
             const isActive = link.dataset.section === sectionId;
             link.classList.toggle('active-link', isActive);
@@ -4771,6 +4817,8 @@ document.addEventListener('DOMContentLoaded', function () {
         mobileNavLinks.forEach(link => {
             link.style.color = link.dataset.section === sectionId ? 'var(--gold)' : 'rgba(255,255,255,0.55)';
         });
+
+        persistActiveSection(sectionId);
     }
 
     [...navLinks, ...mobileNavLinks].forEach(link =>
@@ -4780,7 +4828,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (s && sections[s]) activateSection(s);
         })
     );
-    activateSection('dashboard');
+
+    activateSection(resolveInitialSection());
 
     // ── EVALUATION FORM SUBMIT — show loader ──
     const evalForm = document.getElementById('evaluation_form');
@@ -5091,7 +5140,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Chapters
         if (data.chapters && data.chapters.length) {
             data.chapters.forEach(ch => {
                 const row = document.createElement('div');
@@ -5107,7 +5155,6 @@ document.addEventListener('DOMContentLoaded', function () {
             addEvalRevChapterRow();
         }
 
-        // IoT
         if (data.iot_findings && data.iot_findings.length) {
             data.iot_findings.forEach(iot => {
                 const row = document.createElement('div');
@@ -5122,7 +5169,6 @@ document.addEventListener('DOMContentLoaded', function () {
             addEvalRevIotRow();
         }
 
-        // Objectives
         if (data.additional_objectives && data.additional_objectives.length) {
             data.additional_objectives.forEach(obj => {
                 const text = typeof obj === 'object' ? obj.objective : obj;
@@ -5205,127 +5251,127 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── EVALUATION MODAL ────────────────────────
     window.openGroupRevisionsModal = function (groupId, groupName) {
-    document.getElementById('grm_title').textContent = `Revisions — ${groupName}`;
-    const content = document.getElementById('grm_content');
-    content.innerHTML = window.skeletonCards(2);
+        document.getElementById('grm_title').textContent = `Revisions — ${groupName}`;
+        const content = document.getElementById('grm_content');
+        content.innerHTML = window.skeletonCards(2);
 
-    openModal('groupRevisionsModal');
-    showPageLoader('Loading revisions…');
+        openModal('groupRevisionsModal');
+        showPageLoader('Loading revisions…');
 
-    fetch(`/teacher/get-all-revisions/${groupId}`)
-        .then(async r => {
-            const data = await r.json();
-            if (!r.ok) throw new Error(data.error || 'Failed to load revisions.');
-            return data;
-        })
-        .then(data => {
-            const revisions = data.revisions || [];
+        fetch(`/teacher/get-all-revisions/${groupId}`)
+            .then(async r => {
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || 'Failed to load revisions.');
+                return data;
+            })
+            .then(data => {
+                const revisions = data.revisions || [];
 
-            if (revisions.length === 0) {
-                content.innerHTML = `
-                    <div class="text-center py-10 text-[#5b6375]">
-                        <i class="fa-regular fa-folder-open text-3xl mb-2 block"></i>
-                        No panelist has submitted a revision for this group.
-                    </div>
-                `;
-                hidePageLoader();
-                return;
-            }
+                if (revisions.length === 0) {
+                    content.innerHTML = `
+                        <div class="text-center py-10 text-[#5b6375]">
+                            <i class="fa-regular fa-folder-open text-3xl mb-2 block"></i>
+                            No panelist has submitted a revision for this group.
+                        </div>
+                    `;
+                    hidePageLoader();
+                    return;
+                }
 
-            content.innerHTML = revisions.map(rev => {
-                const chapterRows = (rev.chapters && rev.chapters.length)
-                    ? rev.chapters.map(ch => `
-                        <tr class="border-b border-[#e2dacf]">
-                            <td class="p-2 pl-3 font-semibold">${escHtml(ch.chapter)}</td>
-                            <td class="p-2">${escHtml(ch.findings)}</td>
-                            <td class="p-2 pr-3 text-center">
-                                <span class="badge ${String(ch.remarks).toLowerCase() === 'completed' ? 'badge-green' : 'badge-amber'}">${escHtml(ch.remarks)}</span>
-                            </td>
-                        </tr>
-                    `).join('')
-                    : `<tr><td colspan="3" class="p-3 text-center text-[#5b6375]">No chapter findings.</td></tr>`;
+                content.innerHTML = revisions.map(rev => {
+                    const chapterRows = (rev.chapters && rev.chapters.length)
+                        ? rev.chapters.map(ch => `
+                            <tr class="border-b border-[#e2dacf]">
+                                <td class="p-2 pl-3 font-semibold">${escHtml(ch.chapter)}</td>
+                                <td class="p-2">${escHtml(ch.findings)}</td>
+                                <td class="p-2 pr-3 text-center">
+                                    <span class="badge ${String(ch.remarks).toLowerCase() === 'completed' ? 'badge-green' : 'badge-amber'}">${escHtml(ch.remarks)}</span>
+                                </td>
+                            </tr>
+                        `).join('')
+                        : `<tr><td colspan="3" class="p-3 text-center text-[#5b6375]">No chapter findings.</td></tr>`;
 
-                const iotRows = (rev.iot_findings && rev.iot_findings.length)
-                    ? rev.iot_findings.map(iot => `
-                        <tr class="border-b border-[#e2dacf]">
-                            <td class="p-2 pl-3">${escHtml(iot.finding)}</td>
-                            <td class="p-2 pr-3 text-center">
-                                <span class="badge ${String(iot.remarks).toLowerCase() === 'completed' ? 'badge-green' : 'badge-amber'}">${escHtml(iot.remarks)}</span>
-                            </td>
-                        </tr>
-                    `).join('')
-                    : `<tr><td colspan="2" class="p-3 text-center text-[#5b6375]">No IoT findings.</td></tr>`;
+                    const iotRows = (rev.iot_findings && rev.iot_findings.length)
+                        ? rev.iot_findings.map(iot => `
+                            <tr class="border-b border-[#e2dacf]">
+                                <td class="p-2 pl-3">${escHtml(iot.finding)}</td>
+                                <td class="p-2 pr-3 text-center">
+                                    <span class="badge ${String(iot.remarks).toLowerCase() === 'completed' ? 'badge-green' : 'badge-amber'}">${escHtml(iot.remarks)}</span>
+                                </td>
+                            </tr>
+                        `).join('')
+                        : `<tr><td colspan="2" class="p-3 text-center text-[#5b6375]">No IoT findings.</td></tr>`;
 
-                const objectiveRows = (rev.additional_objectives && rev.additional_objectives.length)
-                    ? rev.additional_objectives.map(obj => `
-                        <tr class="border-b border-[#e2dacf]">
-                            <td class="p-2 pl-3">${escHtml(obj.objective)}</td>
-                            <td class="p-2 pr-3 text-center">
-                                <span class="badge ${String(obj.remarks).toLowerCase() === 'completed' ? 'badge-green' : 'badge-amber'}">${escHtml(obj.remarks)}</span>
-                            </td>
-                        </tr>
-                    `).join('')
-                    : `<tr><td colspan="2" class="p-3 text-center text-[#5b6375]">No additional objectives.</td></tr>`;
+                    const objectiveRows = (rev.additional_objectives && rev.additional_objectives.length)
+                        ? rev.additional_objectives.map(obj => `
+                            <tr class="border-b border-[#e2dacf]">
+                                <td class="p-2 pl-3">${escHtml(obj.objective)}</td>
+                                <td class="p-2 pr-3 text-center">
+                                    <span class="badge ${String(obj.remarks).toLowerCase() === 'completed' ? 'badge-green' : 'badge-amber'}">${escHtml(obj.remarks)}</span>
+                                </td>
+                            </tr>
+                        `).join('')
+                        : `<tr><td colspan="2" class="p-3 text-center text-[#5b6375]">No additional objectives.</td></tr>`;
 
-                return `
-                    <div class="content-card">
-                        <div class="card-accent"></div>
-                        <div class="p-5">
-                            <div class="flex justify-between items-start gap-3 mb-3">
-                                <div>
-                                    <p class="font-bold text-sm text-[#0a1428]"><i class="fa-regular fa-user mr-1 text-[#d6b15c]"></i> ${escHtml(rev.panelist_name)}</p>
-                                    <p class="text-xs text-[#5b6375]">${fmtDate(rev.created_at)}</p>
+                    return `
+                        <div class="content-card">
+                            <div class="card-accent"></div>
+                            <div class="p-5">
+                                <div class="flex justify-between items-start gap-3 mb-3">
+                                    <div>
+                                        <p class="font-bold text-sm text-[#0a1428]"><i class="fa-regular fa-user mr-1 text-[#d6b15c]"></i> ${escHtml(rev.panelist_name)}</p>
+                                        <p class="text-xs text-[#5b6375]">${fmtDate(rev.created_at)}</p>
+                                    </div>
+                                </div>
+
+                                ${rev.overall_remarks ? `<div class="mb-3 p-3 bg-[#faf8f4] border border-[#e2dacf] rounded-lg text-sm italic text-[#5b6375]">"${escHtml(rev.overall_remarks)}"</div>` : ''}
+
+                                <p class="form-fieldset-title mt-2"><i class="fa-solid fa-book"></i> Chapter / Document Findings</p>
+                                <div class="overflow-x-auto mb-3">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr class="bg-[#faf8f4] text-[#0a1428] font-semibold border-b border-[#e2dacf]">
+                                                <th class="p-2 pl-3">Chapter</th><th class="p-2">Findings</th><th class="p-2 pr-3 text-center">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>${chapterRows}</tbody>
+                                    </table>
+                                </div>
+
+                                <p class="form-fieldset-title"><i class="fa-solid fa-microchip"></i> System / IoT Findings</p>
+                                <div class="overflow-x-auto mb-3">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr class="bg-[#faf8f4] text-[#0a1428] font-semibold border-b border-[#e2dacf]">
+                                                <th class="p-2 pl-3">Finding</th><th class="p-2 pr-3 text-center">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>${iotRows}</tbody>
+                                    </table>
+                                </div>
+
+                                <p class="form-fieldset-title"><i class="fa-solid fa-list-check"></i> Additional Objectives</p>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead>
+                                            <tr class="bg-[#faf8f4] text-[#0a1428] font-semibold border-b border-[#e2dacf]">
+                                                <th class="p-2 pl-3">Objective</th><th class="p-2 pr-3 text-center">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>${objectiveRows}</tbody>
+                                    </table>
                                 </div>
                             </div>
-
-                            ${rev.overall_remarks ? `<div class="mb-3 p-3 bg-[#faf8f4] border border-[#e2dacf] rounded-lg text-sm italic text-[#5b6375]">"${escHtml(rev.overall_remarks)}"</div>` : ''}
-
-                            <p class="form-fieldset-title mt-2"><i class="fa-solid fa-book"></i> Chapter / Document Findings</p>
-                            <div class="overflow-x-auto mb-3">
-                                <table class="w-full text-left border-collapse text-xs">
-                                    <thead>
-                                        <tr class="bg-[#faf8f4] text-[#0a1428] font-semibold border-b border-[#e2dacf]">
-                                            <th class="p-2 pl-3">Chapter</th><th class="p-2">Findings</th><th class="p-2 pr-3 text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${chapterRows}</tbody>
-                                </table>
-                            </div>
-
-                            <p class="form-fieldset-title"><i class="fa-solid fa-microchip"></i> System / IoT Findings</p>
-                            <div class="overflow-x-auto mb-3">
-                                <table class="w-full text-left border-collapse text-xs">
-                                    <thead>
-                                        <tr class="bg-[#faf8f4] text-[#0a1428] font-semibold border-b border-[#e2dacf]">
-                                            <th class="p-2 pl-3">Finding</th><th class="p-2 pr-3 text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${iotRows}</tbody>
-                                </table>
-                            </div>
-
-                            <p class="form-fieldset-title"><i class="fa-solid fa-list-check"></i> Additional Objectives</p>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse text-xs">
-                                    <thead>
-                                        <tr class="bg-[#faf8f4] text-[#0a1428] font-semibold border-b border-[#e2dacf]">
-                                            <th class="p-2 pl-3">Objective</th><th class="p-2 pr-3 text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${objectiveRows}</tbody>
-                                </table>
-                            </div>
                         </div>
-                    </div>
-                `;
-            }).join('');
-            hidePageLoader();
-        })
-        .catch(err => {
-            content.innerHTML = `<p class="text-sm text-red-500 text-center py-8">❌ ${err.message}</p>`;
-            hidePageLoader();
-        });
-};
+                    `;
+                }).join('');
+                hidePageLoader();
+            })
+            .catch(err => {
+                content.innerHTML = `<p class="text-sm text-red-500 text-center py-8">❌ ${err.message}</p>`;
+                hidePageLoader();
+            });
+    };
 
     window.openEvaluationModal = function (groupId, milestoneId = null) {
         document.getElementById('eval_group_id').value = groupId;
@@ -5354,7 +5400,6 @@ document.addEventListener('DOMContentLoaded', function () {
         openModal('evaluationModal');
         showPageLoader('Preparing evaluation form…');
 
-        // ── Fetch all needed data ──
         Promise.all([
             fetch(`/teacher/get-group/${groupId}`).then(r => r.json()),
             fetch(`/teacher/get-revision-details/${groupId}`).then(r => r.json()).catch(() => null),
@@ -5364,7 +5409,7 @@ document.addEventListener('DOMContentLoaded', function () {
             window.currentGroupData = groupData;
             window.currentRevisionData = revisionData;
             window.currentEvaluationData = evalData;
-            // ── Lock the milestone select to this group's room's required milestone ──
+
             const requiredMilestoneId = groupData.required_milestone_id;
             const requiredMilestoneTitle = groupData.required_milestone_title || 'Milestone';
             milestoneSelect.innerHTML = requiredMilestoneId
@@ -5374,7 +5419,6 @@ document.addEventListener('DOMContentLoaded', function () {
             milestoneSelect.disabled = true;
             document.getElementById('eval_milestone_id').value = requiredMilestoneId || '';
 
-            // ── Check if evaluation already exists ──
             if (evalData && evalData.score !== undefined) {
                 setEvalModeReadOnly('This group has already been evaluated. All fields are read-only.');
                 displayEvaluation(evalData);
@@ -5384,7 +5428,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // ── Load group members for attendance checklist ──
             const checklist = document.getElementById('student_checklist');
             checklist.innerHTML = '<p class="text-xs text-[#5b6375] col-span-2 text-center py-2">Loading students…</p>';
             fetch(`/teacher/get-group/${groupId}`)
@@ -5405,7 +5448,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .catch(() => checklist.innerHTML = '<p class="text-xs text-red-500 col-span-2 text-center py-2">Failed to load students.</p>');
 
-            // ── Disable already evaluated milestones ──
             Array.from(milestoneSelect.options).forEach(opt => {
                 opt.disabled = false;
                 opt.textContent = opt.textContent.replace(' (Already Evaluated)', '');
@@ -5423,17 +5465,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 })
                 .catch(() => {});
-            // Load the rubric for the locked milestone (not-yet-evaluated path)
+
             if (requiredMilestoneId) {
                 milestoneSelect.dispatchEvent(new Event('change'));
             }
-            // Reset attendance radio
+
             const presentRadio = document.querySelector('input[name="attendance"][value="present"]');
             if (presentRadio) presentRadio.checked = true;
             const absentContainer = document.getElementById('absent_students_container');
             if (absentContainer) absentContainer.classList.add('hidden');
 
-            // ── Load revision sheet on the right ──
             const revisionSheetEl = document.getElementById('eval_revision_sheet_content');
             if (revisionSheetEl) renderRevisionSheet(revisionSheetEl, groupId);
 
@@ -5498,7 +5539,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 if (!groupName) titleEl.textContent = `Rubric Scores — ${data.group_name}`;
 
-            const evaluations = data.evaluations || [];
+                const evaluations = data.evaluations || [];
 
                 if (evaluations.length === 0) {
                     content.innerHTML = `
@@ -5638,6 +5679,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('#criteria_tbody tr[data-crit-id]').forEach(row => {
             critCount++;
             const checked = row.querySelector('.criteria-score:checked');
+            if (checked) row.classList.remove('bg-red-50');
+
             totalScore += checked ? parseInt(checked.value, 10) : 0;
         });
         const totalMax = critCount * 4;
@@ -5648,19 +5691,34 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     window.submitEvalModal = function() {
-        const submitEvaluation = () => {
-            const form = document.getElementById('evaluation_form');
-            form.requestSubmit ? form.requestSubmit() : form.submit();
-        };
+            // every rubric criterion needs a 1-4 score
+            const rows = Array.from(document.querySelectorAll('#criteria_tbody tr[data-crit-id]'));
+            if (!rows.length) {
+                showToast('The rubric has not loaded yet.', true);
+                return;
+            }
+            rows.forEach(r => r.classList.remove('bg-red-50'));
+            const missing = rows.filter(r => !r.querySelector('.criteria-score:checked'));
+            if (missing.length) {
+                missing.forEach(r => r.classList.add('bg-red-50'));
+                missing[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                showToast(`Please score all criteria (1–4). ${missing.length} still missing.`, true);
+                return;
+            }
 
-        if (revisionSheetDirty) {
-            saveRevisionSheet({ silent: true })
-                .then(submitEvaluation)
-                .catch(error => showToast(error.message || 'Save the revision notes before evaluating.', true));
-        } else {
-            submitEvaluation();
-        }
-    };
+            const submitEvaluation = () => {
+                const form = document.getElementById('evaluation_form');
+                form.requestSubmit ? form.requestSubmit() : form.submit();
+            };
+
+            if (revisionSheetDirty) {
+                saveRevisionSheet({ silent: true })
+                    .then(submitEvaluation)
+                    .catch(error => showToast(error.message || 'Save the revision notes before evaluating.', true));
+            } else {
+                submitEvaluation();
+            }
+        };
 
     // ── EDIT TEAM MEMBERS ───────────────────────
     let editIdx = 0;
@@ -6022,7 +6080,6 @@ document.addEventListener('DOMContentLoaded', function () {
             })
         ])
         .then(([groupData, revData]) => {
-            // Proponents
             if (groupData.members && groupData.members.length) {
                 proponentsEl.innerHTML = groupData.members.map(m => `
                     <span class="badge badge-navy"><i class="fa-regular fa-user mr-1"></i> ${m.name}</span>
@@ -6033,7 +6090,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             document.getElementById('check_overall_remarks').textContent = revData.overall_remarks || 'No overall remarks.';
 
-            // Chapters
             const chaptersTbody = document.getElementById('check_chapters_tbody');
             if (revData.chapters && revData.chapters.length) {
                 revData.chapters.forEach((ch, idx) => {
@@ -6058,7 +6114,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 chaptersTbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-[#5b6375]">No chapter findings.</td></tr>`;
             }
 
-            // IoT
             const iotTbody = document.getElementById('check_iot_tbody');
             if (revData.iot_findings && revData.iot_findings.length) {
                 revData.iot_findings.forEach((iot, idx) => {
@@ -6081,7 +6136,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 iotTbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-[#5b6375]">No IoT findings.</td></tr>`;
             }
 
-            // Objectives
             const objectivesList = document.getElementById('check_objectives_list');
             objectivesList.innerHTML = '';
             const table = document.createElement('table');
@@ -6124,7 +6178,6 @@ document.addEventListener('DOMContentLoaded', function () {
             table.appendChild(tbodyObj);
             objectivesList.appendChild(table);
 
-            // Toggle completed checkboxes
             document.querySelectorAll(
                 '#check_chapters_tbody [data-role="chapter-completed"], ' +
                 '#check_iot_tbody [data-role="iot-completed"], ' +
@@ -6496,8 +6549,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
- 
-
     window.openViewEvaluationModal = function (groupId) {
         window.openEvaluationModal(groupId);
     };
@@ -6511,9 +6562,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const form = e.target;
         if (!(form instanceof HTMLFormElement)) return;
         if (form.id === 'logout-form') return;
-        if (e.defaultPrevented) return; // forms that own their submit handler
+        if (e.defaultPrevented) return;
 
-        // Skip forms we already handle manually
         if (['revision_check_form', 'revision_form'].includes(form.id)) return;
 
         showPageLoader('Saving changes…');
@@ -6522,236 +6572,273 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 <script>
-(function () {
-    'use strict';
+    (function () {
+        'use strict';
 
-    const PRINT_CLASS_MAP = {
-        revisionSheetModal: 'print-revision',
-        recommendationSheetModal: 'print-recommendation',
-        approvalSheetModal: 'print-approval'
-    };
-    const PRINTABLE_PX = 9.5 * 96 * 0.9;
-    const PRINT_WIDTH_PX = 7.5 * 96;
-
-    const esc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    const personName = p => typeof p === 'string' ? p : (p?.name || 'Panelist');
-    const joinNames = names => {
-        const list = (names || []).map(personName).filter(Boolean);
-        if (!list.length) return '—';
-        if (list.length === 1) return list[0];
-        if (list.length === 2) return `${list[0]} and ${list[1]}`;
-        return `${list.slice(0, -1).join(', ')}, and ${list[list.length - 1]}`;
-    };
-    const fetchJson = url => fetch(url, { __silent: true }).then(r => r.json().catch(() => ({})));
-
-    // ── PRINT: one document at a time, scaled to a single page ──
-    window.printModalContent = function (modalId) {
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
-        const printClass = PRINT_CLASS_MAP[modalId];
-        const box = modal.querySelector('.modal-box');
-
-        let previousZoom = '';
-        if (box && printClass !== 'print-recommendation') {
-            previousZoom = box.style.zoom || '';
-            const previousWidth = box.style.width || '';
-            box.classList.add('print-measure');
-            box.style.zoom = '1';
-            box.style.width = PRINT_WIDTH_PX + 'px';
-            const naturalHeight = box.scrollHeight;
-            box.style.width = previousWidth;
-            box.classList.remove('print-measure');
-            if (naturalHeight > PRINTABLE_PX) {
-                const scale = Math.max(0.45, PRINTABLE_PX / naturalHeight);
-                box.style.zoom = String(Math.floor(scale * 100) / 100);
-            }
-        }
-
-        Object.values(PRINT_CLASS_MAP).forEach(c => document.body.classList.remove(c));
-        if (printClass) document.body.classList.add(printClass);
-
-        const cleanup = () => {
-            if (printClass) document.body.classList.remove(printClass);
-            if (box) box.style.zoom = previousZoom;
-            window.removeEventListener('afterprint', cleanup);
+        const PRINT_CLASS_MAP = {
+            revisionSheetModal: 'print-revision',
+            recommendationSheetModal: 'print-recommendation',
+            approvalSheetModal: 'print-approval'
         };
-        window.addEventListener('afterprint', cleanup);
-        window.print();
-        setTimeout(cleanup, 2000);
-    };
+        const PRINTABLE_PX = 9.5 * 96 * 0.9;
+        const PRINT_WIDTH_PX = 7.5 * 96;
 
-    // ── RECOMMENDATION SHEET ──
-    window.openRecommendationSheet = function (groupId) {
+        const esc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        const personName = p => typeof p === 'string' ? p : (p?.name || 'Panelist');
+        const joinNames = names => {
+            const list = (names || []).map(personName).filter(Boolean);
+            if (!list.length) return '—';
+            if (list.length === 1) return list[0];
+            if (list.length === 2) return `${list[0]} and ${list[1]}`;
+            return `${list.slice(0, -1).join(', ')}, and ${list[list.length - 1]}`;
+        };
+        const fetchJson = url => fetch(url, { __silent: true }).then(r => r.json().catch(() => ({})));
+
+        // ── PRINT: one document at a time, scaled to a single page ──
+        window.printModalContent = function (modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            const printClass = PRINT_CLASS_MAP[modalId];
+            const box = modal.querySelector('.modal-box');
+
+            let previousZoom = '';
+            if (box && printClass !== 'print-recommendation') {
+                previousZoom = box.style.zoom || '';
+                const previousWidth = box.style.width || '';
+                box.classList.add('print-measure');
+                box.style.zoom = '1';
+                box.style.width = PRINT_WIDTH_PX + 'px';
+                const naturalHeight = box.scrollHeight;
+                box.style.width = previousWidth;
+                box.classList.remove('print-measure');
+                if (naturalHeight > PRINTABLE_PX) {
+                    const scale = Math.max(0.45, PRINTABLE_PX / naturalHeight);
+                    box.style.zoom = String(Math.floor(scale * 100) / 100);
+                }
+            }
+
+            Object.values(PRINT_CLASS_MAP).forEach(c => document.body.classList.remove(c));
+            if (printClass) document.body.classList.add(printClass);
+
+            const cleanup = () => {
+                if (printClass) document.body.classList.remove(printClass);
+                if (box) box.style.zoom = previousZoom;
+                window.removeEventListener('afterprint', cleanup);
+            };
+            window.addEventListener('afterprint', cleanup);
+            window.print();
+            setTimeout(cleanup, 2000);
+        };
+
+        // ── RECOMMENDATION SHEET ──
+        window.openRecommendationSheet = function (groupId) {
+            if (!groupId) return;
+            const $ = id => document.getElementById(id);
+            const title = $('recommendationTitle'), props = $('recommendationProponents'),
+                adviser = $('recommendationAdviser'), dateEl = $('recommendationDate'),
+                serialEl = $('recommendationSerial'), groupEl = $('recommendationGroup'),
+                loading = $('recommendationSheetLoading');
+
+            title.textContent = '—'; props.textContent = 'Loading...'; adviser.textContent = '—';
+            dateEl.textContent = '—'; serialEl.textContent = '—'; groupEl.textContent = '—';
+            if (loading) loading.style.display = 'flex';
+            openModal('recommendationSheetModal');
+
+            fetchJson(`/teacher/get-recommendation-sheet/${groupId}`)
+                .then(data => {
+                    title.textContent = data.capstone_title || '—';
+                    props.textContent = joinNames(data.members);
+                    adviser.textContent = data.adviser || '—';
+                    groupEl.textContent = data.group_name || '—';
+                    serialEl.textContent = data.serial_number || '—';
+                    const issued = data.issued_date || data.date_issued;
+                    if (issued) {
+                        dateEl.textContent = new Date(issued).toLocaleDateString('en-US',
+                            { month: 'long', day: 'numeric', year: 'numeric' });
+                    }
+                })
+                .catch(() => { props.textContent = 'Error loading data'; adviser.textContent = 'Error loading data'; })
+                .finally(() => { if (loading) loading.style.display = 'none'; });
+        };
+
+        // ── APPROVAL SHEET ──
+        window.openApprovalSheet = function (groupId) {
+            if (!groupId) return;
+            const $ = id => document.getElementById(id);
+            const title = $('approvalTitle'), proponents = $('approvalProponents'), adviser = $('approvalAdviser'),
+                panelists = $('approvalPanelists'), chairmanBlock = $('approvalChairmanBlock'), chairman = $('approvalChairman'),
+                oralResult = $('approvalOralResult'), oralDate = $('approvalOralDate'), president = $('approvalPresident'),
+                serialEl = $('approvalSerial'), loading = $('approvalSheetLoading');
+            const defaultPresident = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
+
+            title.textContent = '—'; proponents.textContent = 'Loading...'; adviser.textContent = '—';
+            panelists.innerHTML = '<div class="approval-signature"><span class="approval-sig-line">Loading...</span><div class="approval-sig-role">Member</div></div>';
+            chairmanBlock.style.display = 'none'; chairman.textContent = '—';
+            oralResult.textContent = '—'; oralDate.textContent = '—';
+            president.textContent = defaultPresident; serialEl.textContent = ' ';
+            if (loading) loading.style.display = 'flex';
+            openModal('approvalSheetModal');
+
+            fetch(`/teacher/get-approval-sheet/${groupId}`, { __silent: true })
+                .then(async r => {
+                    if (!r.ok) throw new Error(`Server returned ${r.status}`);
+                    return r.json();
+                })
+                .then(data => {
+                    title.textContent = data.capstone_title || '—';
+                    proponents.textContent = joinNames(data.members);
+                    adviser.textContent = data.adviser || '—';
+
+                    const all = Array.isArray(data.panelists) ? data.panelists : [];
+                    const chairmanEntry = all.find(p => /chair/i.test(String(p?.role || p?.type || '')))
+                        || (data.chairman ? { name: data.chairman } : null);
+                    const members = chairmanEntry ? all.filter(p => p !== chairmanEntry) : all;
+
+                    panelists.innerHTML = members.length
+                        ? members.map(p => `<div class="approval-signature"><span class="approval-sig-line">${esc(personName(p))}</span><div class="approval-sig-role">Member</div></div>`).join('')
+                        : '<div class="approval-signature"><span class="approval-sig-line">No panelists assigned</span><div class="approval-sig-role">Member</div></div>';
+
+                    if (chairmanEntry) {
+                        chairmanBlock.style.display = 'block';
+                        chairman.textContent = personName(chairmanEntry);
+                    }
+                    
+                    oralResult.textContent = data.oral_exam_result || '—';
+
+                    // Only show the date when an actual oral exam evaluation exists.
+                    const examDateRaw = data.oral_exam_date;
+                    if (examDateRaw) {
+                        const dt = new Date(examDateRaw);
+                        oralDate.textContent = isNaN(dt.getTime())
+                            ? examDateRaw
+                            : dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    } else {
+                        oralDate.textContent = '—';
+                    }
+                    president.textContent = data.school_president || defaultPresident;
+                    serialEl.textContent = data.serial_number || ' ';
+                })
+                .catch(err => {
+                    console.error('Approval sheet error:', err);
+                    proponents.textContent = 'Unable to load approval data';
+                    panelists.innerHTML = `<div class="approval-signature"><span class="approval-sig-line">Error loading panel</span><div class="approval-sig-role">${esc(err.message)}</div></div>`;
+                })
+                .finally(() => { if (loading) loading.style.display = 'none'; });
+        };
+
+        // ── REVISION SHEET (all panelists, official form layout) ──
+    window.openRevisionSheet = function (groupId, preferRevisionId) {
         if (!groupId) return;
         const $ = id => document.getElementById(id);
-        const title = $('recommendationTitle'), props = $('recommendationProponents'),
-              adviser = $('recommendationAdviser'), dateEl = $('recommendationDate'),
-              serialEl = $('recommendationSerial'), groupEl = $('recommendationGroup'),
-              loading = $('recommendationSheetLoading');
+        const serialEl = $('revisionSheetSerial'), tabsEl = $('revisionPanelistTabs'),
+            proponents = $('sheetProponents'), chapterRows = $('sheetChapterRows'),
+            iotRows = $('sheetIotRows'), objectiveRows = $('sheetObjectivesList'),
+            overall = $('sheetOverallRemarks'), approvedBy = $('sheetApprovedBy'),
+            loading = $('revisionSheetLoading');
 
-        title.textContent = '—'; props.textContent = 'Loading...'; adviser.textContent = '—';
-        dateEl.textContent = '—'; serialEl.textContent = '—'; groupEl.textContent = '—';
-        if (loading) loading.style.display = 'flex';
-        openModal('recommendationSheetModal');
+        const remarkText = v => String(v || 'Pending').toLowerCase() === 'completed' ? 'Completed' : 'Pending';
+        const blankRow = cols => `<tr class="rv-tall">${'<td></td>'.repeat(cols)}</tr>`;
 
-        fetchJson(`/teacher/get-recommendation-sheet/${groupId}`)
-            .then(data => {
-                title.textContent = data.capstone_title || '—';
-                props.textContent = joinNames(data.members);
-                adviser.textContent = data.adviser || '—';
-                groupEl.textContent = data.group_name || '—';
-                serialEl.textContent = data.serial_number || '—';
-                const issued = data.issued_date || data.date_issued;
-                if (issued) {
-                    dateEl.textContent = new Date(issued).toLocaleDateString('en-US',
-                        { month: 'long', day: 'numeric', year: 'numeric' });
-                }
-            })
-            .catch(() => { props.textContent = 'Error loading data'; adviser.textContent = 'Error loading data'; })
-            .finally(() => { if (loading) loading.style.display = 'none'; });
-    };
+        const renderProponents = (members, title) => {
+            const n = Math.max(5, members.length);
+            let html = '';
+            for (let i = 0; i < n; i++) {
+                const name = members[i] ? esc(members[i].name ?? members[i]) : '';
+                html += `<tr><td>${i + 1}. ${name}</td>` +
+                    (i === 0 ? `<td class="rv-project" rowspan="${n}">${esc(title)}</td>` : '') + `</tr>`;
+            }
+            proponents.innerHTML = html;
+        };
 
-    // ── APPROVAL SHEET ──
-    window.openApprovalSheet = function (groupId) {
-        if (!groupId) return;
-        const $ = id => document.getElementById(id);
-        const title = $('approvalTitle'), proponents = $('approvalProponents'), adviser = $('approvalAdviser'),
-              panelists = $('approvalPanelists'), chairmanBlock = $('approvalChairmanBlock'), chairman = $('approvalChairman'),
-              oralResult = $('approvalOralResult'), oralDate = $('approvalOralDate'), president = $('approvalPresident'),
-              serialEl = $('approvalSerial'), loading = $('approvalSheetLoading');
-        const defaultPresident = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
+        const fillSheet = (rev, data) => {
+            renderProponents(data.members || [], data.capstone_title || '');
 
-        title.textContent = '—'; proponents.textContent = 'Loading...'; adviser.textContent = '—';
-        panelists.innerHTML = '<div class="approval-signature"><span class="approval-sig-line">Loading...</span><div class="approval-sig-role">Member</div></div>';
-        chairmanBlock.style.display = 'none'; chairman.textContent = '—';
-        oralResult.textContent = '—'; oralDate.textContent = '—';
-        president.textContent = defaultPresident; serialEl.textContent = ' ';
-        if (loading) loading.style.display = 'flex';
-        openModal('approvalSheetModal');
+            const chapters = rev ? rev.chapters || [] : [];
+            let html = chapters.map(ch =>
+                `<tr><td class="rv-c">${esc(ch.chapter)}</td><td>${esc(ch.findings)}</td><td class="rv-c">${remarkText(ch.remarks)}</td></tr>`
+            ).join('');
+            for (let i = chapters.length; i < 3; i++) html += blankRow(3);
+            chapterRows.innerHTML = html;
 
-        fetch(`/teacher/get-approval-sheet/${groupId}`, { __silent: true })
-            .then(async r => {
-                if (!r.ok) throw new Error(`Server returned ${r.status}`);
-                return r.json();
-            })
-            .then(data => {
-                title.textContent = data.capstone_title || '—';
-                proponents.textContent = joinNames(data.members);
-                adviser.textContent = data.adviser || '—';
+            const iots = rev ? rev.iot_findings || [] : [];
+            html = iots.map(i =>
+                `<tr class="rv-tall"><td>${esc(i.finding)}</td><td class="rv-c">${remarkText(i.remarks)}</td></tr>`
+            ).join('');
+            for (let i = iots.length; i < 8; i++) html += blankRow(2);
+            iotRows.innerHTML = html;
 
-                const all = Array.isArray(data.panelists) ? data.panelists : [];
-                const chairmanEntry = all.find(p => /chair/i.test(String(p?.role || p?.type || '')))
-                    || (data.chairman ? { name: data.chairman } : null);
-                const members = chairmanEntry ? all.filter(p => p !== chairmanEntry) : all;
+            const objs = rev ? rev.additional_objectives || [] : [];
+            const rows = Math.max(2, Math.ceil(objs.length / 2));
+            html = '';
+            for (let i = 0; i < rows; i++) {
+                const l = objs[i], r = objs[i + rows];
+                html += `<tr class="rv-tall"><td>${i + 1}.${l ? ' ' + esc(l.objective) : ''}</td>` +
+                        `<td>${i + rows + 1}.${r ? ' ' + esc(r.objective) : ''}</td></tr>`;
+            }
+            objectiveRows.innerHTML = html;
 
-                panelists.innerHTML = members.length
-                    ? members.map(p => `<div class="approval-signature"><span class="approval-sig-line">${esc(personName(p))}</span><div class="approval-sig-role">Member</div></div>`).join('')
-                    : '<div class="approval-signature"><span class="approval-sig-line">No panelists assigned</span><div class="approval-sig-role">Member</div></div>';
+            overall.textContent = rev ? (rev.overall_remarks || '') : '';
+            approvedBy.textContent = rev ? (rev.panelist_name || '') : '';
+            serialEl.textContent = data.serial_number || '\u00A0';
+        };
 
-                if (chairmanEntry) {
-                    chairmanBlock.style.display = 'block';
-                    chairman.textContent = personName(chairmanEntry);
-                }
-                oralResult.textContent = data.oral_exam_result || '—';
-                
-                // Prefer the certificate issued_date; fall back to the evaluation date.
-                const examDateRaw = data.issued_date || data.oral_exam_date;
-                if (examDateRaw) {
-                    const dt = new Date(examDateRaw);
-                    oralDate.textContent = isNaN(dt.getTime())
-                        ? examDateRaw
-                        : dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                } else {
-                    oralDate.textContent = '—';
-                }
-                president.textContent = data.school_president || defaultPresident;
-                serialEl.textContent = data.serial_number || ' ';
-            })
-            .catch(err => {
-                console.error('Approval sheet error:', err);
-                proponents.textContent = 'Unable to load approval data';
-                panelists.innerHTML = `<div class="approval-signature"><span class="approval-sig-line">Error loading panel</span><div class="approval-sig-role">${esc(err.message)}</div></div>`;
-            })
-            .finally(() => { if (loading) loading.style.display = 'none'; });
-    };
-
-    // ── REVISION SHEET ──
-    window.openRevisionSheet = function (groupId) {
-        if (!groupId) return;
-        const $ = id => document.getElementById(id);
-        const serialEl = $('revisionSheetSerial'), proponents = $('sheetProponents'), title = $('sheetProjectTitle'),
-              chapterRows = $('sheetChapterRows'), iotRows = $('sheetIotRows'), objectiveRows = $('sheetObjectivesList'),
-              overall = $('sheetOverallRemarks'), approvedBy = $('sheetApprovedBy'), loading = $('revisionSheetLoading');
-        const myName = @json(trim(($teacher->teacher_first_name ?? '') . ' ' . ($teacher->teacher_last_name ?? '')));
-
-        proponents.innerHTML = '<li class="text-[#5b6375] italic">Loading...</li>';
-        title.textContent = '—';
-        chapterRows.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-[#5b6375] italic">Loading...</td></tr>';
-        iotRows.innerHTML = '<tr><td colspan="2" class="p-3 text-center text-[#5b6375] italic">Loading...</td></tr>';
-        objectiveRows.innerHTML = '<tr><td colspan="2" class="p-3 text-center text-[#5b6375] italic">Loading...</td></tr>';
-        overall.textContent = '—';
-        approvedBy.textContent = myName || '_________________________';
-        serialEl.textContent = ' ';
+        // reset + open
+        tabsEl.innerHTML = '';
+        serialEl.innerHTML = '&nbsp;';
+        renderProponents([], '');
+        chapterRows.innerHTML = blankRow(3).repeat(3);
+        iotRows.innerHTML = blankRow(2).repeat(8);
+        objectiveRows.innerHTML = blankRow(2).repeat(2);
+        overall.textContent = ''; approvedBy.textContent = '';
         if (loading) loading.style.display = 'flex';
         openModal('revisionSheetModal');
 
-        const badge = remarks => {
-            const done = String(remarks || 'Pending').toLowerCase() === 'completed';
-            return `<span class="badge ${done ? 'badge-green' : 'badge-amber'}">${done ? 'Completed' : 'Pending'}</span>`;
-        };
-        const empty = (cols, msg) => `<tr><td colspan="${cols}" class="p-3 text-center text-[#5b6375] italic">${msg}</td></tr>`;
+        fetch(`/teacher/get-all-revisions/${groupId}`, { __silent: true })
+            .then(async r => {
+                const d = await r.json().catch(() => ({}));
+                if (!r.ok) throw new Error(d.error || `Server returned ${r.status}`);
+                return d;
+            })
+            .then(data => {
+                const revisions = data.revisions || [];
+                if (!revisions.length) {
+                    fillSheet(null, data);
+                    overall.textContent = 'No panelist has issued a revision sheet for this group yet.';
+                    return;
+                }
 
-        Promise.all([
-            fetchJson(`/teacher/get-group/${groupId}`),
-            fetchJson(`/teacher/get-revision-details/${groupId}`)
-        ])
-        .then(([groupData, rev]) => {
-            proponents.innerHTML = (groupData.members && groupData.members.length)
-                ? groupData.members.map(m => `<li>${esc(m.name)}</li>`).join('')
-                : '<li class="text-[#5b6375] italic">No members.</li>';
-            title.textContent = groupData.capstone_title || '—';
+                const show = id => {
+                    const rev = revisions.find(r => String(r.id) === String(id)) || revisions[0];
+                    tabsEl.querySelectorAll('.rv-tab').forEach(b =>
+                        b.classList.toggle('active', String(b.dataset.id) === String(rev.id)));
+                    fillSheet(rev, data);
+                };
 
-            chapterRows.innerHTML = (rev.chapters && rev.chapters.length)
-                ? rev.chapters.map(ch => `<tr>
-                    <td class="border border-[#b88d3a] p-2 font-semibold">${esc(ch.chapter)}</td>
-                    <td class="border border-[#b88d3a] p-2">${esc(ch.findings)}</td>
-                    <td class="border border-[#b88d3a] p-2 text-center">${badge(ch.remarks)}</td></tr>`).join('')
-                : empty(3, 'No chapter findings.');
+                if (revisions.length > 1) {
+                    tabsEl.innerHTML = revisions.map(r =>
+                        `<button type="button" class="rv-tab" data-id="${r.id}">` +
+                        `<i class="fa-regular fa-user mr-1"></i>${esc(r.panelist_name)}${r.is_mine ? ' (You)' : ''}</button>`
+                    ).join('');
+                    tabsEl.querySelectorAll('.rv-tab').forEach(b => b.addEventListener('click', () => show(b.dataset.id)));
+                }
 
-            iotRows.innerHTML = (rev.iot_findings && rev.iot_findings.length)
-                ? rev.iot_findings.map(i => `<tr>
-                    <td class="border border-[#b88d3a] p-2">${esc(i.finding)}</td>
-                    <td class="border border-[#b88d3a] p-2 text-center">${badge(i.remarks)}</td></tr>`).join('')
-                : empty(2, 'No System / IoT findings.');
-
-            objectiveRows.innerHTML = (rev.additional_objectives && rev.additional_objectives.length)
-                ? rev.additional_objectives.map(o => {
-                    const text = typeof o === 'object' ? o.objective : o;
-                    const rem = typeof o === 'object' ? o.remarks : 'Pending';
-                    return `<tr><td class="border border-[#b88d3a] p-2">${esc(text)}</td>
-                        <td class="border border-[#b88d3a] p-2 text-center">${badge(rem)}</td></tr>`;
-                }).join('')
-                : empty(2, 'No additional objectives.');
-
-            overall.textContent = rev.overall_remarks || 'No overall remarks.';
-            const sn = rev.serial_number || groupData.serial_number;
-            serialEl.textContent = sn ? sn : ' ';
-            if (rev.panelist_name || rev.approved_by) approvedBy.textContent = rev.panelist_name || rev.approved_by;
-        })
-        .catch(err => {
-            console.error('Revision sheet error:', err);
-            proponents.innerHTML = `<li class="text-red-500">${esc(err.message)}</li>`;
-        })
-        .finally(() => { if (loading) loading.style.display = 'none'; });
+                const start = preferRevisionId || (revisions.find(r => r.is_mine) || revisions[0]).id;
+                show(start);
+            })
+            .catch(err => {
+                console.error('Revision sheet error:', err);
+                overall.textContent = 'Unable to load revision sheets: ' + err.message;
+            })
+            .finally(() => { if (loading) loading.style.display = 'none'; });
     };
-
-    // ── Hooks used by the existing teacher buttons ──
-    window.openTeacherRecommendationSheet = window.openRecommendationSheet;
-    window.openTeacherApprovalSheet       = window.openApprovalSheet;
-    window.openTeacherRevisionSheet       = window.openRevisionSheet;
-    window.openViewRevisionModal          = window.openRevisionSheet;
-})();
+        // ── Hooks used by the existing teacher buttons ──
+        window.openTeacherRecommendationSheet = window.openRecommendationSheet;
+        window.openTeacherApprovalSheet       = window.openApprovalSheet;
+        window.openTeacherRevisionSheet       = window.openRevisionSheet;
+        window.openViewRevisionModal          = window.openRevisionSheet;
+    })();
 </script>
+<script src="{{ asset('js/idle-logout.js') }}"></script>
 </body>
     </html> 
