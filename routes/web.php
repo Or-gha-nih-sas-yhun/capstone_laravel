@@ -39,6 +39,9 @@ Route::post('/destroy',    [user_controller::class, 'destroy'])->name('destroy.s
 Route::post('/send-code',  [user_controller::class, 'sendVerificationCode'])
     ->name('send_code')
     ->middleware('throttle:5,1');
+Route::get('/verify-email',          [user_controller::class, 'showVerifyEmailForm'])->name('verification.notice');
+Route::post('/verify-email/send',    [user_controller::class, 'sendVerificationCode'])->name('verification.send_code')->middleware('throttle:5,1');
+Route::post('/verify-email/confirm', [user_controller::class, 'confirmVerificationCode'])->name('verification.confirm')->middleware('throttle:10,10');
 
 Route::get('/forgot-password',          [user_controller::class, 'showForgotPasswordForm'])->name('password.request');
 Route::post('/forgot-password/send',    [user_controller::class, 'sendForgotPasswordCode'])->name('password.email')->middleware('throttle:3,10');
@@ -58,9 +61,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('/keep-alive', fn () => response()->noContent())->name('keep.alive');
-    Route::get('/verify-email',          [user_controller::class, 'showVerifyEmailForm'])->name('verification.notice');
-    Route::post('/verify-email/send',    [user_controller::class, 'sendVerificationCodeAfterLogin'])->name('verification.send_code')->middleware('throttle:3,10');
-    Route::post('/verify-email/confirm', [user_controller::class, 'confirmVerificationCode'])->name('verification.confirm')->middleware('throttle:10,10');
 
     Route::get('/certificate/{groupId}/{certificateId}', [user_controller::class, 'showCertificate'])->name('certificate.show');
     Route::get('/group/{groupId}/certificates',          [user_controller::class, 'getGroupCertificates'])->name('group.certificates');

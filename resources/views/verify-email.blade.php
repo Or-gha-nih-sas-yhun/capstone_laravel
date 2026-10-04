@@ -142,8 +142,11 @@
                 <p class="error">{{ $message }}</p>
                 @enderror
             </div>
-            <button type="submit" class="btn-submit" style="background:transparent;border:1.5px solid var(--gold);color:var(--navy);">
-                Send Verification Code
+            <button type="submit" id="sendCodeBtn" class="btn-submit"
+                    style="background:transparent;border:1.5px solid var(--gold);color:var(--navy);"
+                    data-label="{{ session('code_sent') ? 'Resend Verification Code' : 'Send Verification Code' }}"
+                    {{ ($remaining ?? 0) > 0 ? 'disabled' : '' }}>
+                {{ session('code_sent') ? 'Resend Verification Code' : 'Send Verification Code' }}
             </button>
             @if(session('success'))
             <p style="color:#1e6b3a;font-size:0.75rem;margin-top:0.5rem;">{{ session('success') }}</p>
@@ -176,5 +179,42 @@
         </form>
     </div>
 </div>
+<x-slot:scripts>
+<script>
+(function () {
+    const btn = document.getElementById('sendCodeBtn');
+    if (!btn) return;
+    let left = {{ (int) ($remaining ?? 0) }};
+    const label = btn.dataset.label || 'Send Verification Code';
 
+    function paint() {
+        if (left > 0) {
+            btn.disabled = true;
+            btn.style.opacity = '.6';
+            btn.style.cursor = 'not-allowed';
+            btn.textContent = 'Resend available in ' + left + 's';
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor = '';
+            btn.textContent = label;
+        }
+    }
+
+    paint();
+    if (left > 0) {
+        const t = setInterval(function () {
+            left--;
+            paint();
+            if (left <= 0) clearInterval(t);
+        }, 1000);
+    }
+
+    // after the form is submitted, lock the button so it can't be double-clicked
+    btn.closest('form').addEventListener('submit', function () {
+        setTimeout(function () { btn.disabled = true; btn.style.opacity = '.6'; }, 0);
+    });
+})();
+</script>
+</x-slot:scripts>
 </x-layout>

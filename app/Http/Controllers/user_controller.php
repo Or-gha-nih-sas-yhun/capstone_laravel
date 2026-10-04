@@ -50,98 +50,121 @@ class user_controller extends Controller
             default   => redirect()->route('student.page'),
         };
     }
+private const VERIFY_COOLDOWN = 60; // seconds
 
+private function verifyCooldownRemaining(string $userId): int
+{
+    $until = Cache::get('verify_cooldown_' . $userId);
+    return $until ? max(0, (int) $until - time()) : 0;
+}
+
+private function startVerifyCooldown(string $userId): void
+{
+    Cache::put('verify_cooldown_' . $userId, time() + self::VERIFY_COOLDOWN, self::VERIFY_COOLDOWN);
+}
     // ── REGISTER ──────────────────────────────────────────────────
     public function register(Request $request)
-    {
-        if (Auth::check()) {
-            return $this->redirectByRole();
-        }
-
-        $user = User::where('user_id', session('user_id'))->first();
-
-        if (!$user) {
-            return back()->withErrors(['id' => 'No matching ID found. Please check your ID again.']);
-        }
-
-        if (!is_null($user->password)) {
-            return back()->withErrors(['id' => 'This account has already been registered. Please log in instead.']);
-        }
-
-        $incomingdata = $request->validate([
-            'name'     => ['required', 'min:3'],
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
-        ]);
-
-        $user->name     = $incomingdata['name'];
-        $user->email    = $incomingdata['email'];
-        $user->password = bcrypt($incomingdata['password']);
-        $user->save();
-
-        Auth::login($user);
-
-        // ── GENERATE & SEND EMAIL VERIFICATION CODE AFTER CREATING ACCOUNT ──
-        $code = (string) random_int(100000, 999999);
-        Cache::put('verify_code_' . $user->user_id, $code, now()->addMinutes(10));
-
-        Mailer::send(
-            $user->email,
-            $user->user_id,
-            'Your Capstone Tracker verification code',
-            "<p>Your verification code is:</p><h2>{$code}</h2><p>This code expires in 10 minutes.</p>"
-        );
-
-        return redirect()->route('verification.notice')
-            ->with('success', 'A verification code has been sent to your email.')
-            ->with('code_sent', true)
-            ->with('verified_email', $user->email);
+{
+    if (Auth::check()) {
+        return $this->redirectByRole();
     }
+
+    $user = User::where('user_id', session('user_id'))->first();
+    if (!$user) {
+        return back()->withErrors(['id' => 'No matching ID found. Please check your ID again.']);
+    }
+    if (!is_null($user->password)) {
+        return back()->withErrors(['id' => 'This account has already been registered. Please log in instead.']);
+    }
+
+    $incomingdata = $request->validate([
+        'name'     => ['required', 'min:3'],
+        'email'    => 'required|email|unique:users,email',
+        'password' => 'required|min:6',
+    ]);
+
+    // Hold the details temporarily. NOTHING is saved to the users table yet.
+    Cache::put('pending_reg_' . $user->user_id, [
+        'name'     => $incomingdata['name'],
+        'email'    => $incomingdata['email'],
+        'password' => bcrypt($incomingdata['password']),
+    ], now()->addMinutes(30));
+
+    $code = (string) random_int(100000, 999999);
+    Cache::put('verify_code_' . $user->user_id, $code, now()->addMinutes(10));
+
+    $sent = Mailer::send(
+        $incomingdata['email'],
+        $user->user_id,
+        'Your Capstone Tracker verification code',
+        "<p>Your verification code is:</p><h2>{$code}</h2><p>This code expires in 10 minutes.</p>"
+    );
+
+    if (!$sent) {
+        Cache::forget('pending_reg_' . $user->user_id);
+        return back()
+            ->withErrors(['email' => 'Failed to send verification email. Please try again.'])
+            ->withInput($request->only('name', 'email'));
+    }
+
+    $this->startVerifyCooldown($user->user_id);
+
+    return redirect()->route('verification.notice')
+        ->with('success', 'A verification code has been sent to your email.')
+        ->with('code_sent', true)
+        ->with('verified_email', $incomingdata['email']);
+}
 
     // ── VERIFICATION ─────────────────────────────────────────────
     public function sendVerificationCode(Request $request)
-    {   
-        $request->validate(['email' => 'required|email']);
-
-        $user = User::where('user_id', session('user_id'))->first();
-        if (!$user) {
-            return back()->withErrors(['id' => 'No matching ID found. Please check your ID again.']);
-        }
-
-        if (!is_null($user->password)) {
-            return back()->withErrors(['id' => 'This account has already been registered. Please log in instead.']);
-        }
-
-        // Find the email already on file for this role — this is the identity check.
-        $onFileEmail = match ($user->role) {
-            'student' => Student::where('user_id', $user->user_id)->value('student_email'),
-            'teacher' => Teacher::where('user_id', $user->user_id)->value('teacher_email'),
-            'admin'   => Admin::where('user_id', $user->user_id)->value('admin_email'),
-            default   => null,
-        };
-
-        if (!$onFileEmail || strtolower($onFileEmail) !== strtolower($request->email)) {
-            return back()->withErrors(['email' => 'This email does not match our records for this ID.']);
-        }
-
-        $code = (string) random_int(100000, 999999);
-        Cache::put('verify_code_' . $user->user_id, $code, now()->addMinutes(10));
-
-        $sent = Mailer::send(
-            $onFileEmail,
-            $user->user_id,
-            'Your Capstone Tracker verification code',
-            "<p>Your verification code is:</p><h2>{$code}</h2><p>This code expires in 10 minutes.</p>"
-        );
-
-        if (!$sent) {
-            return back()->withErrors(['email' => 'Failed to send verification email. Please try again.']);
-        }
-
-        return back()->with('success', 'A verification code has been sent to your email.')
-                      ->with('code_sent', true)
-                      ->with('verified_email', $request->email);
+{
+    if (Auth::check()) {
+        return $this->sendVerificationCodeAfterLogin($request);
     }
+
+    $request->validate(['email' => 'required|email|unique:users,email']);
+
+    $user = User::where('user_id', session('user_id'))->first();
+    if (!$user || !is_null($user->password)) {
+        return redirect('/');
+    }
+
+    $pending = Cache::get('pending_reg_' . $user->user_id);
+    if (!$pending) {
+        return redirect('/')->withErrors(['id' => 'Registration expired. Please register again.']);
+    }
+
+    $wait = $this->verifyCooldownRemaining($user->user_id);
+    if ($wait > 0) {
+        return back()
+            ->withErrors(['email' => "Please wait {$wait} second(s) before requesting a new code."])
+            ->with('code_sent', true)
+            ->with('verified_email', $pending['email']);
+    }
+
+    $pending['email'] = $request->email;
+    Cache::put('pending_reg_' . $user->user_id, $pending, now()->addMinutes(30));
+
+    $code = (string) random_int(100000, 999999);
+    Cache::put('verify_code_' . $user->user_id, $code, now()->addMinutes(10));
+
+    $sent = Mailer::send(
+        $request->email,
+        $user->user_id,
+        'Your Capstone Tracker verification code',
+        "<p>Your verification code is:</p><h2>{$code}</h2><p>This code expires in 10 minutes.</p>"
+    );
+
+    if (!$sent) {
+        return back()->withErrors(['email' => 'Failed to send verification email. Please try again.']);
+    }
+
+    $this->startVerifyCooldown($user->user_id);
+
+    return back()->with('success', 'A verification code has been sent to your email.')
+                 ->with('code_sent', true)
+                 ->with('verified_email', $request->email);
+}
 
     // ── LOGIN ─────────────────────────────────────────────────────
   public function login(Request $request)
@@ -2466,13 +2489,31 @@ $adviserName = $group->adviser
 
 
     // ── SHOW VERIFY EMAIL FORM ───────────────────────
-    public function showVerifyEmailForm()
-    {
+   public function showVerifyEmailForm()
+{
+    if (Auth::check()) {
+        // legacy accounts that are already logged in but unverified
         if (Auth::user()->email_verified_at !== null) {
             return $this->redirectByRole();
         }
-        return view('verify-email');
+        $userId = Auth::user()->user_id;
+        $email  = Auth::user()->email;
+    } else {
+        $user = User::where('user_id', session('user_id'))->first();
+        if (!$user || !is_null($user->password)) {
+            return redirect('/');
+        }
+        $pending = Cache::get('pending_reg_' . $user->user_id);
+        if (!$pending) {
+            return redirect('/')->withErrors(['id' => 'Registration expired. Please register again.']);
+        }
+        $userId = $user->user_id;
+        $email  = $pending['email'];
     }
+
+    $remaining = $this->verifyCooldownRemaining($userId);
+    return view('verify-email', compact('remaining', 'email'));
+}
 
     // ── SEND CODE AFTER LOGIN ────────────────────────
     public function sendVerificationCodeAfterLogin(Request $request)
@@ -2483,71 +2524,122 @@ $adviserName = $group->adviser
         ], [
             'email.unique' => 'This email is already taken.',
         ]);
-
-        $email = $request->email;
-
-        $code = (string) random_int(100000, 999999);
-        Cache::put('verify_code_' . $user->user_id, $code, now()->addMinutes(10));
-
-        $sent = Mailer::send(
-            $email,
-            $user->user_id,
-            'Your Capstone Tracker verification code',
-            "<p>Your verification code is:</p><h2>{$code}</h2><p>This code expires in 10 minutes.</p>"
-        );
-
-        if (!$sent) {
-            return back()->withErrors(['email' => 'Failed to send verification email. Please try again.'])->withInput();
+        $wait = $this->verifyCooldownRemaining($user->user_id);
+        if ($wait > 0) {
+            return back()
+                ->withErrors(['email' => "Please wait {$wait} second(s) before requesting a new code."])
+                ->withInput()
+                ->with('code_sent', true)
+                ->with('verified_email', $request->email);
         }
 
-        return back()->with('success', 'A verification code has been sent to your email.')
-                      ->with('code_sent', true)
-                      ->with('verified_email', $email);
+                $email = $request->email;
+
+                $code = (string) random_int(100000, 999999);
+                Cache::put('verify_code_' . $user->user_id, $code, now()->addMinutes(10));
+
+                $sent = Mailer::send(
+                    $email,
+                    $user->user_id,
+                    'Your Capstone Tracker verification code',
+                    "<p>Your verification code is:</p><h2>{$code}</h2><p>This code expires in 10 minutes.</p>"
+                );
+
+                if (!$sent) {
+                    return back()->withErrors(['email' => 'Failed to send verification email. Please try again.'])->withInput();
+                }
+        $this->startVerifyCooldown($user->user_id);
+                return back()->with('success', 'A verification code has been sent to your email.')
+                            ->with('code_sent', true)
+                            ->with('verified_email', $email);
     }
 
     // ── CONFIRM VERIFICATION CODE ────────────────────
     public function confirmVerificationCode(Request $request)
-    {   
-         /** @var \App\Models\User $user */
-        $user = Auth::user();
-        $request->validate([
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'code'  => 'required|string',
-        ], [
-            'email.unique' => 'This email is already taken.',
-        ]);
+{
+        // ── legacy: already logged in, just verifying an email ──
+        if (Auth::check()) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            $request->validate([
+                'email' => 'required|email|unique:users,email,' . $user->id,
+                'code'  => 'required|string',
+            ], ['email.unique' => 'This email is already taken.']);
 
-        $cachedCode = Cache::get('verify_code_' . $user->user_id);
+            $cachedCode = Cache::get('verify_code_' . $user->user_id);
+            if (!$cachedCode || !hash_equals($cachedCode, (string) $request->code)) {
+                return back()->withErrors(['code' => 'Invalid or expired verification code.'])
+                            ->with('code_sent', true)
+                            ->with('verified_email', $request->email);
+            }
 
-        if (!$cachedCode || $cachedCode !== $request->code) {
-            return back()->withErrors(['code' => 'Invalid or expired verification code.'])
-                         ->withInput()
-                         ->with('code_sent', true)
-                         ->with('verified_email', $request->email);
+            $user->email = $request->email;
+            $user->email_verified_at = now();
+            $user->save();
+            $this->syncProfileEmail($user, $request->email);
+            Cache::forget('verify_code_' . $user->user_id);
+
+            return $this->redirectByRole();
         }
 
-        // ── PERSIST THE VERIFIED EMAIL ──
-        $user->email = $request->email;
+        // ── new registration: verify FIRST, then create the credentials ──
+        $request->validate(['code' => 'required|digits:6']);
+
+        $user = User::where('user_id', session('user_id'))->first();
+        if (!$user || !is_null($user->password)) {
+            return redirect('/');
+        }
+
+        $pending = Cache::get('pending_reg_' . $user->user_id);
+        if (!$pending) {
+            return redirect('/')->withErrors(['id' => 'Registration expired. Please register again.']);
+        }
+
+        // 5 tries per code
+        $key = 'verify_attempts_' . $user->user_id;
+        if (Cache::get($key, 0) >= 5) {
+            Cache::forget('verify_code_' . $user->user_id);
+            return back()->withErrors(['code' => 'Too many attempts. Request a new code.'])
+                        ->with('code_sent', true)
+                        ->with('verified_email', $pending['email']);
+        }
+        Cache::put($key, Cache::get($key, 0) + 1, now()->addMinutes(10));
+
+        $cachedCode = Cache::get('verify_code_' . $user->user_id);
+        if (!$cachedCode || !hash_equals($cachedCode, (string) $request->code)) {
+            return back()->withErrors(['code' => 'Invalid or expired verification code.'])
+                        ->with('code_sent', true)
+                        ->with('verified_email', $pending['email']);
+        }
+
+        // ✅ verified — NOW save username, email and password
+        $user->name              = $pending['name'];
+        $user->email             = $pending['email'];
+        $user->password          = $pending['password']; // already hashed
         $user->email_verified_at = now();
         $user->save();
 
-        // ── UPDATE SYNCED PROFILE EMAIL ──
-        switch ($user->role) {
-            case 'student':
-                Student::where('user_id', $user->user_id)->update(['student_email' => $request->email]);
-                break;
-            case 'teacher':
-                Teacher::where('user_id', $user->user_id)->update(['teacher_email' => $request->email]);
-                break;
-            case 'admin':
-                Admin::where('user_id', $user->user_id)->update(['admin_email' => $request->email]);
-                break;
-        }
+        $this->syncProfileEmail($user, $pending['email']);
 
+        Cache::forget('pending_reg_' . $user->user_id);
         Cache::forget('verify_code_' . $user->user_id);
+        Cache::forget('verify_cooldown_' . $user->user_id);
+        Cache::forget($key);
+
+        Auth::login($user);
+        $request->session()->regenerate();
 
         return $this->redirectByRole();
-    }
+}
+
+    private function syncProfileEmail(User $user, string $email): void
+{
+        switch ($user->role) {
+            case 'student': Student::where('user_id', $user->user_id)->update(['student_email' => $email]); break;
+            case 'teacher': Teacher::where('user_id', $user->user_id)->update(['teacher_email' => $email]); break;
+            case 'admin':   Admin::where('user_id', $user->user_id)->update(['admin_email' => $email]); break;
+        }
+}
 
     // ── SHOW FORGOT PASSWORD FORM ───────────────────
     public function showForgotPasswordForm()
@@ -2702,6 +2794,7 @@ public function requestGroupRevision(Request $request, $groupId)
         return back()->with('error', 'You are not authorized to request revision for this group.');
     }
 
+
     $validated = $request->validate([
         'revision_description'    => 'required|string|max:2000',
         'chapters'                => 'nullable|array',
@@ -2715,6 +2808,16 @@ public function requestGroupRevision(Request $request, $groupId)
         'additional_objectives.*' => 'required|string|max:500',
     ]);
 
+
+            if (empty($validated['chapters'] ?? [])
+        && empty($validated['iot_findings'] ?? [])
+        && empty($validated['additional_objectives'] ?? [])) {
+        $msg = 'Add at least one finding: a Chapter finding, a System/IoT finding, or an Additional Objective.';
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => false, 'error' => $msg], 422);
+        }
+        return back()->with('error', $msg);
+    }
     // ── 1. Save the revision (transaction ONLY wraps the revision rows) ──
     try {
         DB::transaction(function () use ($validated, $teacher, $group) {

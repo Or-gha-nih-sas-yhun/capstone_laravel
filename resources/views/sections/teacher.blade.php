@@ -3244,7 +3244,7 @@
         <div class="mb-4">
             <div class="relative">
                 <input type="text" id="ddm_search_input" oninput="filterDdmTable()" class="form-input text-xs w-full pl-9 py-2 border border-[#e2dacf] rounded-xl bg-[#faf8f4]" placeholder="Search by name, title, section, or details...">
-                <i class="fas fa-search absolute left-3 top-3 text-[#b8b0a0] text-xs"></i>
+                <i class="fas fa-search absolute left-3 top-3 text-[#b8b0a0] text-xs    "></i>
             </div>
         </div>
 
@@ -3799,14 +3799,30 @@
     else window.addEventListener('load', hideSplash);
     setTimeout(hideSplash, SPLASH_MAX_MS);
 
-    /* ---------------- 2. Top route progress bar ---------------- */
+        /* ---------------- 2. Top route progress bar ---------------- */
     const barEl   = document.getElementById('route-progress');
     const barFill = document.getElementById('route-progress-fill');
-    let barValue = 0, barTimer = null, barActive = false, barRefs = 0;
+    let barValue = 0, barTimer = null, barActive = false, barRefs = 0, barMaxTimer = null;
+
+    function barReset() {
+        if (!barEl || !barFill) return;
+        barRefs = 0;
+        clearInterval(barTimer);
+        clearTimeout(barMaxTimer);
+        barFill.style.width = '100%';
+        setTimeout(function () {
+            barEl.classList.remove('active');
+            barActive = false;
+            setTimeout(function () { if (!barActive) barFill.style.width = '0%'; }, 320);
+        }, 200);
+    }
 
     function barStart() {
         if (!barEl || !barFill) return;
         barRefs++;
+        // safety net: no matter what, the bar is forced to finish after 12s
+        clearTimeout(barMaxTimer);
+        barMaxTimer = setTimeout(barReset, 12000);
         if (barActive) return;
         barActive = true;
         barValue = 10;
@@ -3825,19 +3841,16 @@
         if (!barEl || !barFill) return;
         barRefs = Math.max(0, barRefs - 1);
         if (barRefs > 0 || !barActive) return;
-        clearInterval(barTimer);
-        barFill.style.width = '100%';
-        setTimeout(function () {
-            barEl.classList.remove('active');
-            barActive = false;
-            setTimeout(function () { barFill.style.width = '0%'; }, 320);
-        }, 230);
+        barReset();
     }
+    window.resetTopBar = barReset;
 
     /* ---------------- 3. Overlay loader ---------------- */
     const overlayEl = document.getElementById('page-loader');
     const overlayLabel = overlayEl ? overlayEl.querySelector('.loader-label') : null;
     let overlayRefs = 0, overlayTimer = null, overlayShownAt = 0, watchdogTimer = null;
+
+       let overlayHoldsBar = false;
 
     window.showPageLoader = function (label) {
         if (!overlayEl) return;
@@ -3857,9 +3870,11 @@
         watchdogTimer = setTimeout(function () {
             overlayRefs = 0;
             overlayEl.classList.remove('active');
+            if (overlayHoldsBar) { overlayHoldsBar = false; barFinish(); }
         }, WATCHDOG_MS);
 
-        barStart();
+        // the overlay takes ONE bar reference, no matter how many times it is shown
+        if (!overlayHoldsBar) { overlayHoldsBar = true; barStart(); }
     };
 
     window.hidePageLoader = function (force) {
@@ -3877,7 +3892,8 @@
             if (overlayRefs === 0) overlayEl.classList.remove('active');
         }, wait);
 
-        barFinish();
+        if (overlayHoldsBar) { overlayHoldsBar = false; barFinish(); }
+        if (force) barReset();
     };
 
     window.softReload = function (delay) {
@@ -3966,6 +3982,7 @@
         if (e.persisted) {
             hideSplash();
             window.hidePageLoader(true);
+            window.resetTopBar();
         }
     });
 })();
@@ -5049,6 +5066,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 objectives.push(input.value);
             }
         });
+                if (!chapters.length && !iotFindings.length && !objectives.length) {
+            showToast('Add at least one finding: a Chapter finding, a System/IoT finding, or an Additional Objective.', true);
+            return;
+        }
 
         fetch(`/teacher/group/${groupId}/request-revision`, {
             method: 'POST',
@@ -5372,8 +5393,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 hidePageLoader();
             });
     };
+function resetEvalModalState() {
+    // re-enable every field (milestone select stays locked on purpose)
+    document.querySelectorAll('#evaluation_form input, #evaluation_form select, #evaluation_form textarea').forEach(el => {
+        if (el.type !== 'hidden' && el.id !== 'milestone_select') el.disabled = false;
+    });
 
+    // clear leftovers from a previously viewed evaluation
+    const fb = document.querySelector('#evaluation_form textarea[name="feedback"]');
+    if (fb) fb.value = '';
+    const present = document.querySelector('input[name="attendance"][value="present"]');
+    if (present) present.checked = true;
+    document.getElementById('absent_students_container')?.classList.add('hidden');
+    document.getElementById('student_checklist').innerHTML = '';
+    document.getElementById('criteria_tbody').innerHTML = '';
+    document.getElementById('total_score_display').textContent = '0';
+    document.getElementById('total_max').textContent = '0';
+    document.getElementById('rubric_name_display').textContent = '';
+
+    // restore footer: remove the read-only message, show the submit button
+    document.querySelectorAll('.eval-modal-footer > p').forEach(p => p.remove());
+    const submitBtn = document.getElementById('eval_submit_btn');
+    if (submitBtn) { submitBtn.style.display = ''; submitBtn.disabled = false; }
+}
     window.openEvaluationModal = function (groupId, milestoneId = null) {
+        resetEvalModalState();   
         document.getElementById('eval_group_id').value = groupId;
         revisionSheetDirty = false;
         revisionEditorReadOnly = false;
@@ -6352,12 +6396,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const readOnlyAttr = editable ? '' : 'readonly';
         return `
-            <div id="eval_revision_editor" class="space-y-4" data-editable="${editable ? 'true' : 'false'}">
-                <div class="mb-4">
-                    <label class="form-label">Overall Remarks / Instructions</label>
-                    <textarea id="eval_sheet_overall_remarks" class="form-input text-sm min-h-24" placeholder="No remarks provided." oninput="markRevisionSheetDirty()" ${readOnlyAttr}>${escHtml(data?.overall_remarks || '')}</textarea>
-                </div>
-
+            
                 <div class="border-t border-[#e2dacf] pt-4 mt-4">
                     <p class="form-fieldset-title"><i class="fa-solid fa-book"></i> Chapter / Document Findings</p>
                     <div class="overflow-x-auto">
@@ -6389,6 +6428,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         </table>
                     </div>
                     ${editable ? '<button type="button" onclick="addRevisionSheetObjectiveRow()" class="btn-outline text-xs mt-2"><i class="fas fa-plus mr-1"></i> Add Objective</button>' : ''}
+                </div>
+
+                                <div class="border-t border-[#e2dacf] pt-4 mt-4">
+                    <label class="form-label">Overall Remarks / Instructions <span class="text-red-500">*</span></label>
+                    <textarea id="eval_sheet_overall_remarks" class="form-input text-sm min-h-24" required
+                        placeholder="${editable ? 'Required: provide clear instructions for the group and their adviser...' : 'No remarks provided.'}"
+                        oninput="markRevisionSheetDirty()" ${readOnlyAttr}>${escHtml(data?.overall_remarks || '')}</textarea>
                 </div>
 
                 ${editable ? `
@@ -6440,74 +6486,100 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     window.saveRevisionSheet = function(options = {}) {
-        const groupId = document.getElementById('eval_group_id')?.value;
-        const saveBtn = document.getElementById('eval_revision_save_btn');
-        const status = document.getElementById('eval_revision_save_status');
-        if (!groupId) return Promise.reject(new Error('Group not selected.'));
+    const groupId = document.getElementById('eval_group_id')?.value;
+    const saveBtn = document.getElementById('eval_revision_save_btn');
+    const status  = document.getElementById('eval_revision_save_status');
+    if (!groupId) return Promise.reject(new Error('Group not selected.'));
 
-        const description = document.getElementById('eval_sheet_overall_remarks')?.value.trim() || '';
-        const chapters = Array.from(document.querySelectorAll('#eval_sheet_chapter_rows .eval-sheet-row')).map(row => ({
-            chapter: row.querySelector('.eval-sheet-chapter')?.value.trim() || '',
-            findings: row.querySelector('.eval-sheet-findings')?.value.trim() || ''
-        })).filter(item => item.chapter || item.findings);
-        const iotFindings = Array.from(document.querySelectorAll('#eval_sheet_iot_rows .eval-sheet-row')).map(row => ({
-            finding: row.querySelector('.eval-sheet-iot')?.value.trim() || ''
-        })).filter(item => item.finding);
-        const additionalObjectives = Array.from(document.querySelectorAll('#eval_sheet_objective_rows .eval-sheet-row'))
-            .map(row => row.querySelector('.eval-sheet-objective')?.value.trim() || '')
-            .filter(Boolean);
+    const remarksEl   = document.getElementById('eval_sheet_overall_remarks');
+    const description = remarksEl?.value.trim() || '';
 
-        if (!description && !chapters.length && !iotFindings.length && !additionalObjectives.length) {
-            if (!options.silent) showToast('Add at least one revision note before saving.', true);
-            return Promise.resolve({ skipped: true });
-        }
+    const chapterRaw = Array.from(document.querySelectorAll('#eval_sheet_chapter_rows .eval-sheet-row')).map(row => ({
+        chapter:  row.querySelector('.eval-sheet-chapter')?.value.trim() || '',
+        findings: row.querySelector('.eval-sheet-findings')?.value.trim() || ''
+    }));
+    const chapters = chapterRaw.filter(i => i.chapter || i.findings);
+    const iotFindings = Array.from(document.querySelectorAll('#eval_sheet_iot_rows .eval-sheet-row')).map(row => ({
+        finding: row.querySelector('.eval-sheet-iot')?.value.trim() || ''
+    })).filter(i => i.finding);
+    const additionalObjectives = Array.from(document.querySelectorAll('#eval_sheet_objective_rows .eval-sheet-row'))
+        .map(row => row.querySelector('.eval-sheet-objective')?.value.trim() || '')
+        .filter(Boolean);
 
-        const originalHtml = saveBtn?.innerHTML;
-        if (saveBtn) {
-            saveBtn.disabled = true;
-            saveBtn.classList.add('is-loading');
-            saveBtn.innerHTML = '<i class="fas fa-circle-notch"></i> Saving…';
-        }
-        if (status) status.textContent = 'Saving…';
-
-        return fetch(`/teacher/group/${groupId}/request-revision`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                revision_description: description,
-                chapters,
-                iot_findings: iotFindings,
-                additional_objectives: additionalObjectives
-            })
-        })
-            .then(async response => {
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok || !result.success) throw new Error(result.error || 'Failed to save revision notes.');
-                return result;
-            })
-            .then(result => {
-                revisionSheetDirty = false;
-                if (status) status.textContent = 'Saved';
-                if (!options.silent) showToast(result.message || 'Revision notes saved successfully.');
-                return result;
-            })
-            .catch(error => {
-                if (status) status.textContent = 'Save failed';
-                if (!options.silent) showToast(error.message || 'Failed to save revision notes.', true);
-                throw error;
-            })
-            .finally(() => {
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.classList.remove('is-loading');
-                    saveBtn.innerHTML = originalHtml || '<i class="fa-solid fa-floppy-disk mr-1"></i> Save Revision Notes';
-                }
-            });
+    const fail = (msg, el) => {
+        el?.classList.add('border-red-400');
+        el?.focus();
+        if (!options.silent) showToast(msg, true);
+        return Promise.reject(new Error(msg));
     };
+    remarksEl?.classList.remove('border-red-400');
+
+    // at least ONE finding is required (chapter OR system/IoT OR objective)
+    if (!chapters.length && !iotFindings.length && !additionalObjectives.length) {
+        return fail('Add at least one finding: a Chapter finding, a System/IoT finding, or an Additional Objective.', null);
+    }
+
+    // a chapter row needs BOTH chapter and findings
+    if (chapters.some(c => !c.chapter || !c.findings)) {
+        return fail('Each chapter finding needs both a Chapter and Findings.', null);
+    }
+
+    // overall remarks is required by the server
+    if (!description) return fail('Overall Remarks / Instructions is required.', remarksEl);
+
+    const originalHtml = saveBtn?.innerHTML;
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.classList.add('is-loading');
+        saveBtn.innerHTML = '<i class="fas fa-circle-notch"></i> Saving…';
+    }
+    if (status) status.textContent = 'Saving…';
+
+    return fetch(`/teacher/group/${groupId}/request-revision`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            revision_description: description,
+            chapters,
+            iot_findings: iotFindings,
+            additional_objectives: additionalObjectives
+        })
+    })
+    .then(async response => {
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.success === false) {
+            const firstValidation = result.errors ? Object.values(result.errors).flat()[0] : null;
+            throw new Error(result.error || firstValidation || result.message || 'Failed to save revision notes.');
+        }
+        return result;
+    })
+    .then(result => {
+        revisionSheetDirty = false;
+        if (status) status.textContent = 'Saved';
+        if (!options.silent) {
+            showToast(result.message || 'Revision notes saved successfully.');
+            softReload(900);          // refresh so the page reflects the new revision
+        }
+        return result;
+    })
+    .catch(error => {
+        if (status) status.textContent = 'Save failed';
+        if (!options.silent) showToast(error.message, true);
+        throw error;
+    })
+    .finally(() => {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('is-loading');
+            saveBtn.innerHTML = originalHtml || '<i class="fa-solid fa-floppy-disk mr-1"></i> Save Revision Notes';
+        }
+    });
+};
 
     function setRevisionAccessLabel(editable) {
         const label = document.getElementById('eval_revision_access_label');
