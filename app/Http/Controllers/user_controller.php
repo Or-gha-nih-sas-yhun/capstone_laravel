@@ -257,9 +257,9 @@ private function startVerifyCooldown(string $userId): void
  */
 private function autoIssueCertificateIfEligible($groupId, $milestoneId)
 {
-    $milestone = Milestone::find($milestoneId);
+    $milestone = Milestone::with('capstoneStage')->find($milestoneId); 
     if (!$milestone) return;
-
+    $stageType = $milestone->capstoneStage?->stage_type;  
     $title = strtolower($milestone->milestone_title ?? '');
     $type = str_contains($title, 'recommendation sheet') ? 'recommendation'
           : (str_contains($title, 'approval sheet') ? 'approval' : null);
@@ -275,9 +275,15 @@ private function autoIssueCertificateIfEligible($groupId, $milestoneId)
                 . 'Bachelor of Science in Information Technology has been examined, '
                 . 'accepted, and recommended for Oral Presentation.',
             'milestone_id'            => $milestoneId,
+             'capstone_stage_id'       => $milestone->capstone_stage_id,
             'is_locked'               => 1,
         ]);
     }
+    // Backfill the stage if missing (older rows)
+if ($certificate && ! $certificate->capstone_stage_id && $milestone->capstone_stage_id) {
+    $certificate->capstone_stage_id = $milestone->capstone_stage_id;
+    $certificate->save();
+}
 
     if (!$certificate) return;
 
@@ -296,7 +302,7 @@ private function autoIssueCertificateIfEligible($groupId, $milestoneId)
         'group_id'       => $groupId,
         'certificate_id' => $certificate->id,
         'issued_date'    => now()->toDateString(),
-        'serial_number'  => $this->generateSerialNumber($certificate->document_type ?? $type),
+        'serial_number'  => $this->generateSerialNumber($certificate->document_type ?? $type,$stageType),
     ]);
 }
 
@@ -309,10 +315,22 @@ private function autoIssueCertificateIfEligible($groupId, $milestoneId)
  */
 private function issueRevisionCertificate(Group $group): ?GroupCertificate
 {
-    // Reuse (or create) a single "Revision Sheet" certificate template.
-    // milestone_id is NULL because revisions are not tied to a milestone.
+    $group->loadMissing('room');
+
+    $stageId = $group->room?->capstone_stage_id
+        ?: $group->capstone_stage_id
+        ?: CapstoneStages::where('is_archived', false)
+            ->where('is_enabled', true)
+            ->where('capstone_year_id', $group->capstone_year_id)
+            ->value('id');
+            
+        $stageType = $stageId
+        ? CapstoneStages::where('id', $stageId)->value('stage_type')        // ← NEW
+        : null;
+
     $certificate = Certificate::where('document_type', 'revision')
         ->whereNull('milestone_id')
+        ->where('capstone_stage_id', $stageId)
         ->first();
 
     if (!$certificate) {
@@ -321,15 +339,13 @@ private function issueRevisionCertificate(Group $group): ?GroupCertificate
             'document_type'           => 'revision',
             'certificate_description' => 'Official revision sheet issued by the panel.',
             'milestone_id'            => null,
+            'capstone_stage_id'       => $stageId,
             'is_locked'               => 1,
         ]);
     }
 
-    // Idempotency: don't issue the same revision sheet twice for one group.
-    $already = GroupCertificate::where('group_id', $group->id)
-        ->where('certificate_id', $certificate->id)
-        ->exists();
-    if ($already) {
+    if (GroupCertificate::where('group_id', $group->id)
+            ->where('certificate_id', $certificate->id)->exists()) {
         return null;
     }
 
@@ -337,7 +353,7 @@ private function issueRevisionCertificate(Group $group): ?GroupCertificate
         'group_id'       => $group->id,
         'certificate_id' => $certificate->id,
         'issued_date'    => now()->toDateString(),
-        'serial_number'  => $this->generateSerialNumber('revision'),
+        'serial_number'  => $this->generateSerialNumber('revision', $stageType),
     ]);
 }
 
@@ -378,29 +394,67 @@ private function issueRevisionCertificate(Group $group): ?GroupCertificate
         }
 
  
-      // ── Load ALL revisions for this group (if any) ──
-    $revisions = collect();
-    if ($groups) {
-        $revisions = \App\Models\Revision::with([
-            'documentation',
-            'enhancements',
-            'objectives',
-            'panelist'  // eager load the panelist teacher
-        ])
-        ->where('group_id', $groups->id)
-        ->orderBy('created_at', 'desc')
-        ->get();
-    }
 
 
  
-        $activeYear = CapstoneYear::getActiveYear();
+        $activeYear  = CapstoneYear::getActiveYear();
         $groupYearId = $groups ? $groups->capstone_year_id : $activeYear->id;
 
         $enabledStageIds = CapstoneStages::where('is_enabled', true)
             ->where('capstone_year_id', $groupYearId)
             ->pluck('id');
-        $milestones = Milestone::whereIn('capstone_stage_id', $enabledStageIds)->orderBy('step_order')->get();
+// ══════════════════════════════════════════════════════════════════
+// Revisions — a revision is visible to the student only while the
+// capstone stage it belongs to is currently ENABLED.
+//
+//   • Capstone 1 enabled  → Capstone 1 revisions are shown
+//   • Capstone 2 disabled → Capstone 2 revisions are hidden
+//
+// (Full history is kept in $allRevisions if you later need it for
+//  audit / certificate re-issuance purposes.)
+// ══════════════════════════════════════════════════════════════════
+// ── Load every revision for this group ───────────────────────────
+$allRevisions = collect();
+if ($groups) {
+    $allRevisions = \App\Models\Revision::with([
+            'documentation',
+            'enhancements',
+            'objectives',
+            'panelist',
+        ])
+        ->where('group_id', $groups->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
+}
+
+// Legacy rows without a capstone_stage_id are treated as belonging to
+// whichever single stage is currently enabled for this group's year.
+// Prevents historical revisions from vanishing when the stage flips.
+$fallbackStageId = $enabledStageIds->count() === 1
+    ? $enabledStageIds->first()
+    : null;
+
+$revisions = $allRevisions
+    ->filter(function ($rev) use ($enabledStageIds, $fallbackStageId) {
+        $stageId = $rev->capstone_stage_id ?: $fallbackStageId;
+        return $stageId !== null && $enabledStageIds->contains($stageId);
+    })
+    ->values();
+
+$hasPendingRevision = $revisions->contains(function ($rev) {
+    return collect([$rev->documentation, $rev->enhancements, $rev->objectives])
+        ->flatten(1)
+        ->contains(fn ($i) => strtolower(trim($i->remarks ?? '')) !== 'completed');
+});
+
+$revisionStatus = $revisions->isEmpty()
+    ? 'none'
+    : ($hasPendingRevision ? 'needs_revision' : 'revised');
+
+// ── Milestones ───────────────────────────────────────────────────
+$milestones = Milestone::whereIn('capstone_stage_id', $enabledStageIds)
+    ->orderBy('step_order')
+    ->get();
         $overallProgress = 0;
         $nextMilestone = null;
 
@@ -452,12 +506,25 @@ private function issueRevisionCertificate(Group $group): ?GroupCertificate
             : collect();
 
             // in dashboard(), replace the certificates map with:
-            $certificates = Certificate::all()->map(function ($cert) use ($groupcertificates, $groups) {
-                $groupCert = $groupcertificates->firstWhere('certificate_id', $cert->id);
-                $cert->unlocked = (bool) $groupCert;
-                $cert->issued_date = $groupCert->issued_date ?? null;
-                return $cert;
-            });
+           $liveStageIds = CapstoneStages::where('is_enabled', true)
+    ->where('is_archived', false)
+    ->pluck('id')
+    ->map(fn ($id) => (int) $id)
+    ->toArray();
+
+$certificates = Certificate::where(function ($q) use ($liveStageIds) {
+        $q->whereNull('capstone_stage_id');
+        if (!empty($liveStageIds)) {
+            $q->orWhereIn('capstone_stage_id', $liveStageIds);
+        }
+    })
+    ->get()
+    ->map(function ($cert) use ($groupcertificates) {
+        $gc = $groupcertificates->firstWhere('certificate_id', $cert->id);
+        $cert->unlocked    = (bool) $gc;
+        $cert->issued_date = $gc->issued_date ?? null;
+        return $cert;
+    });
 
    // ── Check if capstone is fully completed ──
     $isCapstoneComplete = false;
@@ -484,21 +551,28 @@ if ($groups) {
 }
 
 
-       $certificatesCap1 = collect();
-$certificatesCap2 = collect();
+// Pre-load stage_type map once so we don't hit the DB per certificate
+$stageTypeById = CapstoneStages::whereIn(
+        'id',
+        $certificates->pluck('capstone_stage_id')->filter()->unique()
+    )
+    ->pluck('stage_type', 'id')
+    ->mapWithKeys(fn ($v, $k) => [(int) $k => $v]);
 
-foreach ($certificates as $cert) {
-    // Each certificate is linked to a milestone via `milestone_id`
-    $milestone = \App\Models\Milestone::find($cert->milestone_id);
-    if ($milestone) {
-        $stage = $milestone->capstoneStage->stage_type ?? null;
-        if ($stage == 1) {
-            $certificatesCap1->push($cert);
-        } elseif ($stage == 2) {
-            $certificatesCap2->push($cert);
-        }
-    }
-}
+$certificatesCap1 = $certificates->filter(function ($cert) use ($stageTypeById) {
+    // Prefer the denormalised column, fall back to the milestone for legacy rows
+    $stageType = $cert->capstone_stage_id
+        ? ($stageTypeById[$cert->capstone_stage_id] ?? null)
+        : optional(optional(\App\Models\Milestone::find($cert->milestone_id))->capstoneStage)->stage_type;
+    return $stageType == 1;
+})->values();
+
+$certificatesCap2 = $certificates->filter(function ($cert) use ($stageTypeById) {
+    $stageType = $cert->capstone_stage_id
+        ? ($stageTypeById[$cert->capstone_stage_id] ?? null)
+        : optional(optional(\App\Models\Milestone::find($cert->milestone_id))->capstoneStage)->stage_type;
+    return $stageType == 2;
+})->values();
 
 // ── Has this group's required capstone milestone (oral presentation) been evaluated? ──
 $isRequiredCapstoneEvaluated = false;
@@ -507,37 +581,7 @@ if ($groups && $groups->room && $groups->room->required_milestone_id) {
         ->where('milestone_id', $groups->room->required_milestone_id)
         ->exists();
 }
-
-// ── Locate the "Approval Sheet" milestone for Capstone 2 (e.g. "ISSUANCE OF APPROVAL SHEET") ──
-$approvalMilestone = $milestones->first(function ($m) {
-    return $m->capstoneStage
-        && $m->capstoneStage->stage_type == 2
-        && stripos($m->milestone_title, 'approval sheet') !== false;
-});
-
-// ── Has this group ever had a revision requested? ──
-$groupRevisions = collect();
-if ($groups) {
-    $groupRevisions = \App\Models\Revision::with(['documentation', 'enhancements', 'objectives'])
-        ->where('group_id', $groups->id)
-        ->get();
-}
-
-// ── Path 1: the "ISSUANCE OF APPROVAL SHEET" milestone itself is completed ──
-$isApprovalMilestoneComplete = $approvalMilestone
-    ? in_array($approvalMilestone->id, $completedMilestoneIds)
-    : false;
-
-// ── Path 2: a revision was requested AND every item across all revisions is "Completed" ──
-$isRevisionFullyCleared = $groupRevisions->isNotEmpty() && $groupRevisions->every(function ($rev) {
-    $allDocsDone = $rev->documentation->every(fn($item) => strtolower(trim($item->remarks ?? '')) === 'completed');
-    $allEnhDone  = $rev->enhancements->every(fn($item) => strtolower(trim($item->remarks ?? '')) === 'completed');
-    $allObjDone  = $rev->objectives->every(fn($item) => strtolower(trim($item->remarks ?? '')) === 'completed');
-    return $allDocsDone && $allEnhDone && $allObjDone;
-});
-
-// ── Unlocked if EITHER path is satisfied — not exclusive ──
-$isApprovalSheetUnlocked = $isApprovalMilestoneComplete || $isRevisionFullyCleared;
+$isApprovalSheetUnlocked = $groups ? $this->approvalSheetUnlocked($groups) : false;
 
 // ── Recommendation Sheet unlocks: the "Recommendation Sheet" milestone itself is marked completed ──
 $isRecommendationUnlocked = false;
@@ -549,11 +593,12 @@ if ($groups) {
         $isRecommendationUnlocked = in_array($recommendationMilestone->id, $completedMilestoneIds);
     }
 }
+$stageTypeByStageId = CapstoneStages::pluck('stage_type', 'id');
         return view('sections.student', compact(
             'user', 'student', 'groups', 'members', 'adviser',
             'milestones', 'overallProgress', 'nextMilestone',
             'evaluations', 'allEvaluations', 'certificates', 'completedMilestoneIds', 'groupcertificates',
-            'remarksByMilestone', 'absencesByMilestone','revisions','isCapstoneComplete','isCapstone2Complete','isRecommendationUnlocked','isApprovalSheetUnlocked','certificatesCap1','certificatesCap2'
+            'remarksByMilestone', 'absencesByMilestone','isCapstone2Complete','isRecommendationUnlocked','isApprovalSheetUnlocked','certificatesCap1','certificatesCap2','revisions', 'revisionStatus'
         ));
     }
 
@@ -773,10 +818,15 @@ if ($groups) {
         $q->where('stage_type', 2)->where('is_archived', false);
     })->pluck('id')->toArray();
 
-    $groupsData = Group::where('is_archived', false)->where('capstone_year_id', $activeYear->id)
-        ->with(['adviser', 'section', 'students', 'room', 'groupMilestones', 'team_members'])
-        ->get()
-        ->map(function ($group) use ($capstone1Milestones, $capstone2Milestones) {
+  $groupsData = Group::where('is_archived', false)
+    ->where('capstone_year_id', $activeYear->id)
+    ->with([
+        'adviser', 'section', 'students', 'room',
+        'capstone1Room', 'capstone2Room',        // ← new relations
+        'groupMilestones', 'team_members',
+    ])
+    ->get()
+    ->map(function ($group) use ($capstone1Milestones, $capstone2Milestones) {
             $completedMilestoneIds = $group->groupMilestones
                 ->where('status', 'completed')
                 ->pluck('milestone_id')
@@ -815,6 +865,14 @@ if ($groups) {
                 'members'               => $members,
                 'completed_c1'          => $completedC1,
                 'completed_c2'          => $completedC2,
+                'room_id'   => $group->room_id,
+            'room_name' => $group->room->room_name ?? 'Unassigned',
+
+            // ── NEW ──
+            'capstone1_room_id'   => $group->capstone1_room_id,
+            'capstone1_room_name' => $group->capstone1Room->room_name ?? null,
+            'capstone2_room_id'   => $group->capstone2_room_id,
+            'capstone2_room_name' => $group->capstone2Room->room_name ?? null,
             ];
         });
 
@@ -920,23 +978,47 @@ if ($groups) {
     }
 
 
+$liveStageIds = CapstoneStages::where('is_enabled', true)
+    ->where('is_archived', false)
+    ->pluck('id')
+    ->map(fn ($id) => (int) $id)
+    ->all();
 
-    $issuedDocuments = GroupCertificate::with(['certificate', 'group.students.user'])
+$milestoneStage = Milestone::pluck('capstone_stage_id', 'id');   // [milestone_id => stage_id]
+
+$issuedDocuments = GroupCertificate::with(['certificate', 'group.students.user', 'group.room'])
     ->orderByDesc('issued_date')
     ->get()
+    ->filter(function ($gc) use ($liveStageIds, $milestoneStage) {
+        $cert = $gc->certificate;
+        if (!$cert) return false;
+
+        // Resolve the real stage
+        $stageId = null;
+        if ($cert->milestone_id) {
+            $stageId = $milestoneStage[$cert->milestone_id] ?? null;      // recommendation / approval
+        } elseif ($gc->group && $gc->group->room) {
+            $stageId = $gc->group->room->capstone_stage_id;               // revision sheet
+        }
+        $stageId = $stageId ?: $cert->capstone_stage_id;                  // last resort
+
+        // Unknown stage → keep; known stage → must be live
+        return $stageId === null || in_array((int) $stageId, $liveStageIds, true);
+    })
     ->map(function ($gc) {
         $group = $gc->group;
         return [
-            'id'                 => $gc->id,
-            'group_id'           => $gc->group_id,                                 // NEW
-            'serial_number'      => $gc->serial_number ?? '—',
-            'certificate_title'  => $gc->certificate->certificate_title ?? 'Document',
-            'document_type'      => $gc->certificate->document_type ?? null,        // NEW
-            'group_name'         => $group->group_name ?? 'Unknown Group',
-            'section_name'       => optional($group?->students->first())->section ?? 'N/A',
-            'issued_date'        => $gc->issued_date,
+            'id'                => $gc->id,
+            'group_id'          => $gc->group_id,
+            'serial_number'     => $gc->serial_number ?? '—',
+            'certificate_title' => $gc->certificate->certificate_title ?? 'Document',
+            'document_type'     => $gc->certificate->document_type ?? null,
+            'group_name'        => $group->group_name ?? 'Unknown Group',
+            'section_name'      => optional($group?->students->first())->section ?? 'N/A',
+            'issued_date'       => $gc->issued_date,
         ];
-    });
+    })
+    ->values();
     // ── Return view with all compact variables ──
     return view('sections.admin', compact(
         'user',
@@ -1020,7 +1102,7 @@ public function adminGetGroupRevisions($groupId)
     $serial = GroupCertificate::where('group_id', $groupId)
         ->where(function ($q) {
             $q->whereHas('certificate', fn($c) => $c->where('document_type', 'revision'))
-              ->orWhere('serial_number', 'like', 'MCC-REV-%');
+              ->orWhere('serial_number', 'like', 'MCC-%REV-%');
         })
         ->latest('issued_date')
         ->value('serial_number');
@@ -1057,12 +1139,23 @@ public function adminGetGroupRevisions($groupId)
 
     $activeYear = CapstoneYear::getActiveYear();
 
-    $assignedRooms = $teacher->evaluationRooms()->with('groups')->get();
+   $assignedRooms = $teacher->evaluationRooms()
+    ->where(function ($q) {
+        $q->whereNull('capstone_stage_id')
+          ->orWhereHas('capstoneStage', fn ($s) => $s->where('is_enabled', true));
+    })
+    ->with('groups')
+    ->get();
     $assignedRoomIds = $assignedRooms->pluck('id');
     $teacherId = $teacher->id;
     // ── All evaluation rooms, for the classroom grid ──   
-    $allRooms = EvaluationRoom::where('is_archived', false)->
-    with(['panelists', 'groups'])->get();           
+    $allRooms = EvaluationRoom::where('is_archived', false)
+    ->where(function ($q) {
+        $q->whereNull('capstone_stage_id')
+          ->orWhereHas('capstoneStage', fn ($s) => $s->where('is_enabled', true));
+    })
+    ->with(['panelists', 'groups'])
+    ->get();
 
     $groups = Group::where('is_archived', false)
         ->where('capstone_year_id', $activeYear->id)
@@ -1370,6 +1463,8 @@ public function adminGetGroupRevisions($groupId)
 // BLOCK EVALUATION IF REVISION IS NOT COMPLETE
 // ==========================================
 
+$stageId = $group->room?->capstone_stage_id;
+
 $revision = \App\Models\Revision::with([
     'documentation',
     'enhancements',
@@ -1377,6 +1472,7 @@ $revision = \App\Models\Revision::with([
 ])
 ->where('group_id', $group->id)
 ->where('panelist_id', $teacher->id)
+->when($stageId, fn ($q) => $q->where('capstone_stage_id', $stageId))
 ->first();
 
 if ($revision) {
@@ -1647,7 +1743,12 @@ if ($revision) {
         // Auto-issue certificate if this milestone has one
         $this->autoIssueCertificateIfEligible($validated['group_id'], $validated['milestone_id']);
 
-        $milestoneCount = Milestone::count();
+        $enabledStageIds = CapstoneStages::where('is_enabled', true)
+            ->where('is_archived', false)
+            ->where('capstone_year_id', $group->capstone_year_id)
+            ->pluck('id');
+
+        $milestoneCount = Milestone::whereIn('capstone_stage_id', $enabledStageIds)->count();
         $completedCount = \App\Models\GroupMilestones::where('group_id', $validated['group_id'])
             ->where('status', 'completed')->count();
         $overallProgress = $milestoneCount > 0 ? round(($completedCount / $milestoneCount) * 100) : 0;
@@ -2214,21 +2315,21 @@ public function getGroupProgress($groupId)
 
     $groupMilestonesMap = $group->groupMilestones->keyBy('milestone_id');
 
-    $milestoneData = $milestones->map(function ($m) use (
-        $completedMilestoneIds, $nextMilestone, $remarksByMilestone,
-        $allAbsences, $absentStudentsById, $groupMilestonesMap
-    ) {
-        $isCompleted = in_array($m->id, $completedMilestoneIds);
-        $isNext      = $m->id === $nextMilestone?->id && !$isCompleted;
+        $milestoneData = $milestones->map(function ($m) use (
+            $completedMilestoneIds, $nextMilestone, $remarksByMilestone,
+            $allAbsences, $absentStudentsById, $groupMilestonesMap
+        ) {
+            $isCompleted = in_array($m->id, $completedMilestoneIds);
+            $isNext      = $m->id === $nextMilestone?->id && !$isCompleted;
 
-        $gm             = $groupMilestonesMap->get($m->id);
-        $completionDate = $gm ? $gm->completion_date : null;
+            $gm             = $groupMilestonesMap->get($m->id);
+            $completionDate = $gm ? $gm->completion_date : null;
 
-        $r           = $remarksByMilestone->get($m->id);
-        $absentNames = $allAbsences->where('milestone_id', $m->id)->map(function ($a) use ($absentStudentsById) {
-            $s = $absentStudentsById->get($a->user_id);
-            return $s ? trim($s->student_first_name . ' ' . $s->student_last_name) : $a->user_id;
-        })->values();
+            $r           = $remarksByMilestone->get($m->id);
+            $absentNames = $allAbsences->where('milestone_id', $m->id)->map(function ($a) use ($absentStudentsById) {
+                $s = $absentStudentsById->get($a->user_id);
+                return $s ? trim($s->student_first_name . ' ' . $s->student_last_name) : $a->user_id;
+            })->values();   
 
         return [
             'id'                   => $m->id,
@@ -2241,6 +2342,7 @@ public function getGroupProgress($groupId)
             'is_next'              => $isNext,
             'completion_date'      => $completionDate,
             'capstone_stage_id'    => $m->capstone_stage_id,
+            'capstone_stage_type'  => $m->capstoneStage->stage_type ?? null,  
             'capstone_stage_title' => $m->capstoneStage->stage_title ?? 'Capstone',
             'has_rubric'           => $m->rubrics->isNotEmpty(),
             'remarks'              => $r ? [
@@ -2307,6 +2409,13 @@ public function joinRoomWithCode(Request $request)
         }
         return redirect()->back()->with('error', 'Invalid code. Please check with the admin and try again.');
     }
+    if ($room->capstone_stage_id && optional($room->capstoneStage)->is_enabled === false) {
+    $msg = 'This evaluation room belongs to a capstone stage that is currently disabled.';
+    if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+        return response()->json(['error' => $msg], 422);
+    }
+    return redirect()->back()->with('error', $msg);
+}
 
     $alreadyThisTeacher = $room->panelists()->where('teacher_id', $teacher->id)->exists();
     if ($alreadyThisTeacher) {
@@ -2316,15 +2425,16 @@ public function joinRoomWithCode(Request $request)
         return redirect()->back()->with('error', "Already joined {$room->room_name}.");
     }
 
-    // Check if teacher is already assigned to ANY room
-    $isAlreadyAssigned = DB::table('room_panelists')->where('teacher_id', $teacher->id)->exists();
-    if ($isAlreadyAssigned) {
-        if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
-            return response()->json(['error' => 'You are already assigned to an evaluation room.'], 422);
-        }
-        return redirect()->back()->with('error', 'You are already assigned to an evaluation room.');
-    }
+    $roomStageType = (int) ($room->capstoneStage->stage_type
+    ?? $room->requiredMilestone?->capstoneStage?->stage_type ?? 1);
 
+if ($teacher->hasActiveRoomForStageType($roomStageType)) {
+    $msg = "You are already assigned to a Capstone {$roomStageType} evaluation room.";
+    if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+        return response()->json(['error' => $msg], 422);
+    }
+    return redirect()->back()->with('error', $msg);
+}
     // Add teacher as panelist to this room (avoiding duplicate entries)
     $room->panelists()->attach($teacher->id);
 
@@ -2350,18 +2460,33 @@ public function joinRoomWithCode(Request $request)
  *   MCC-APR-2026-0001, MCC-APR-2026-0002, ...
  *   MCC-DOC-2026-0001, ... (fallback)
  */
-private function generateSerialNumber(?string $documentType): string
+private function generateSerialNumber(?string $documentType, ?int $capstoneStageType = null): string
 {
-    $prefix = match ($documentType) {
-        'recommendation' => 'MCC-REC',
-        'approval'       => 'MCC-APR',
-        'revision'       => 'MCC-REV',
-        default          => 'MCC-DOC',
+    // Base code per document type
+    $typeCode = match ($documentType) {
+        'recommendation' => 'REC',
+        'approval'       => 'APR',
+        'revision'       => 'REV',
+        default          => 'DOC',
     };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Serial format
+    |--------------------------------------------------------------------------
+    | Capstone 1 → MCC-C1-REC-2026-0001, MCC-C1-APR-2026-0001, MCC-C1-REV-2026-0001
+    | Capstone 2 → MCC-C2-REC-2026-0001, MCC-C2-APR-2026-0001, MCC-C2-REV-2026-0001
+    |
+    | Legacy rows without a stage type keep the old prefix:
+    |   MCC-REC-2026-0001, MCC-APR-2026-0001, MCC-REV-2026-0001
+    */
+    $prefix = $capstoneStageType
+        ? sprintf('MCC-C%d-%s', $capstoneStageType, $typeCode)
+        : sprintf('MCC-%s', $typeCode);
 
     $year = now()->format('Y');
 
-    // Grab the highest existing serial for this prefix + year
+    // Find the highest serial *in this exact prefix + year*
     $lastSerial = GroupCertificate::where('serial_number', 'like', "{$prefix}-{$year}-%")
         ->orderByDesc('serial_number')
         ->value('serial_number');
@@ -2774,26 +2899,45 @@ public function resetPasswordWithCode(Request $request)
 public function requestGroupRevision(Request $request, $groupId)
 {
     $teacher = Teacher::where('user_id', Auth::user()->user_id)->firstOrFail();
-    $group   = Group::findOrFail($groupId);
+    $group   = Group::with(['room.requiredMilestone'])->findOrFail($groupId);
 
+    /* ── Resolve capstone stage ─────────────────────────────────────
+     | Priority:
+     |   1. What the front-end sent (most reliable, from the room card)
+     |   2. The group's currently assigned evaluation room
+     |   3. The required milestone's stage (fallback)
+     */
+    $stageId = $request->input('capstone_stage_id')
+        ?: $group->room?->capstone_stage_id
+        ?: $group->room?->requiredMilestone?->capstone_stage_id;
+
+    if (!$stageId) {
+        $msg = 'Cannot determine capstone stage for this revision.';
+        return $request->expectsJson()
+            ? response()->json(['success' => false, 'error' => $msg], 422)
+            : back()->with('error', $msg);
+    }
+
+    // Was a revision already requested for THIS stage by THIS panelist?
     $alreadyRequested = \App\Models\Revision::where('group_id', $groupId)
         ->where('panelist_id', $teacher->id)
+        ->where('capstone_stage_id', $stageId)
         ->exists();
+
     if ($alreadyRequested) {
-        if ($request->ajax()) {
-            return response()->json(['error' => 'You have already requested a revision for this group.'], 422);
-        }
-        return back()->with('error', 'You have already requested a revision for this group.');
+        $msg = 'You have already requested a revision for this group at this capstone stage.';
+        return $request->ajax()
+            ? response()->json(['error' => $msg], 422)
+            : back()->with('error', $msg);
     }
 
+    // Panelist must be assigned to the room that belongs to this stage
     $assignedRoomIds = $teacher->evaluationRooms()->pluck('evaluation_rooms.id')->toArray();
     if (!in_array($group->room_id, $assignedRoomIds)) {
-        if ($request->ajax()) {
-            return response()->json(['error' => 'You are not authorized to request revision for this group.'], 403);
-        }
-        return back()->with('error', 'You are not authorized to request revision for this group.');
+        return $request->ajax()
+            ? response()->json(['error' => 'You are not authorized to request revision for this group.'], 403)
+            : back()->with('error', 'You are not authorized to request revision for this group.');
     }
-
 
     $validated = $request->validate([
         'revision_description'    => 'required|string|max:2000',
@@ -2808,23 +2952,22 @@ public function requestGroupRevision(Request $request, $groupId)
         'additional_objectives.*' => 'required|string|max:500',
     ]);
 
-
-            if (empty($validated['chapters'] ?? [])
+    if (empty($validated['chapters'] ?? [])
         && empty($validated['iot_findings'] ?? [])
         && empty($validated['additional_objectives'] ?? [])) {
         $msg = 'Add at least one finding: a Chapter finding, a System/IoT finding, or an Additional Objective.';
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['success' => false, 'error' => $msg], 422);
-        }
-        return back()->with('error', $msg);
+        return ($request->ajax() || $request->wantsJson())
+            ? response()->json(['success' => false, 'error' => $msg], 422)
+            : back()->with('error', $msg);
     }
-    // ── 1. Save the revision (transaction ONLY wraps the revision rows) ──
+
     try {
-        DB::transaction(function () use ($validated, $teacher, $group) {
+        DB::transaction(function () use ($validated, $teacher, $group, $stageId) {
             $revision = \App\Models\Revision::create([
-                'group_id'        => $group->id,
-                'panelist_id'     => $teacher->id,
-                'overall_remarks' => $validated['revision_description'],
+                'group_id'          => $group->id,
+                'panelist_id'       => $teacher->id,
+                'capstone_stage_id' => $stageId,          // ← SAVE STAGE
+                'overall_remarks'   => $validated['revision_description'],
             ]);
 
             foreach ($validated['chapters'] ?? [] as $ch) {
@@ -2841,9 +2984,7 @@ public function requestGroupRevision(Request $request, $groupId)
                 ]);
             }
             foreach ($validated['additional_objectives'] ?? [] as $obj) {
-                $revision->objectives()->create([
-                    'objective' => $obj,
-                ]);
+                $revision->objectives()->create(['objective' => $obj]);
             }
 
             $group->update([
@@ -2854,38 +2995,23 @@ public function requestGroupRevision(Request $request, $groupId)
         });
     } catch (\Throwable $e) {
         Log::error('Revision save failed', [
-            'group_id' => $groupId,
+            'group_id'   => $groupId,
             'teacher_id' => $teacher->id,
-            'error'    => $e->getMessage(),
-            'trace'    => $e->getTraceAsString(),
+            'stage_id'   => $stageId,
+            'error'      => $e->getMessage(),
         ]);
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => false,
-                'error'   => 'Could not save revision: ' . $e->getMessage(),
-            ], 500);
-        }
-        return back()->with('error', 'Could not save revision: ' . $e->getMessage());
+        return $request->ajax()
+            ? response()->json(['success' => false, 'error' => 'Could not save revision.'], 500)
+            : back()->with('error', 'Could not save revision.');
     }
 
-    // ── 2. Auto-issue the Revision Certificate — SEPARATE from the transaction ──
-    //      If this fails, the revision is still safely saved.
-    try {
-        $this->issueRevisionCertificate($group);
-    } catch (\Throwable $e) {
-        Log::error('Auto-issue revision certificate failed', [
-            'group_id'    => $groupId,
-            'teacher_id'  => $teacher->id,
-            'error'       => $e->getMessage(),
-            'trace'       => $e->getTraceAsString(),
-        ]);
-        // Do NOT abort — the revision itself was saved successfully.
-    }
+    // Auto-issue the revision certificate for the correct stage
+    try { $this->issueRevisionCertificate($group); }
+    catch (\Throwable $e) { Log::error('Auto-issue revision cert failed', ['error' => $e->getMessage()]); }
 
-    if ($request->ajax() || $request->wantsJson()) {
-        return response()->json(['success' => true, 'message' => 'Revision request submitted successfully!']);
-    }
-    return back()->with('success', 'Revision request submitted successfully!');
+    return $request->ajax() || $request->wantsJson()
+        ? response()->json(['success' => true, 'message' => 'Revision request submitted successfully!'])
+        : back()->with('success', 'Revision request submitted successfully!');
 }
 
     /**
@@ -2917,140 +3043,79 @@ public function requestGroupRevision(Request $request, $groupId)
         }
         return back()->with('success', 'Group successfully marked as revised.');
     }
-   public function getRevisionDetails($groupId)
+ public function getRevisionDetails(Request $request, $groupId)
 {
-    $teacher = Teacher::where(
-        'user_id',
-        Auth::user()->user_id
-    )->firstOrFail();
+    $teacher = Teacher::where('user_id', Auth::user()->user_id)->firstOrFail();
+    $group   = Group::with('room')->findOrFail($groupId);
 
-    $group = Group::findOrFail($groupId);
-
-    // Must be a panelist assigned to this group's room
-    $assignedRoomIds = $teacher->evaluationRooms()
-        ->pluck('evaluation_rooms.id')
-        ->toArray();
-
+    $assignedRoomIds = $teacher->evaluationRooms()->pluck('evaluation_rooms.id')->toArray();
     if (!in_array($group->room_id, $assignedRoomIds)) {
-        return response()->json([
-            'error' => 'You are not authorized to verify this group.'
-        ], 403);
+        return response()->json(['error' => 'You are not authorized to verify this group.'], 403);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | GET ONLY THIS TEACHER'S REVISION
-    |--------------------------------------------------------------------------
-    |
-    | Teacher A -> Teacher A revision
-    | Teacher B -> Teacher B revision
-    |
-    | Other revisions for this group DO NOT affect this query.
-    |
-    */
+    // Stage from request → group's room
+    $stageId = $request->query('capstone_stage_id')
+        ?: $group->room?->capstone_stage_id;
 
-    $revision = \App\Models\Revision::with([
-        'documentation',
-        'enhancements',
-        'objectives'
-    ])
-    ->where('group_id', $groupId)
-    ->where('panelist_id', $teacher->id)
-    ->first();
+    $query = \App\Models\Revision::with(['documentation', 'enhancements', 'objectives'])
+        ->where('group_id', $groupId)
+        ->where('panelist_id', $teacher->id);
+
+    if ($stageId) {
+        $query->where('capstone_stage_id', $stageId);
+    }
+
+    $revision = $query->first();
 
     if (!$revision) {
         return response()->json([
-            'error' => 'You have not requested a revision for this group.'
+            'error' => 'You have not requested a revision for this group'
+                     . ($stageId ? ' at this capstone stage.' : '.'),
         ], 404);
     }
 
     return response()->json([
-
-        'revision_id' => $revision->id,
-
-        'chapters' => $revision->documentation
-            ->map(function ($item) {
-                return [
-                    'id'       => $item->id,
-                    'chapter'  => $item->chapter,
-                    'findings' => $item->findings,
-                    'remarks'  => $item->remarks ?: 'Pending',
-                ];
-            })
-            ->values(),
-
-        'iot_findings' => $revision->enhancements
-            ->map(function ($item) {
-                return [
-                    'id'      => $item->id,
-                    'finding' => $item->enhancement,
-                    'remarks' => $item->remarks ?: 'Pending',
-                ];
-            })
-            ->values(),
-
-        'additional_objectives' => $revision->objectives
-            ->map(function ($item) {
-                return [
-                    'id'        => $item->id,
-                    'objective' => $item->objective,
-                    'remarks'   => $item->remarks ?: 'Pending',
-                ];
-            })
-            ->values(),
-
+        'revision_id'       => $revision->id,
+        'capstone_stage_id' => $revision->capstone_stage_id,
+        'chapters'          => $revision->documentation->map(fn($i) => [
+            'id' => $i->id, 'chapter' => $i->chapter,
+            'findings' => $i->findings, 'remarks' => $i->remarks ?: 'Pending',
+        ])->values(),
+        'iot_findings'      => $revision->enhancements->map(fn($i) => [
+            'id' => $i->id, 'finding' => $i->enhancement, 'remarks' => $i->remarks ?: 'Pending',
+        ])->values(),
+        'additional_objectives' => $revision->objectives->map(fn($i) => [
+            'id' => $i->id, 'objective' => $i->objective, 'remarks' => $i->remarks ?: 'Pending',
+        ])->values(),
         'overall_remarks' => $revision->overall_remarks,
-
-        'approved_by' => $revision->approved_by ?? null,
+        'approved_by'     => $revision->approved_by ?? null,
     ]);
 }
 
 public function verifyRevision(Request $request, $groupId)
 {
-    $teacher = Teacher::where(
-        'user_id',
-        Auth::user()->user_id
-    )->firstOrFail();
+   $teacher = Teacher::where('user_id', Auth::user()->user_id)->firstOrFail();
+    $group   = Group::with('room')->findOrFail($groupId);
 
-    $group = Group::findOrFail($groupId);
-
-
-    // ==========================================
-    // CHECK IF TEACHER IS A PANELIST
-    // ==========================================
-
-    $assignedRoomIds = $teacher->evaluationRooms()
-        ->pluck('evaluation_rooms.id')
-        ->toArray();
-
+    $assignedRoomIds = $teacher->evaluationRooms()->pluck('evaluation_rooms.id')->toArray();
     if (!in_array($group->room_id, $assignedRoomIds)) {
-
-        return response()->json([
-            'success' => false,
-            'error' => 'You are not authorized to verify this group.'
-        ], 403);
+        return response()->json(['success' => false, 'error' => 'You are not authorized to verify this group.'], 403);
     }
 
+    $stageId = $request->input('capstone_stage_id')
+        ?: $group->room?->capstone_stage_id;
 
-    // ==========================================
-    // GET ONLY THIS TEACHER'S REVISION
-    // ==========================================
+    $query = \App\Models\Revision::with(['documentation', 'enhancements', 'objectives'])
+        ->where('group_id', $groupId)
+        ->where('panelist_id', $teacher->id);
 
-    $revision = \App\Models\Revision::with([
-        'documentation',
-        'enhancements',
-        'objectives'
-    ])
-    ->where('group_id', $groupId)
-    ->where('panelist_id', $teacher->id)
-    ->first();
+    if ($stageId) $query->where('capstone_stage_id', $stageId);
 
-
+    $revision = $query->first();
     if (!$revision) {
-
         return response()->json([
             'success' => false,
-            'error' => 'You have not requested a revision for this group.'
+            'error'   => 'You have not requested a revision for this group at this stage.',
         ], 404);
     }
 
@@ -3556,6 +3621,9 @@ public function getApprovalSheet($groupId)
         return trim(($s->student_first_name ?? '') . ' ' . ($s->student_last_name ?? ''));
     })->filter()->values()->all();
 
+     if (!$this->approvalSheetUnlocked($group)) {
+    return response()->json(['error' => 'The approval sheet is not available yet.'], 403);
+}
     // Adviser
     $adviser = $group->adviser
         ? trim(($group->adviser->teacher_first_name ?? '') . ' ' . ($group->adviser->teacher_last_name ?? ''))
@@ -3604,38 +3672,84 @@ public function getApprovalSheet($groupId)
     $president = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
 
 
-$approvalRecord = GroupCertificate::where('group_id', $groupId)
-    ->where(function ($q) {
-        $q->whereHas('certificate', function ($c) {
-            $c->where('document_type', 'approval')
-              ->orWhere('certificate_title', 'like', '%Approval%');
+    $approvalRecord = GroupCertificate::where('group_id', $groupId)
+        ->where(function ($q) {
+            $q->whereHas('certificate', function ($c) {
+                $c->where('document_type', 'approval')
+                ->orWhere('certificate_title', 'like', '%Approval%');
+            })
+            ->orWhere('serial_number', 'like', 'MCC-%APR-%');
         })
-        ->orWhere('serial_number', 'like', 'MCC-APR-%');
-    })
-    ->latest('issued_date')
-    ->first();
-    
-    return response()->json([
-        'capstone_title'     => $group->capstone_title,
-        'members'            => $members,
-        'adviser'            => $adviser,
-        'panelists'          => $panelists,
-        'oral_exam_result'   => $oralExamResult,
-        'oral_exam_date'     => $oralExamDate,
-        'school_president'   => $president,
-        'serial_number'      => $approvalRecord?->serial_number,   
-         'issued_date'        => $approvalRecord?->issued_date,    
-    ]);
+        ->latest('issued_date')
+        ->first();
+        
+        return response()->json([
+            'capstone_title'     => $group->capstone_title,
+            'members'            => $members,
+            'adviser'            => $adviser,
+            'panelists'          => $panelists,
+            'oral_exam_result'   => $oralExamResult,
+            'oral_exam_date'     => $oralExamDate,
+            'school_president'   => $president,
+            'serial_number'      => $approvalRecord?->serial_number,   
+            'issued_date'        => $approvalRecord?->issued_date,    
+        ]);
+}
+private function approvalSheetUnlocked(Group $group): bool
+{
+    // Every revision item must be Completed (no revisions = nothing pending)
+    $revisionsCleared = \App\Models\Revision::with(['documentation', 'enhancements', 'objectives'])
+        ->where('group_id', $group->id)->get()
+        ->every(function ($rev) {
+            $done = fn($i) => strtolower(trim($i->remarks ?? '')) === 'completed';
+            return $rev->documentation->every($done)
+                && $rev->enhancements->every($done)
+                && $rev->objectives->every($done);
+        });
+
+    if (!$revisionsCleared) return false;
+
+    $enabledStageIds = CapstoneStages::where('is_enabled', true)
+        ->where('capstone_year_id', $group->capstone_year_id)
+        
+        ->pluck('id');
+
+    $approvalMilestone = Milestone::whereIn('capstone_stage_id', $enabledStageIds)
+        ->where('milestone_title', 'like', '%Approval Sheet%')
+        ->first();
+
+    // Capstone 2: the "Issuance of Approval Sheet" milestone must be completed
+    if ($approvalMilestone) {
+        return GroupMilestones::where('group_id', $group->id)
+            ->where('milestone_id', $approvalMilestone->id)
+            ->where('status', 'completed')
+            ->exists();
+    }
+
+    // Capstone 1: no approval milestone, so the oral presentation must be evaluated
+    $requiredId = $group->room?->required_milestone_id;
+    return $requiredId
+        && Evaluation::where('group_id', $group->id)
+            ->where('milestone_id', $requiredId)
+            ->exists();
 }
 
-
+// helper (put in the controller, or a trait since user_controller needs it too)
+private function teacherHasActiveRoom($teacherId, $exceptRoomId = null): bool
+{
+    return DB::table('room_panelists')
+        ->join('evaluation_rooms', 'evaluation_rooms.id', '=', 'room_panelists.room_id')
+        ->where('room_panelists.teacher_id', $teacherId)
+        ->where('evaluation_rooms.is_archived', false)
+        ->exists();
+}
 /**
  * All revision sheets (from every panelist) for a group — teacher-facing.
  */
-public function getAllRevisionsForGroup($groupId)
+public function getAllRevisionsForGroup(Request $request, $groupId)
 {
     $user  = Auth::user();
-    $group = Group::with(['team_members.student'])->findOrFail($groupId);
+    $group = Group::with(['team_members.student', 'room'])->findOrFail($groupId);
     $myTeacherId = null;
 
     if ($user->role === 'teacher') {
@@ -3655,46 +3769,54 @@ public function getAllRevisionsForGroup($groupId)
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
+    // Optional stage filter
+    $stageId = $request->query('capstone_stage_id')
+        ?: $group->room?->capstone_stage_id;
+
+    $query = \App\Models\Revision::with(['documentation', 'enhancements', 'objectives', 'panelist'])
+        ->where('group_id', $groupId)
+        ->orderBy('created_at');
+
+    if ($stageId) $query->where('capstone_stage_id', $stageId);
+
+    $revisions = $query->get()->map(fn($rev) => [
+        'id'                => $rev->id,
+        'capstone_stage_id' => $rev->capstone_stage_id,     // ← include in payload
+        'is_mine'           => $myTeacherId && (int) $rev->panelist_id === (int) $myTeacherId,
+        'panelist_name'     => $rev->panelist
+            ? trim($rev->panelist->teacher_first_name . ' ' . $rev->panelist->teacher_last_name)
+            : 'Panelist',
+        'created_at'        => $rev->created_at,
+        'overall_remarks'   => $rev->overall_remarks,
+        'chapters'          => $rev->documentation->map(fn($d) => [
+            'chapter' => $d->chapter, 'findings' => $d->findings, 'remarks' => $d->remarks ?: 'Pending',
+        ]),
+        'iot_findings'      => $rev->enhancements->map(fn($e) => [
+            'finding' => $e->enhancement, 'remarks' => $e->remarks ?: 'Pending',
+        ]),
+        'additional_objectives' => $rev->objectives->map(fn($o) => [
+            'objective' => $o->objective, 'remarks' => $o->remarks ?: 'Pending',
+        ]),
+    ]);
+
     $members = $group->team_members->map(function ($tm) {
         $s = $tm->student;
         return trim(($s->student_first_name ?? '') . ' ' . ($s->student_last_name ?? ''));
     })->filter()->values()->all();
 
-    $revisions = \App\Models\Revision::with(['documentation', 'enhancements', 'objectives', 'panelist'])
-        ->where('group_id', $groupId)
-        ->orderBy('created_at')
-        ->get()
-        ->map(fn ($rev) => [
-            'id'            => $rev->id,
-            'is_mine'       => $myTeacherId && (int) $rev->panelist_id === (int) $myTeacherId,
-            'panelist_name' => $rev->panelist
-                ? trim($rev->panelist->teacher_first_name . ' ' . $rev->panelist->teacher_last_name)
-                : 'Panelist',
-            'created_at'      => $rev->created_at,
-            'overall_remarks' => $rev->overall_remarks,
-            'chapters' => $rev->documentation->map(fn ($d) => [
-                'chapter' => $d->chapter, 'findings' => $d->findings, 'remarks' => $d->remarks ?: 'Pending',
-            ]),
-            'iot_findings' => $rev->enhancements->map(fn ($e) => [
-                'finding' => $e->enhancement, 'remarks' => $e->remarks ?: 'Pending',
-            ]),
-            'additional_objectives' => $rev->objectives->map(fn ($o) => [
-                'objective' => $o->objective, 'remarks' => $o->remarks ?: 'Pending',
-            ]),
-        ]);
-
     $serial = GroupCertificate::where('group_id', $groupId)
         ->where(function ($q) {
-            $q->whereHas('certificate', fn ($c) => $c->where('document_type', 'revision'))
-              ->orWhere('serial_number', 'like', 'MCC-REV-%');
+            $q->whereHas('certificate', fn($c) => $c->where('document_type', 'revision'))
+              ->orWhere('serial_number', 'like', 'MCC-%REV-%');
         })->latest('issued_date')->value('serial_number');
 
     return response()->json([
-        'group_name'     => $group->group_name,
-        'capstone_title' => $group->capstone_title,
-        'members'        => $members,
-        'serial_number'  => $serial,
-        'revisions'      => $revisions,
+        'group_name'        => $group->group_name,
+        'capstone_title'    => $group->capstone_title,
+        'capstone_stage_id' => $stageId,
+        'members'           => $members,
+        'serial_number'     => $serial,
+        'revisions'         => $revisions,
     ]);
 }
 public function getRecommendationSheet($groupId)
@@ -3762,6 +3884,13 @@ public function issueRecommendationSheet(Request $request)
               ->orWhere('certificate_title', 'like', '%Recommendation%');
         })
         ->first();
+        if ($certificate && ! $certificate->capstone_stage_id && ! empty($validated['milestone_id'])) {
+    $m = Milestone::find($validated['milestone_id']);
+    if ($m?->capstone_stage_id) {
+        $certificate->capstone_stage_id = $m->capstone_stage_id;
+        $certificate->save();
+    }
+}
 
     // … else any certificate on the milestone …
     if (! $certificate) {
@@ -3770,6 +3899,7 @@ public function issueRecommendationSheet(Request $request)
 
     // … else auto-create one (e.g. Capstone 2 has no seeded certificate yet).
     if (! $certificate) {
+           $milestone = Milestone::find($validated['milestone_id']);
         $certificate = Certificate::create([
             'certificate_title'       => 'Recommendation Sheet',
             'document_type'           => 'recommendation',
@@ -3777,9 +3907,13 @@ public function issueRecommendationSheet(Request $request)
                 . 'Bachelor of Science in Information Technology has been examined, '
                 . 'accepted, and recommended for Oral Presentation.',
             'milestone_id'            => $validated['milestone_id'],
+            'capstone_stage_id'       => $milestone->capstone_stage_id,
+            
             'is_locked'               => 1,
         ]);
     }
+
+
 
     $already = GroupCertificate::where('group_id', $validated['group_id'])
         ->where('certificate_id', $certificate->id)
@@ -3794,12 +3928,16 @@ public function issueRecommendationSheet(Request $request)
             'issued_date' => $already->issued_date,
         ]);
     }
+    
+// Resolve the capstone stage type for this milestone
+$milestone = Milestone::with('capstoneStage')->find($validated['milestone_id']);
+$stageType = $milestone?->capstoneStage?->stage_type;
 
     $issued = GroupCertificate::create([
         'group_id'       => $validated['group_id'],
         'certificate_id' => $certificate->id,
         'issued_date'    => now()->toDateString(),
-        'serial_number'  => $this->generateSerialNumber('recommendation'),
+        'serial_number'  => $this->generateSerialNumber('recommendation', $stageType),
     ]);
 
     return response()->json([
@@ -3910,19 +4048,25 @@ public function issueSheet(Request $request)
         )
         ->first();
 
-    if (! $certificate) {
-        $certificate = Certificate::create([
-            'certificate_title'       => $title,
-            'document_type'           => $type,
-            'certificate_description' => $type === 'revision'
-                ? 'Official revision sheet issued by the panel.'
-                : 'partial fulfillment of the requirements for the degree of '
-                  . 'Bachelor of Science in Information Technology has been examined, '
-                  . 'accepted, and recommended for Oral Presentation.',
-            'milestone_id'            => $validated['milestone_id'] ?? null,
-            'is_locked'               => 1,
-        ]);
-    }
+            $milestone = ! empty($validated['milestone_id'])
+        ? Milestone::with('capstoneStage')->find($validated['milestone_id'])  
+        : null;
+   if (! $certificate) {
+
+
+    $certificate = Certificate::create([
+        'certificate_title'       => $title,
+        'document_type'           => $type,
+        'certificate_description' => $type === 'revision'
+            ? 'Official revision sheet issued by the panel.'
+            : 'partial fulfillment of the requirements for the degree of '
+              . 'Bachelor of Science in Information Technology has been examined, '
+              . 'accepted, and recommended for Oral Presentation.',
+        'milestone_id'            => $validated['milestone_id'] ?? null,
+        'capstone_stage_id'       => $milestone?->capstone_stage_id,   // ← NEW
+        'is_locked'               => 1,
+    ]);
+}
 
     // Idempotent — don't double-issue
     $already = GroupCertificate::where('group_id', $validated['group_id'])
@@ -3944,7 +4088,9 @@ public function issueSheet(Request $request)
         'group_id'       => $validated['group_id'],
         'certificate_id' => $certificate->id,
         'issued_date'    => now()->toDateString(),
-           'serial_number'  => $this->generateSerialNumber($type),
+          'serial_number'  => $this->generateSerialNumber(
+        $type,
+        $milestone?->capstoneStage?->stage_type),
     ]);
 
     return response()->json([
@@ -3965,10 +4111,10 @@ public function getSheetStatus(Request $request, $groupId)
     }
 
     $prefixMap = [
-        'recommendation' => 'MCC-REC-%',
-        'approval'       => 'MCC-APR-%',
-        'revision'       => 'MCC-REV-%',   // or whatever revision uses
-    ];
+    'recommendation' => 'MCC-%REC-%',   // was MCC-REC-%
+    'approval'       => 'MCC-%APR-%',   // was MCC-APR-%
+    'revision'       => 'MCC-%REV-%',   // was MCC-REV-%
+];
     $titleMap = [
         'recommendation' => '%Recommendation%',
         'approval'       => '%Approval%',

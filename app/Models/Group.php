@@ -19,6 +19,8 @@ class Group extends Model
         'revision_status',
         'revision_description',
           'revision_id',
+          'capstone1_room_id',
+    'capstone2_room_id',
     ];
 
     protected $casts = [
@@ -81,5 +83,14 @@ public function revision()
 public function revisions()
 {
     return $this->hasMany(Revision::class);
+}
+public function capstone1Room()
+{
+    return $this->belongsTo(EvaluationRoom::class, 'capstone1_room_id');
+}
+
+public function capstone2Room()
+{
+    return $this->belongsTo(EvaluationRoom::class, 'capstone2_room_id');
 }
 }

@@ -457,6 +457,7 @@ class admin_controller extends Controller
                 [
                     'certificate_title'       => $validated['certificate_title'],
                     'certificate_description' => $validated['certificate_description'],
+                      'capstone_stage_id'       => $milestone->capstone_stage_id, 
                     'is_locked'               => 1,
                 ]
             );
@@ -498,6 +499,7 @@ class admin_controller extends Controller
                 'document_type'           => $request->document_type,
                 'certificate_title'       => $titleMap[$request->document_type] ?? null,
                 'certificate_description' => $request->certificate_description,
+                'capstone_stage_id'       => $milestone->capstone_stage_id,  
             ]);
         }
 
@@ -848,107 +850,153 @@ class admin_controller extends Controller
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     public function createRoom(Request $request)
-    {
-        $validated = $request->validate([
-            'room_count'            => 'required|integer|min:1',
-            'required_milestone_id' => 'required|exists:milestones,id',
-            'activity_name'         => 'nullable|string|max:255',
-            'panelists'             => 'nullable|array',
-            'panelists.*'           => 'exists:teachers,id',
-        ]);
+{
+    $validated = $request->validate([
+        'room_count'            => 'required|integer|min:1',
+        'required_milestone_id' => 'required|exists:milestones,id',
+        'activity_name'         => 'nullable|string|max:255',
+        'panelists'             => 'nullable|array',
+        'panelists.*'           => 'exists:teachers,id',
+    ]);
 
-        $panelists = $validated['panelists'] ?? [];
-        $roomCount = $validated['room_count'];
+    $panelists = $validated['panelists'] ?? [];
+    $roomCount = $validated['room_count'];
 
-        $milestone    = \App\Models\Milestone::findOrFail($validated['required_milestone_id']);
-        $activityName = $validated['activity_name'] ?? $milestone->milestone_title;
+    $milestone    = \App\Models\Milestone::with('capstoneStage')->findOrFail($validated['required_milestone_id']);
+    $activityName = $validated['activity_name'] ?? $milestone->milestone_title;
 
-        $selectedMilestone = \App\Models\Milestone::findOrFail($validated['required_milestone_id']);
-        $stageId           = $selectedMilestone->capstone_stage_id;
+    $stageId   = $milestone->capstone_stage_id;
+    $stageType = (int) ($milestone->capstoneStage->stage_type ?? 1);   // 1 = Capstone 1, 2 = Capstone 2
 
-        $isOralPresentation = in_array(strtoupper($selectedMilestone->milestone_title), [
-            'CAPSTONE ORAL PRESENTATION',
-            'CAPSTONE PROJECT 2 ORAL PRESENTATION'
-        ]);
+    // ── Which column holds THIS stage's room? ──
+    $roomColumn = $stageType === 2 ? 'capstone2_room_id' : 'capstone1_room_id';
 
-        $qualificationMilestoneId = $validated['required_milestone_id'];
+    $isOralPresentation = in_array(strtoupper($milestone->milestone_title), [
+        'CAPSTONE ORAL PRESENTATION',
+        'CAPSTONE PROJECT 2 ORAL PRESENTATION',
+    ]);
 
-        if ($isOralPresentation) {
-            $recomMilestone = \App\Models\Milestone::where('capstone_stage_id', $stageId)
-                ->where(function ($q) {
-                    $q->where('milestone_title', 'like', '%ISSUANCE OF RECOMMENDATION SHEET%')
-                      ->orWhere('milestone_title', 'like', '%Recommendation Sheet%');
-                })
-                ->first();
+    $qualificationMilestoneId = $validated['required_milestone_id'];
 
-            if ($recomMilestone) {
-                $qualificationMilestoneId = $recomMilestone->id;
-            }
+    if ($isOralPresentation) {
+        $recomMilestone = \App\Models\Milestone::where('capstone_stage_id', $stageId)
+            ->where(function ($q) {
+                $q->where('milestone_title', 'like', '%ISSUANCE OF RECOMMENDATION SHEET%')
+                  ->orWhere('milestone_title', 'like', '%Recommendation Sheet%');
+            })
+            ->first();
+
+        if ($recomMilestone) {
+            $qualificationMilestoneId = $recomMilestone->id;
         }
-
-        foreach ($panelists as $teacherId) {
-            $alreadyAssigned = DB::table('room_panelists')->where('teacher_id', $teacherId)->exists();
-            if ($alreadyAssigned) {
-                $teacherObj  = Teacher::find($teacherId);
-                $teacherName = $teacherObj ? ($teacherObj->teacher_first_name . ' ' . $teacherObj->teacher_last_name) : 'Selected Teacher';
-                return back()->withErrors(['panelists' => "Teacher {$teacherName} is already assigned to another evaluation room."])->withInput();
-            }
-        }
-
-        DB::transaction(function () use ($validated, $panelists, $roomCount, $activityName, $qualificationMilestoneId) {
-            $requiredMilestoneId = $validated['required_milestone_id'];
-
-            $groups = Group::whereNull('room_id')
-                ->whereHas('groupMilestones', function ($query) use ($qualificationMilestoneId) {
-                    $query->where('milestone_id', $qualificationMilestoneId)
-                          ->where('status', 'completed');
-                })->get();
-
-            $maxRoomNumber = EvaluationRoom::where('room_name', 'like', 'Room %')
-                ->pluck('room_name')
-                ->map(function ($name) {
-                    return preg_match('/^Room\s+(\d+)$/i', trim($name), $m) ? (int) $m[1] : 0;
-                })
-                ->max() ?? 0;
-
-            $rooms = [];
-
-            for ($i = 1; $i <= $roomCount; $i++) {
-                $roomName = 'Room ' . ($maxRoomNumber + $i);
-
-                $room = EvaluationRoom::create([
-                    'room_name'             => $roomName,
-                    'join_code'             => EvaluationRoom::generateUniqueCode(),
-                    'required_milestone_id' => $requiredMilestoneId,
-                    'activity_name'         => $activityName,
-                ]);
-                $rooms[] = $room;
-            }
-
-            if ($groups->isNotEmpty()) {
-                $groups->each(function ($group, $index) use ($rooms) {
-                    $room = $rooms[$index % count($rooms)];
-                    $group->room_id = $room->id;
-                    $group->save();
-                });
-            }
-
-            foreach ($panelists as $index => $teacherId) {
-                $room = $rooms[$index % count($rooms)];
-                $room->panelists()->attach($teacherId);
-            }
-        });
-
-        return back()->with('success', 'Evaluation rooms created successfully.');
     }
+
+    foreach ($panelists as $teacherId) {
+        $alreadyAssigned = DB::table('room_panelists')->where('teacher_id', $teacherId)->exists();
+        if ($alreadyAssigned) {
+            $teacherObj  = Teacher::find($teacherId);
+            $teacherName = $teacherObj
+                ? $teacherObj->teacher_first_name . ' ' . $teacherObj->teacher_last_name
+                : 'Selected Teacher';
+            return back()
+                ->withErrors(['panelists' => "Teacher {$teacherName} is already assigned to another evaluation room."])
+                ->withInput();
+        }
+    }
+
+    $selectedStageId = $milestone->capstone_stage_id;
+    $selectedYearId  = $milestone->capstoneStage->capstone_year_id ?? null;
+
+    DB::transaction(function () use (
+        $validated, $panelists, $roomCount, $activityName,
+        $qualificationMilestoneId, $selectedStageId, $selectedYearId, $roomColumn
+    ) {
+        $requiredMilestoneId = $validated['required_milestone_id'];
+
+        // ── Stage-aware qualification ──
+        // A group is eligible for THIS stage's rooms when:
+        //   • it is not archived
+        //   • it belongs to the same capstone cycle
+        //   • it has completed the qualification milestone
+        //   • it does NOT yet have a room for THIS stage
+        //     (`$roomColumn` = capstone1_room_id  OR  capstone2_room_id)
+        // NOTE: we deliberately do NOT filter on `room_id` — a group that
+        // already sits in a Capstone 1 room can still get a Capstone 2 room.
+        $groups = Group::where('is_archived', false)
+            ->whereNull($roomColumn)
+            ->when($selectedYearId, fn ($q) => $q->where('capstone_year_id', $selectedYearId))
+            ->whereHas('groupMilestones', function ($query) use ($qualificationMilestoneId) {
+                $query->where('milestone_id', $qualificationMilestoneId)
+                      ->where('status', 'completed');
+            })
+            ->get();
+
+        $maxRoomNumber = EvaluationRoom::where('room_name', 'like', 'Room %')
+            ->pluck('room_name')
+            ->map(function ($name) {
+                return preg_match('/^Room\s+(\d+)$/i', trim($name), $m) ? (int) $m[1] : 0;
+            })
+            ->max() ?? 0;
+
+        $rooms = [];
+
+        for ($i = 1; $i <= $roomCount; $i++) {
+            $roomName = 'Room ' . ($maxRoomNumber + $i);
+
+            $rooms[] = EvaluationRoom::create([
+                'room_name'             => $roomName,
+                'join_code'             => EvaluationRoom::generateUniqueCode(),
+                'required_milestone_id' => $requiredMilestoneId,
+                'capstone_stage_id'     => $selectedStageId,
+                'activity_name'         => $activityName,
+            ]);
+        }
+
+        if ($groups->isNotEmpty()) {
+            $currentStage    = \App\Models\CapstoneStages::find($selectedStageId);
+            $stageIsEnabled  = $currentStage && (bool) $currentStage->is_enabled;
+            $otherRoomColumn = $roomColumn === 'capstone1_room_id'
+                ? 'capstone2_room_id'
+                : 'capstone1_room_id';
+
+            $groups->each(function ($group, $index) use ($rooms, $roomColumn, $otherRoomColumn, $stageIsEnabled) {
+                $room = $rooms[$index % count($rooms)];
+
+                // Always remember this stage's room (history column)
+                $group->{$roomColumn} = $room->id;
+
+                // Only flip the "active" room pointer when:
+                //   • the stage we just created for is the ENABLED one, OR
+                //   • the group has no room for the other stage yet.
+                // Otherwise leave room_id pointing at the other stage's room,
+                // so Capstone 2 stays live while Capstone 1 rooms get created.
+                if ($stageIsEnabled || empty($group->{$otherRoomColumn})) {
+                    $group->room_id = $room->id;
+                }
+
+                $group->save();
+            });
+        }
+
+        foreach ($panelists as $index => $teacherId) {
+            $room = $rooms[$index % count($rooms)];
+            $room->panelists()->attach($teacherId);
+        }
+    });
+
+    return back()->with('success', 'Evaluation rooms created successfully.');
+}
 
     public function getRoom($roomId)
     {
-        $room = EvaluationRoom::with(['panelists', 'groups', 'requiredMilestone'])->findOrFail($roomId);
+        $room = EvaluationRoom::with(['panelists', 'groups', 'requiredMilestone.capstoneStage', 'capstoneStage'])->findOrFail($roomId);
 
-        $assignedTeacherIds = DB::table('room_panelists')->pluck('teacher_id')->toArray();
+        $roomStageType = (int) ($room->capstoneStage->stage_type
+            ?? $room->requiredMilestone?->capstoneStage?->stage_type ?? 1);
 
-        $availableTeachers = Teacher::whereNotIn('id', $assignedTeacherIds)->get();
+        $availableTeachers = Teacher::get()->reject(
+            fn ($t) => $t->hasActiveRoomForStageType($roomStageType)
+        )->values();
 
         return response()->json([
             'id'                 => $room->id,
@@ -976,16 +1024,19 @@ class admin_controller extends Controller
             'teacher_id' => 'required|exists:teachers,id',
         ]);
 
-        $room    = EvaluationRoom::findOrFail($roomId);
+        $room    = EvaluationRoom::with(['capstoneStage', 'requiredMilestone.capstoneStage'])->findOrFail($roomId);
         $teacher = Teacher::findOrFail($validated['teacher_id']);
+
+        $roomStageType = (int) ($room->capstoneStage->stage_type
+            ?? $room->requiredMilestone?->capstoneStage?->stage_type ?? 1);
 
         $alreadyThisTeacher = $room->panelists()->where('teacher_id', $teacher->id)->exists();
         if (!$alreadyThisTeacher) {
-            $isAlreadyAssigned = DB::table('room_panelists')->where('teacher_id', $teacher->id)->exists();
-            if ($isAlreadyAssigned) {
-                return response()->json(['error' => 'This teacher is already assigned to an evaluation room.'], 422);
+            if ($teacher->hasActiveRoomForStageType($roomStageType)) {
+                return response()->json([
+                    'error' => "This teacher is already assigned to a Capstone {$roomStageType} evaluation room."
+                ], 422);
             }
-
             $room->panelists()->attach($teacher->id);
         }
 
@@ -1064,29 +1115,97 @@ class admin_controller extends Controller
     }
 
     // ── TOGGLE CAPSTONE STAGE ───────────────────────────────────────
-    public function toggleCapstoneStage(Request $request)
-    {
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized.');
-        }
-
-        $request->validate([
-            'stage_id' => 'required|exists:capstone_stages,id',
-        ]);
-
-        $stage = CapstoneStages::findOrFail($request->stage_id);
-
-        $stage->is_enabled = ! $stage->is_enabled;
-        $stage->save();
-
-        if ($stage->capstone_year_id) {
-            $field = $stage->stage_type == 1 ? 'capstone_1_enabled' : 'capstone_2_enabled';
-            CapstoneYear::where('id', $stage->capstone_year_id)->update([$field => $stage->is_enabled]);
-        }
-
-        $status = $stage->is_enabled ? 'enabled' : 'disabled';
-        return back()->with('success', "{$stage->stage_title} has been {$status} successfully.");
+public function toggleCapstoneStage(Request $request)
+{
+    if (Auth::user()->role !== 'admin') {
+        abort(403, 'Unauthorized.');
     }
+
+    $request->validate([
+        'stage_id' => 'required|exists:capstone_stages,id',
+    ]);
+
+    $stage = CapstoneStages::findOrFail($request->stage_id);
+
+    $stage->is_enabled = ! $stage->is_enabled;
+    $stage->save();
+
+    // ── NEW: separate rooms & documents per capstone stage ─────────
+    $this->syncStageRoomsAndDocuments($stage);
+
+    if ($stage->capstone_year_id) {
+        $field = $stage->stage_type == 1 ? 'capstone_1_enabled' : 'capstone_2_enabled';
+        CapstoneYear::where('id', $stage->capstone_year_id)->update([$field => $stage->is_enabled]);
+    }
+
+    $status = $stage->is_enabled ? 'enabled' : 'disabled';
+    $extra  = $stage->is_enabled
+        ? 'Rooms and documents for this stage were restored.'
+        : 'Rooms and documents for this stage were archived.';
+
+    return back()->with('success', "{$stage->stage_title} has been {$status} successfully. {$extra}");
+}
+
+/**
+ * Archive (or restore) all evaluation rooms and certificates that belong to the
+ * given capstone stage. Rooms/certificates of the other capstone stage are
+ * left untouched, so Capstone 2 stays live while Capstone 1 is disabled.
+ */
+private function syncStageRoomsAndDocuments(CapstoneStages $stage): void
+{
+    $archived = ! $stage->is_enabled;
+    $year     = $archived
+        ? (int) substr($stage->capstoneYear->year ?? now()->year, 0, 4)
+        : null;
+
+    // Milestones that belong to this stage (used for backfill + fallback).
+    $milestoneIds = Milestone::where('capstone_stage_id', $stage->id)->pluck('id');
+
+    // ── Rooms already tagged with this stage ───────────────────────
+    EvaluationRoom::where('capstone_stage_id', $stage->id)->update([
+        'is_archived'   => $archived,
+        'archived_year' => $year,
+    ]);
+
+    // ── Rooms not tagged yet but whose milestone is in this stage ──
+    if ($milestoneIds->isNotEmpty()) {
+        EvaluationRoom::whereIn('required_milestone_id', $milestoneIds)
+            ->whereNull('capstone_stage_id')
+            ->update([
+                'capstone_stage_id' => $stage->id,
+                'is_archived'       => $archived,
+                'archived_year'     => $year,
+            ]);
+    }
+
+    // ── Certificates (documents) tagged with this stage ────────────
+    Certificate::where('capstone_stage_id', $stage->id)
+        ->update(['is_locked' => $archived ? 0 : 1]);
+
+    if ($milestoneIds->isNotEmpty()) {
+        Certificate::whereIn('milestone_id', $milestoneIds)
+            ->whereNull('capstone_stage_id')
+            ->update([
+                'capstone_stage_id' => $stage->id,
+                'is_locked'         => $archived ? 0 : 1,
+            ]);
+    }
+
+    $col      = $stage->stage_type == 2 ? 'capstone2_room_id' : 'capstone1_room_id';
+$otherCol = $stage->stage_type == 2 ? 'capstone1_room_id' : 'capstone2_room_id';
+
+if (! $archived) {
+    // stage enabled → point room_id at this stage's room
+    Group::where('capstone_year_id', $stage->capstone_year_id)
+        ->whereNotNull($col)
+        ->update(['room_id' => DB::raw($col)]);
+} else {
+    // stage disabled → fall back to the other stage's room
+    Group::where('capstone_year_id', $stage->capstone_year_id)
+        ->where('room_id', DB::raw($col))
+        ->update(['room_id' => DB::raw($otherCol)]);
+}
+}
 
     // ── ARCHIVE CAPSTONE BY YEAR ────────────────────────────────────
     public function archiveCapstoneByYear(Request $request)
@@ -1144,10 +1263,18 @@ class admin_controller extends Controller
                 'stage_type'  => $stage->stage_type,
             ]);
 
-            $oldMilestones = Milestone::where('capstone_stage_id', $stage->id)->get();
-
+            $oldMilestones   = Milestone::where('capstone_stage_id', $stage->id)->get();
             $oldMilestoneIds = $oldMilestones->pluck('id')->toArray();
-            EvaluationRoom::whereIn('required_milestone_id', $oldMilestoneIds)->delete();
+
+            // KEEP the rooms (with their panelists and groups), just archive them
+            EvaluationRoom::where(function ($q) use ($oldMilestoneIds, $stage) {
+                    $q->whereIn('required_milestone_id', $oldMilestoneIds)
+                    ->orWhere('capstone_stage_id', $stage->id);
+                })
+                ->update([
+                    'is_archived'   => true,
+                    'archived_year' => $year,
+                ]);
 
             foreach ($oldMilestones as $om) {
                 Milestone::create([
@@ -1194,6 +1321,15 @@ class admin_controller extends Controller
         return back()->with('success', "Capstone year {$request->year} has been enabled successfully.");
     }
 
+    // helper (put in the controller, or a trait since user_controller needs it too)
+        private function teacherHasActiveRoom($teacherId, $exceptRoomId = null): bool
+        {
+            return DB::table('room_panelists')
+                ->join('evaluation_rooms', 'evaluation_rooms.id', '=', 'room_panelists.room_id')
+                ->where('room_panelists.teacher_id', $teacherId)
+                ->where('evaluation_rooms.is_archived', false)
+                ->exists();
+        }
     /**
      * Add a new capstone year.
      */
@@ -1660,9 +1796,14 @@ class admin_controller extends Controller
      */
     private function archiveRoomsForYear($capstoneYearId)
     {
-        $roomIds = Group::where('capstone_year_id', $capstoneYearId)
-            ->whereNotNull('room_id')
-            ->pluck('room_id')
+        // Collect room IDs from BOTH stage columns as well as the active pointer.
+        $rows = Group::where('capstone_year_id', $capstoneYearId)
+            ->get(['room_id', 'capstone1_room_id', 'capstone2_room_id']);
+
+        $roomIds = $rows->pluck('room_id')
+            ->merge($rows->pluck('capstone1_room_id'))
+            ->merge($rows->pluck('capstone2_room_id'))
+            ->filter()
             ->unique();
 
         if ($roomIds->isNotEmpty()) {
@@ -1680,18 +1821,22 @@ class admin_controller extends Controller
     /**
      * Restore every evaluation room that has a group belonging to the given capstone year.
      */
-    private function restoreRoomsForYear($capstoneYearId)
-    {
-        $roomIds = Group::where('capstone_year_id', $capstoneYearId)
-            ->whereNotNull('room_id')
-            ->pluck('room_id')
-            ->unique();
+        private function restoreRoomsForYear($capstoneYearId)
+        {
+            $rows = Group::where('capstone_year_id', $capstoneYearId)
+                ->get(['room_id', 'capstone1_room_id', 'capstone2_room_id']);
 
-        if ($roomIds->isNotEmpty()) {
-            EvaluationRoom::whereIn('id', $roomIds)->update([
-                'is_archived'   => false,
-                'archived_year' => null,
-            ]);
+            $roomIds = $rows->pluck('room_id')
+                ->merge($rows->pluck('capstone1_room_id'))
+                ->merge($rows->pluck('capstone2_room_id'))
+                ->filter()
+                ->unique();
+
+            if ($roomIds->isNotEmpty()) {
+                EvaluationRoom::whereIn('id', $roomIds)->update([
+                    'is_archived'   => false,
+                    'archived_year' => null,
+                ]);
+            }
         }
-    }
 }

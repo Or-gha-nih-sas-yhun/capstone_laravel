@@ -3048,8 +3048,7 @@
             $allRevisionSheetsComplete = $revisionItems->isEmpty()
                 || $revisionItems->every(fn ($item) => strtolower(trim((string) data_get($item, 'remarks', ''))) === 'completed');
             $approvalLetterUnlocked = $isApprovalSheetUnlocked ?? false;
-            $capstone1Certificate = collect($certificatesCap1 ?? [])->first();
-            $capstone1CertificateUnlocked = $capstone1Certificate && (bool) $capstone1Certificate->unlocked;
+
         @endphp
 
         <!-- ═══════ CERTIFICATES ═══════ -->
@@ -3060,132 +3059,42 @@
                 <p class="text-[#5b6375] mt-2 text-sm">Download certificates, evaluation results, and progress reports</p>
             </div>
             <br>
-        @if($isCapstone1Stage)
-        <h2 class="text-xl font-bold text-[#0a1428] mb-4 flex items-center gap-2" style="font-family:'Cormorant Garamond',serif;">
-            <i class="fas fa-scroll w-4"></i> Capstone 1
-        </h2>
-        <br>
-        <div class="flex gap-3 mb-6 text-sm">
-            <span class="badge badge-green">
-                Available: <strong>{{ $capstone1CertificateUnlocked ? '1/1' : '0/1' }}</strong>
-            </span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Capstone 1 is intentionally one hard-coded document, not a loop. -->
-            <div class="content-card {{ !$capstone1CertificateUnlocked ? 'locked-card' : '' }}">
-                <div class="card-accent"></div>
-                <div class="p-5">
-                    @if(!$capstone1CertificateUnlocked)
-                    <div class="absolute top-3 right-3 badge badge-muted">
-                        <i class="fa-solid fa-lock"></i> Disabled
-                    </div>
-                    @endif
-                    <h3 class="mt-3 text-lg {{ !$capstone1CertificateUnlocked ? 'text-[#5b6375]' : 'text-[#0a1428]' }}">Capstone 1 Certificate</h3>
-                    <p class="text-[#5b6375] text-xs my-2">Official completion certificate for Capstone 1.</p>
-                    @if($capstone1CertificateUnlocked)
-                    <p class="text-[11px] text-[#1e6b3a]"><i class="fa-regular fa-circle-check"></i> Available</p>
-                    @else
-                    <p class="text-xs" style="color:var(--gold-dark);"><i class="fa-solid fa-lock"></i> Disabled</p>
-                    <p class="text-[10px] text-[#5b6375] mt-1">Capstone 1 is available only during capstone stage type 1 after completion.</p>
-                    @endif
-                    <div class="flex gap-3 mt-4">
-                        @if($capstone1CertificateUnlocked && $groups && $capstone1Certificate)
-                        <a href="{{ route('certificate.show', ['groupId' => $groups->id, 'certificateId' => $capstone1Certificate->id]) }}"
-                           target="_blank"
-                           class="btn-outline text-xs py-1.5 px-3">
-                            <i class="fas fa-print mr-1"></i> Print / Download
-                        </a>
-                        @else
-                        <button class="btn-outline text-xs py-1.5 px-3" disabled>
-                            <i class="fas fa-lock mr-1"></i> Disabled
-                        </button>
-                        @endif
-                    </div>
-                </div>
-            </div>
+@php $capstoneNo = $isCapstone1Stage ? 1 : 2; @endphp
 
-            <!-- Approval Letter: available only after evaluation and all revision items are completed. -->
-            <div class="content-card {{ !$approvalLetterUnlocked ? 'locked-card' : '' }}">
-                <div class="card-accent"></div>
-                <div class="p-5 relative">
-                    @if(!$approvalLetterUnlocked)
-                    <div class="absolute top-3 right-3 badge badge-muted">
-                        <i class="fa-solid fa-lock"></i> Locked
-                    </div>
-                    @endif
-                    <h3 class="mt-3 text-lg {{ !$approvalLetterUnlocked ? 'text-[#5b6375]' : 'text-[#0a1428]' }}">Approval Letter</h3>
-                    <p class="text-[#5b6375] text-xs my-2">View and print the official approval letter for your capstone project.</p>
-                    @if($approvalLetterUnlocked)
-                    <p class="text-[11px] text-[#1e6b3a]"><i class="fa-regular fa-circle-check"></i> Issued</p>
-                    @else
-                    <p class="text-xs" style="color:var(--gold-dark);"><i class="fa-regular fa-hourglass-half"></i> Not yet available</p>
-                    <p class="text-[10px] text-[#5b6375] mt-1">Complete the evaluation and all revision-sheet items first.</p>
-                    @endif
-                    <div class="flex gap-3 mt-4">
-                        @if($approvalLetterUnlocked && $groups)
-                        <button onclick="openApprovalSheet({{ $groups->id }})" class="btn-outline text-xs py-1.5 px-4 mt-1">
-                            <i class="fas fa-eye mr-1"></i> View Approval Letter
-                        </button>
-                        @else
-                        <button class="btn-outline text-xs py-1.5 px-3" disabled>
-                            <i class="fa-solid fa-lock mr-1"></i> Locked
-                        </button>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        <!-- Capstone 2: Recommendation & Approval Sheets -->
-<br>
 <h2 class="text-xl font-bold text-[#0a1428] mb-4 flex items-center gap-2" style="font-family:'Cormorant Garamond',serif;">
-    <i class="fas fa-scroll w-4"></i> Capstone 2
+    <i class="fas fa-scroll w-4"></i> Capstone {{ $capstoneNo }}
 </h2>
 <br>
 <div class="flex gap-3 mb-6 text-sm">
-    @php
-        // Count each Capstone 2 document independently:
-        //   • Recommendation Sheet unlocks via $isRecommendationUnlocked
-        //   • Approval Sheet unlocks via $approvalLetterUnlocked
-        $capstone2AvailableCount =
-            (int) ($isRecommendationUnlocked ?? false) +
-            (int) ($approvalLetterUnlocked   ?? false);
-    @endphp
     <span class="badge badge-green">
-        Available: <strong>{{ $capstone2AvailableCount }}/2</strong>
+        Available: <strong>{{ (int) ($isRecommendationUnlocked ?? false) + (int) ($approvalLetterUnlocked ?? false) }}/2</strong>
     </span>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <!-- Recommendation Sheet (standalone document — unlocked by its own milestone) -->
+    <!-- Recommendation Sheet -->
     <div class="content-card {{ !$isRecommendationUnlocked ? 'locked-card' : '' }}">
         <div class="card-accent"></div>
         <div class="p-5">
             @if(!$isRecommendationUnlocked)
-            <div class="absolute top-3 right-3 badge badge-muted">
-                <i class="fa-solid fa-lock"></i> Locked
-            </div>
+            <div class="absolute top-3 right-3 badge badge-muted"><i class="fa-solid fa-lock"></i> Locked</div>
             @endif
-
             <h3 class="mt-3 text-lg {{ !$isRecommendationUnlocked ? 'text-[#5b6375]' : 'text-[#0a1428]' }}">Recommendation Sheet</h3>
-            <p class="text-[#5b6375] text-xs my-2">View the recommendation sheet for your capstone project.</p>
+            <p class="text-[#5b6375] text-xs my-2">View the recommendation sheet for your capstone project {{ $capstoneNo }}.</p>
             @if($isRecommendationUnlocked)
-            <p class="text-[11px] text-[#5b6375]"><i class="fa-regular fa-circle-check"></i> Issued</p>
+            <p class="text-[11px] text-[#1e6b3a]"><i class="fa-regular fa-circle-check"></i> Issued</p>
             @else
             <p class="text-xs" style="color:var(--gold-dark);"><i class="fa-regular fa-hourglass-half"></i> Not yet available</p>
             <p class="text-[10px] text-[#5b6375] mt-1">Complete the required milestone to unlock</p>
             @endif
             <div class="flex gap-3 mt-4">
-                @if($isRecommendationUnlocked)
-                <button onclick="openRecommendationSheet({{ $groups->id }})" class="btn-outline text-xs py-1.5 px-3">
+                @if($isRecommendationUnlocked && $groups)
+                <button onclick="openRecommendationSheet({{ $groups->id }}, {{ $capstoneNo }})" class="btn-outline text-xs py-1.5 px-3">
                     <i class="fas fa-eye mr-1"></i> View Recommendation
                 </button>
                 @else
-                <button class="btn-outline text-xs py-1.5 px-3" disabled>
-                    <i class="fas fa-lock mr-1"></i> View Recommendation
-                </button>
+                <button class="btn-outline text-xs py-1.5 px-3" disabled><i class="fas fa-lock mr-1"></i> View Recommendation</button>
                 @endif
             </div>
         </div>
@@ -3196,34 +3105,29 @@
         <div class="card-accent"></div>
         <div class="p-5">
             @if(!$approvalLetterUnlocked)
-            <div class="absolute top-3 right-3 badge badge-muted">
-                <i class="fa-solid fa-lock"></i> Locked
-            </div>
+            <div class="absolute top-3 right-3 badge badge-muted"><i class="fa-solid fa-lock"></i> Locked</div>
             @endif
-
             <h3 class="mt-3 text-lg {{ !$approvalLetterUnlocked ? 'text-[#5b6375]' : 'text-[#0a1428]' }}">Approval Sheet</h3>
-            <p class="text-[#5b6375] text-xs my-2">View the final approval sheet for your capstone project.</p>
+            <p class="text-[#5b6375] text-xs my-2">View the final approval sheet for your capstone project {{ $capstoneNo }}.</p>
             @if($approvalLetterUnlocked)
-            <p class="text-[11px] text-[#5b6375]"><i class="fa-regular fa-circle-check"></i> Issued</p>
+            <p class="text-[11px] text-[#1e6b3a]"><i class="fa-regular fa-circle-check"></i> Issued</p>
             @else
             <p class="text-xs" style="color:var(--gold-dark);"><i class="fa-regular fa-hourglass-half"></i> Not yet available</p>
-            <p class="text-[10px] text-[#5b6375] mt-1">Complete the required milestone to unlock</p>
+            <p class="text-[10px] text-[#5b6375] mt-1">Complete the required milestone and all revision items to unlock</p>
             @endif
             <div class="flex gap-3 mt-4">
-                @if($approvalLetterUnlocked)
-                <button onclick="openApprovalSheet({{ $groups->id }})" class="btn-outline text-xs py-1.5 px-3">
+                @if($approvalLetterUnlocked && $groups)
+                <button onclick="openApprovalSheet({{ $groups->id }}, {{ $capstoneNo }})" class="btn-outline text-xs py-1.5 px-3">
                     <i class="fas fa-eye mr-1"></i> View Approval
                 </button>
                 @else
-                <button class="btn-outline text-xs py-1.5 px-3" disabled>
-                    <i class="fas fa-lock mr-1"></i> View Approval
-                </button>
+                <button class="btn-outline text-xs py-1.5 px-3" disabled><i class="fas fa-lock mr-1"></i> View Approval</button>
                 @endif
             </div>
         </div>
     </div>
-
 </div>
+
 
         </div>
 
@@ -3238,7 +3142,36 @@
     @if($groups)
         <!-- Active Revision Status Card -->
         <div class="mb-8">
-            @if($groups->revision_status == 'needs_revision')
+            @php
+    // A revision sheet is "completed" when it has items and every
+    // documentation/enhancement item is marked completed.
+    $isRevisionComplete = function ($rev) {
+        $items = collect(data_get($rev, 'documentation', []))
+            ->merge(collect(data_get($rev, 'enhancements', [])));
+        return $items->isNotEmpty() && $items->every(
+            fn ($item) => strtolower(trim((string) data_get($item, 'remarks', ''))) === 'completed'
+        );
+    };
+    $allRevisionsCompleted = $revisions->count() > 0
+        && $revisions->every(fn ($rev) => $isRevisionComplete($rev));
+@endphp
+
+    @if($allRevisionsCompleted)
+        <div class="rounded-xl border shadow-sm p-6 flex flex-col md:flex-row gap-5" style="background-color: #f0fdf4; border-color: #bbf7d0;">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: #dcfce7; color: #16a34a;">
+                <i class="fas fa-check-double text-xl"></i>
+            </div>
+            <div class="flex-grow">
+                <h3 class="text-lg font-bold flex items-center gap-2" style="color: #166534;">
+                    All Revisions Completed
+                    <span class="badge badge-green"><i class="fas fa-check mr-1"></i>Completed</span>
+                </h3>
+                <p class="text-sm mt-1" style="color: #15803d;">
+                    Every revision item from your panelists has been marked as completed.
+                </p>
+            </div>
+        </div>
+    @elseif($groups->revision_status == 'needs_revision')
                 <div class="rounded-xl border shadow-sm p-6 flex flex-col md:flex-row gap-5" style="background-color: #fffbeb; border-color: #fef3c7;">
                     <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background-color: #fef3c7; color: #d97706;">
                         <i class="fas fa-exclamation-triangle text-xl"></i>
@@ -3277,45 +3210,65 @@
                 </div>
             @endif
 
-            @if($revisions->count() > 0)
             <div class="mt-4">
                 <h4 class="font-semibold text-sm text-[#5b6375] mb-4 flex items-center gap-2">
                     <i class="fas fa-file-alt"></i> Revision Sheets from Panelists
+                    @if($revisions->count() > 0)
+                        <span class="badge badge-gold">{{ $revisions->count() }}</span>
+                    @endif
                 </h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    @foreach($revisions as $rev)
-                        @php
-                            $panelistName = $rev->panelist
-                                ? $rev->panelist->teacher_first_name . ' ' . $rev->panelist->teacher_last_name
-                                : 'Panelist';
-                        @endphp
-                        <div class="content-card">
-                            <div class="card-accent"></div>
-                            <div class="p-5">
-                                <div class="flex items-start gap-4">
-                                    <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: white;">
-                                        <i class="fas fa-file-alt text-xl"></i>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="text-lg font-bold text-[#0a1428]">Revision Sheet</h3>
-                                        <p class="text-[#5b6375] text-xs my-2">
-                                            From <strong>{{ $panelistName }}</strong> — {{ $rev->created_at->format('M d, Y') }}
-                                        </p>
-                                        <div class="flex gap-3 mt-4">
-                                            <button type="button"
-                                                    onclick="openRevisionSheet({{ $groups->id }}, {{ $rev->id }}, '{{ addslashes($panelistName) }}')"
+
+                @if($revisions->count() > 0)
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @foreach($revisions as $rev)
+                            @php
+                                $panelistName = $rev->panelist
+                                    ? $rev->panelist->teacher_first_name . ' ' . $rev->panelist->teacher_last_name
+                                    : 'Panelist';
+                                $revComplete = $isRevisionComplete($rev);
+                            @endphp
+                            <div class="content-card">
+                                <div class="card-accent"></div>
+                                <div class="p-5">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                                            style="background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: white;">
+                                            <i class="fas fa-file-alt text-xl"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                                <h3 class="text-lg font-bold text-[#0a1428]">Revision Sheet</h3>
+                                                @if($revComplete)
+                                                    <span class="badge badge-green">
+                                                        <i class="fas fa-check-circle mr-1"></i>Completed
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-amber">
+                                                        <i class="fas fa-hourglass-half mr-1"></i>Pending
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <p class="text-[#5b6375] text-xs my-2">
+                                                From <strong>{{ $panelistName }}</strong> —
+                                                {{ $rev->created_at->format('M d, Y') }}
+                                            </p>
+                                            <div class="flex gap-3 mt-4">
+                                                <button type="button"
+                                                    onclick="openRevisionSheet({{ $groups->id }}, {{ $rev->id }}, '{{ addslashes($panelistName) }}', {{ $stageTypeByStageId[$rev->capstone_stage_id] ?? 2 }})"
                                                     class="btn-outline text-xs py-1.5 px-4">
-                                                <i class="fas fa-eye mr-1"></i> View Revision Sheet
-                                            </button>
+                                                    <i class="fas fa-eye mr-1"></i> View Revision Sheet
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
-                </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-xs text-[#5b6375] italic">No revision sheets have been issued to your group yet.</p>
+                @endif
             </div>
-        @endif
 
         </div>
 
@@ -3411,8 +3364,8 @@
                 <!-- Additional Objectives -->
                 <table class="rv-table">
                     <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
-                    <thead>
-                        <tr><th colspan="2">Additional Objectives for Capstone Project 2</th></tr>
+                     <thead>
+                        <tr><th colspan="2">Additional Objectives for Capstone Project <span id="rvObjCapNo">2</span></th></tr>
                     </thead>
                     <tbody id="sheetObjectivesList">
                         <tr class="rv-tall"><td>1.</td><td>3.</td></tr>
@@ -3472,8 +3425,7 @@
                     <span class="hint">Fetching project details and proponents</span>
                 </div>
 
-                <p>This <strong>Capstone Project</strong> hereto entitled:</p>
-
+                <p>This <strong>Capstone Project <span id="recommendationCapNo">2</span></strong> hereto entitled:</p>
                 <p class="rec-capstone-title" id="recommendationTitle">—</p>
 
                 <p>
@@ -3551,7 +3503,7 @@
                 <span class="hint">Fetching panel, adviser, and oral exam results</span>
             </div>
 
-            <p class="approval-intro">This Capstone Project 2 hereto entitled:</p>
+            <p class="approval-intro">This Capstone Project <span id="approvalCapNo">2</span> hereto entitled:</p>
             <p id="approvalTitle" class="approval-title">—</p>
 
             <p class="approval-body">
@@ -4058,7 +4010,9 @@ window.printModalContent = function (modalId) {
 
         // ── Open Approval Sheet Modal ──
         // Loading is scoped INSIDE the modal — no global overlay.
-        window.openApprovalSheet = function(groupId) {
+        window.openApprovalSheet = function(groupId,capNo) {
+             const capEl = document.getElementById('approvalCapNo');
+            if (capEl) capEl.textContent = capNo || 2;
             const serialEl = document.getElementById('approvalSerial');
             const modal = document.getElementById('approvalSheetModal');
             const heading = document.getElementById('approvalSheetHeading');
@@ -4161,7 +4115,9 @@ if (examDateRaw) {
         };
 
         // ── Open Recommendation Sheet Modal ──
-        window.openRecommendationSheet = function(groupId) {
+        window.openRecommendationSheet = function(groupId, capNo) {
+            const capEl = document.getElementById('recommendationCapNo');
+    if (capEl) capEl.textContent = capNo || 2;
                 const dateEl  = document.getElementById('recommendationDate');
                 const modal        = document.getElementById('recommendationSheetModal');
                 const title        = document.getElementById('recommendationTitle');
@@ -4224,7 +4180,8 @@ if (examDateRaw) {
                     });
         };
 
-    window.openRevisionSheet = function(groupId, revisionId, panelistName) {
+    window.openRevisionSheet = function(groupId, revisionId, panelistName,capNo) {
+        capNo = capNo || 2;
         const $ = id => document.getElementById(id);
         const serialEl     = $('revisionSheetSerial');
         const proponents   = $('sheetProponents');
@@ -4233,6 +4190,13 @@ if (examDateRaw) {
         const objectiveRows= $('sheetObjectivesList');
         const approvedBy   = $('sheetApprovedBy');
         const loadingBox   = $('revisionSheetLoading');
+
+        const objTable = document.getElementById('rvObjectivesTable');
+        if (objTable) objTable.style.display = capNo === 1 ? 'none' : '';
+        const a = document.getElementById('rvObjCapNo');
+        const b = document.getElementById('rvFooterCapNo');
+        if (a) a.textContent = capNo;
+        if (b) b.textContent = capNo;
 
         if (!proponents || !chapterRows || !iotRows || !objectiveRows || !approvedBy) {
             console.error('Revision Sheet modal elements are missing.');

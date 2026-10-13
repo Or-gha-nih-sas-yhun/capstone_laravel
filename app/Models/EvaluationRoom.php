@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class EvaluationRoom extends Model
 {
-    protected $fillable = ['room_name', 'join_code', 'required_milestone_id', 'activity_name'];
+    protected $fillable = ['room_name', 'join_code', 'capstone_stage_id',  'required_milestone_id', 'activity_name'];
 
     protected static function booted()
     {
@@ -41,4 +41,18 @@ class EvaluationRoom extends Model
     {
         return $this->hasMany(Group::class, 'room_id');
     }
+    public function capstoneStage()
+{
+    return $this->belongsTo(CapstoneStages::class, 'capstone_stage_id');
+
+}
+public function capstone1Groups()
+{
+    return $this->hasMany(Group::class, 'capstone1_room_id');
+}
+
+public function capstone2Groups()
+{
+    return $this->hasMany(Group::class, 'capstone2_room_id');
+}
 }

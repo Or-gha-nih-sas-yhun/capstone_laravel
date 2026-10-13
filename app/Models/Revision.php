@@ -16,6 +16,8 @@ class Revision extends Model
         'group_id',
         'panelist_id',
         'overall_remarks',
+        'capstone_stage_id',
+        'approved_by',
     ];
 
     /**

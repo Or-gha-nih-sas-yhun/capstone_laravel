@@ -11,6 +11,7 @@ class Certificate extends Model
                 'document_type',
         'certificate_description',
         'milestone_id',
+        'capstone_stage_id',
     ];
 
     public function milestone()
@@ -22,4 +23,8 @@ class Certificate extends Model
     {
         return $this->belongsTo(GroupCertificate::class);
     }
+    public function capstoneStage()
+{
+    return $this->belongsTo(CapstoneStages::class, 'capstone_stage_id');
+}
 }

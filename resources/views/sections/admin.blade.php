@@ -1395,11 +1395,27 @@ body.print-admin-revision #adminRevisionSheetModal th {
                                 <span class="badge badge-amber"><i class="fa-regular fa-clock mr-0.5"></i> In Progress</span>
                             @endif
                         </td>
-                        <td class="text-sm text-[#3d4450]">
-                            <span class="badge {{ $group['room_name'] !== 'Unassigned' ? 'badge-gold' : 'badge-muted' }}">
-                                {{ $group['room_name'] }}
-                            </span>
-                        </td>
+                    <td class="text-sm text-[#3d4450]">
+                        <div class="flex flex-col gap-1">
+                            @if($group['capstone1_room_name'])
+                                <span class="badge badge-gold" title="Capstone 1 Room">
+                                    <i class="fas fa-door-open text-[9px] mr-1"></i>
+                                    C1: {{ $group['capstone1_room_name'] }}
+                                </span>
+                            @endif
+
+                            @if($group['capstone2_room_name'])
+                                <span class="badge badge-navy" title="Capstone 2 Room">
+                                    <i class="fas fa-door-open text-[9px] mr-1"></i>
+                                    C2: {{ $group['capstone2_room_name'] }}
+                                </span>
+                            @endif
+
+                            @if(!$group['capstone1_room_name'] && !$group['capstone2_room_name'])
+                                <span class="badge badge-muted">Unassigned</span>
+                            @endif
+                        </div>
+                    </td>
                         <td class="pr-2">
                             <div class="flex gap-3 text-[#5b6375]">
                                 <button onclick="openEditGroupModal({{ $group['id'] }})" class="hover:text-[#0a1428] transition"><i class="fas fa-pen"></i></button>
@@ -3206,13 +3222,27 @@ body.print-admin-revision #adminRevisionSheetModal th {
                                             <span class="text-gray-400 italic">Unassigned</span>
                                         @endif
                                     </td>
-                                    <td class="p-3">
-                                        @if($gr['room_name'] && $gr['room_name'] !== 'Unassigned')
-                                            <span class="badge badge-green text-[10px]"><i class="fas fa-door-open text-[9px] mr-1"></i> {{ $gr['room_name'] }}</span>
-                                        @else
+                                <td class="p-3">
+                                    <div class="flex flex-col gap-1">
+                                        @if($gr['capstone1_room_name'])
+                                            <span class="badge badge-gold text-[10px]" title="Capstone 1 Room">
+                                                <i class="fas fa-door-open text-[9px] mr-1"></i>
+                                                C1: {{ $gr['capstone1_room_name'] }}
+                                            </span>
+                                        @endif
+
+                                        @if($gr['capstone2_room_name'])
+                                            <span class="badge badge-green text-[10px]" title="Capstone 2 Room">
+                                                <i class="fas fa-door-open text-[9px] mr-1"></i>
+                                                C2: {{ $gr['capstone2_room_name'] }}
+                                            </span>
+                                        @endif
+
+                                        @if(!$gr['capstone1_room_name'] && !$gr['capstone2_room_name'])
                                             <span class="badge badge-muted text-[10px]">Unassigned</span>
                                         @endif
-                                    </td>
+                                    </div>
+                                </td>
                                     <td class="p-3 pr-4 text-center text-[#5b6375] font-semibold">{{ $gr['member_count'] }}</td>
                                 </tr>
                             @empty

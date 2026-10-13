@@ -48,4 +48,17 @@ public function evaluationRooms()
     return $this->belongsToMany(EvaluationRoom::class, 'room_panelists', 'teacher_id', 'room_id')
         ->withTimestamps();
 }
+// app/Models/Teacher.php
+public function hasActiveRoomForStageType(int $stageType, ?int $exceptRoomId = null): bool
+{
+    return $this->evaluationRooms()
+        ->where('evaluation_rooms.is_archived', false)
+        ->when($exceptRoomId, fn ($q) => $q->where('evaluation_rooms.id', '!=', $exceptRoomId))
+        ->get()
+        ->contains(function ($room) use ($stageType) {
+            $type = $room->capstoneStage->stage_type
+                ?? $room->requiredMilestone?->capstoneStage?->stage_type;
+            return (int) $type === $stageType;
+        });
+}
 }

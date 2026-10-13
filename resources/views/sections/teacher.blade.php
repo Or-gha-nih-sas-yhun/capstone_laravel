@@ -1762,7 +1762,7 @@
                                         <span class="badge badge-green text-[9px] whitespace-nowrap"><i class="fas fa-check-double mr-1"></i> Revised</span>
                                     @else
                                         <button type="button"
-                                            onclick="openGroupRevisionsModal({{ $cg->id }}, '{{ addslashes($cg->group_name) }}')"
+    onclick="openGroupRevisionsModal({{ $cg->id }}, '{{ addslashes($cg->group_name) }}', {{ $cg->room->capstone_stage_id ?? 'null' }})"
                                            class="badge bg-green-600 text-white text-[9px] whitespace-nowrap hover:bg-green-700 transition cursor-pointer">
     <i class="fas fa-file-lines mr-1"></i> View Revisions
                                         </button>
@@ -1835,6 +1835,10 @@
                         ])
                         ->where('group_id', $group->id)
                         ->where('panelist_id', $teacher->id)
+                        ->when(
+                            $group->room?->capstone_stage_id,
+                            fn ($q, $stageId) => $q->where('capstone_stage_id', $stageId)
+                        )
                         ->first();
 
                         $revisionComplete = false;
@@ -1874,7 +1878,12 @@
                             $section = $group->students->first()->section ?? 'No Section';
                         @endphp
                         @continue($progress >= 100)
-                          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-[#faf8f4] border border-[#e2dacf] rounded-xl text-sm group-item ag-row transition hover:shadow-sm" data-search="{{ strtolower($group->group_name . ' ' . $group->capstone_title . ' ' . $section) }}" data-ag-section="{{ $section }}">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-[#faf8f4] border border-[#e2dacf] rounded-xl text-sm group-item ag-row transition hover:shadow-sm"
+                            data-search="{{ strtolower($group->group_name . ' ' . $group->capstone_title . ' ' . $section) }}"
+                            data-ag-section="{{ $section }}"
+                            data-group-id="{{ $group->id }}"
+                            data-group-name="{{ addslashes($group->group_name) }}"
+                            data-stage-id="{{ $group->room?->capstone_stage_id ?? '' }}">
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="font-bold text-[#0a1428] text-base">{{ $group->group_name }}</span>
@@ -1916,7 +1925,8 @@
                                             onclick="openRevisionCheckModal(
                                                 {{ $group->id }},
                                                 '{{ addslashes($group->group_name) }}',
-                                                '{{ addslashes($group->capstone_title) }}'
+                                                '{{ addslashes($group->capstone_title) }}',
+                                                {{ $group->room?->capstone_stage_id ?? 'null' }}
                                             )"
                                             class="btn-primary text-xs px-3 py-1.5 rounded-lg bg-green-700 hover:bg-green-800"
                                             style="background-color:#15803d;"
@@ -2208,7 +2218,10 @@
                                                     ->where('teacher_id', $teacher->id)
                                                     ->exists() : false;
                                             @endphp
-                                            <div onclick="window.openEvaluationModal({{ $rg->id }})" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-green-200 rounded-xl text-sm group-item transition hover:shadow-md cursor-pointer hover:border-green-400 w-full" data-search="{{ $searchData }}">
+                                            <div onclick="window.openEvaluationModal({{ $rg->id }})" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-green-200 rounded-xl text-sm group-item transition hover:shadow-md cursor-pointer hover:border-green-400 w-full"
+                                                data-search="{{ $searchData }}"
+                                                data-group-id="{{ $rg->id }}"
+                                                data-stage-id="{{ $room->capstone_stage_id ?? '' }}">
                                                 <div class="flex flex-col gap-1">
                                                     <div class="flex items-center gap-2 flex-wrap">
                                                         <span class="font-bold text-[#0a1428] text-base">{{ $rg->group_name }}</span>
@@ -2292,6 +2305,10 @@
                                         ])
                                         ->where('group_id', $g->id)
                                         ->where('panelist_id', $teacher->id)
+                                        ->when(
+                                            $room->capstone_stage_id,
+                                            fn ($q, $stageId) => $q->where('capstone_stage_id', $stageId)
+                                        )
                                         ->first()
                                         : null;
 
@@ -2342,8 +2359,9 @@
                                     }
                                 @endphp
                                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-[#faf8f4] border border-[#e2dacf] rounded-xl text-sm group-item transition hover:shadow-sm w-full" data-search="{{ $searchData }}"
-                                             data-group-id="{{ $g->id }}"
-                                              data-group-name="{{ addslashes($g->group_name) }}">
+                            data-group-id="{{ $g->id }}"
+                            data-group-name="{{ addslashes($g->group_name) }}"
+                            data-stage-id="{{ $room->capstone_stage_id ?? '' }}">
                                         <div class="flex flex-col gap-1">
                                             <div class="flex items-center gap-2 flex-wrap">
                                                 <span class="font-bold text-[#0a1428] text-base">{{ $g->group_name }}</span>
@@ -2382,7 +2400,7 @@
                     <i class="fas fa-eye"></i> View Evaluation
                 </button>
 
-                <button onclick="window.openViewRevisionModal({{ $g->id }})"
+                <button onclick="window.openViewRevisionModal({{ $g->id }}, {{ $g->room->capstone_stage_id ?? 'null' }})"
                         class="btn-outline text-xs px-3 py-1.5 rounded-lg border-[#d6b15c] text-[#8b6914]">
                     <i class="fas fa-file-alt mr-1"></i> View Revision
                 </button>
@@ -2402,7 +2420,8 @@
                 onclick="openRevisionCheckModal(
                     {{ $g->id }},
                     '{{ addslashes($g->group_name) }}',
-                    '{{ addslashes($g->capstone_title) }}'
+                    '{{ addslashes($g->capstone_title) }}',
+                    {{ $room->capstone_stage_id ?? 'null' }}
                 )"
                 class="
                     btn-outline
@@ -2480,13 +2499,13 @@
 
                 Evaluate Group
             </button>
-                    <button
-            type="button"
-            onclick="window.openRevisionModal(
-                {{ $g->id }},
-                '{{ addslashes($g->group_name) }}',
-                '{{ addslashes($g->capstone_title) }}'
-            )"
+            <button type="button"
+                onclick="window.openRevisionModal(
+                    {{ $g->id }},
+                    '{{ addslashes($g->group_name) }}',
+                    '{{ addslashes($g->capstone_title) }}',
+                    {{ $room->capstone_stage_id ?? 'null' }}
+                )"
             class="
                 btn-outline
                 text-xs
@@ -2790,8 +2809,9 @@
         </div>
 
         <form id="revision_check_form" onsubmit="submitRevisionCheck(event)" class="space-y-5">
-            @csrf
-            <input type="hidden" id="check_group_id">
+    @csrf
+    <input type="hidden" id="check_group_id">
+    <input type="hidden" id="check_stage_id">
 
             <!-- Header: Proponents & Project -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3037,6 +3057,7 @@
     <input type="hidden" name="milestone_id" id="eval_milestone_id">
     <input type="hidden" name="score" id="eval_total_score">
     <input type="hidden" name="max_score" id="eval_max_score">
+    <input type="hidden" id="eval_stage_id">
 
     <!-- ═══ EVALUATE MODE FIELDS ═══ -->
     <div id="eval_mode_evaluate_fields" class="space-y-5">
@@ -3433,6 +3454,7 @@
         <form id="revision_form" onsubmit="submitRevisionRequest(event)" class="space-y-5">
             @csrf
             <input type="hidden" id="revision_group_id">
+            <input type="hidden" id="revision_stage_id" name="capstone_stage_id">
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -4263,21 +4285,25 @@ function openViewModal(groupId) {
 
                 const feedbackHtml = r.feedback ? `<div class="remark-feedback">"${r.feedback}"</div>` : '';
 
-                // ══════════════════════════════════════════════════════════════
-                //  ISSUANCE DETECTION + GATING
-                //  - Recommendation: milestone ID 5 or 17 (or matching title)
-                //  - Approval:        milestone ID 7 or 19 (or matching title)
-                //    + Requires: milestone complete AND all revisions cleared
-                // ══════════════════════════════════════════════════════════════
-                const isRecommendationMilestone =
-                    /issuance of recommendation/i.test(m.title || '')
-                    || m.id === 5
-                    || m.id === 17;
 
-                const isApprovalMilestone =
-                    /issuance of approval/i.test(m.title || '')
-                    || m.id === 7
-                    || m.id === 19;
+            // Driven by the Capstone Stage type, not hard-coded milestone IDs.
+            //   Capstone 1 (stage_type === 1) → Recommendation Sheet
+            //   Capstone 2 (stage_type === 2) → Approval Sheet
+            const stageType   = Number(m.capstone_stage_type);
+            const stageTitle  = String(m.capstone_stage_title || '').toLowerCase();
+            const titleLower  = String(m.title || '').toLowerCase();
+
+            // Fallback when stage_type is missing for legacy rows
+            const isCapstone1 = stageType === 1 || /capstone\s*1/.test(stageTitle);
+            const isCapstone2 = stageType === 2 || /capstone\s*2/.test(stageTitle);
+
+            // Recommendation Sheet — only inside Capstone 1
+            const isRecommendationMilestone =
+                isCapstone1 && /recommendation/.test(titleLower);
+
+            // Approval Sheet — only inside Capstone 2
+            const isApprovalMilestone =
+                isCapstone2 && /approval/.test(titleLower);
 
                 let issueButtonHtml = '';
 
@@ -4939,8 +4965,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ── REVISION HELPER FUNCTIONS ────────────────
-    window.openRevisionModal = function (groupId, groupName, capstoneTitle) {
+    window.openRevisionModal = function (groupId, groupName, capstoneTitle, stageId) {
         document.getElementById('revision_group_id').value = groupId;
+        document.getElementById('revision_stage_id').value = stageId || '';
         document.getElementById('revision_group_name').value = groupName || '';
         document.getElementById('revision_capstone_title').value = capstoneTitle || '';
         document.getElementById('revision_description_input').value = '';
@@ -4976,17 +5003,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.submitRevisionCheck = function (event) {
         event.preventDefault();
-        const groupId = document.getElementById('check_group_id').value;
+        const groupId    = document.getElementById('check_group_id').value;
+        const stageId    = document.getElementById('check_stage_id')?.value || null;
         const approvedBy = document.querySelector('#revision_check_form input[name="approved_by"]').value;
 
         const chapters = [];
         document.querySelectorAll('#check_chapters_tbody tr').forEach(row => {
             if (!row.dataset.chapter) return;
             chapters.push({
-                chapter: row.dataset.chapter,
-                findings: row.dataset.findings,
+                chapter:   row.dataset.chapter,
+                findings:  row.dataset.findings,
                 completed: row.querySelector('[data-role="chapter-completed"]')?.checked || false,
-                remarks: row.querySelector('[data-role="chapter-remarks"]')?.value || '',
+                remarks:   row.querySelector('[data-role="chapter-remarks"]')?.value || '',
             });
         });
 
@@ -4994,9 +5022,9 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('#check_iot_tbody tr').forEach(row => {
             if (!row.dataset.finding) return;
             iot.push({
-                finding: row.dataset.finding,
+                finding:   row.dataset.finding,
                 completed: row.querySelector('[data-role="iot-completed"]')?.checked || false,
-                remarks: row.querySelector('[data-role="iot-remarks"]')?.value || '',
+                remarks:   row.querySelector('[data-role="iot-remarks"]')?.value || '',
             });
         });
 
@@ -5006,7 +5034,7 @@ document.addEventListener('DOMContentLoaded', function () {
             objectives.push({
                 objective: row.dataset.objective,
                 completed: row.querySelector('[data-role="objective-completed"]')?.checked || false,
-                remarks: row.querySelector('[data-role="objective-remarks"]')?.value || '',
+                remarks:   row.querySelector('[data-role="objective-remarks"]')?.value || '',
             });
         });
 
@@ -5020,7 +5048,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ approved_by: approvedBy, chapters, iot, objectives })
+            body: JSON.stringify({
+                approved_by:       approvedBy,
+                capstone_stage_id: stageId,
+                chapters:          chapters,
+                iot:               iot,
+                objectives:        objectives
+            })
         })
         .then(async r => {
             const data = await r.json().catch(() => null);
@@ -5040,7 +5074,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.submitRevisionRequest = function (event) {
         event.preventDefault();
-        const groupId = document.getElementById('revision_group_id').value;
+        const groupId    = document.getElementById('revision_group_id').value;
+        const stageId    = document.getElementById('revision_stage_id')?.value || null;
         const description = document.getElementById('revision_description_input').value;
 
         const chapters = [];
@@ -5054,19 +5089,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const iotFindings = [];
         document.querySelectorAll('#revision_iot_rows > div').forEach(row => {
             const input = row.querySelector('input[type="text"]');
-            if (input?.value) {
-                iotFindings.push({ finding: input.value });
-            }
+            if (input?.value) iotFindings.push({ finding: input.value });
         });
 
         const objectives = [];
         document.querySelectorAll('#revision_objectives_list > div').forEach(row => {
             const input = row.querySelector('input[type="text"]');
-            if (input?.value) {
-                objectives.push(input.value);
-            }
+            if (input?.value) objectives.push(input.value);
         });
-                if (!chapters.length && !iotFindings.length && !objectives.length) {
+
+        if (!chapters.length && !iotFindings.length && !objectives.length) {
             showToast('Add at least one finding: a Chapter finding, a System/IoT finding, or an Additional Objective.', true);
             return;
         }
@@ -5079,10 +5111,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
-                revision_description: description,
-                chapters: chapters,
-                iot_findings: iotFindings,
-                additional_objectives: objectives
+                revision_description:    description,
+                capstone_stage_id:       stageId,
+                chapters:                chapters,
+                iot_findings:            iotFindings,
+                additional_objectives:   objectives
             })
         })
         .then(response => response.json())
@@ -5271,7 +5304,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ── EVALUATION MODAL ────────────────────────
-    window.openGroupRevisionsModal = function (groupId, groupName) {
+    window.openGroupRevisionsModal = function (groupId, groupName, stageId) {
         document.getElementById('grm_title').textContent = `Revisions — ${groupName}`;
         const content = document.getElementById('grm_content');
         content.innerHTML = window.skeletonCards(2);
@@ -5279,7 +5312,8 @@ document.addEventListener('DOMContentLoaded', function () {
         openModal('groupRevisionsModal');
         showPageLoader('Loading revisions…');
 
-        fetch(`/teacher/get-all-revisions/${groupId}`)
+        const stageQS = stageId ? `?capstone_stage_id=${stageId}` : '';
+fetch(`/teacher/get-all-revisions/${groupId}${stageQS}`)
             .then(async r => {
                 const data = await r.json();
                 if (!r.ok) throw new Error(data.error || 'Failed to load revisions.');
@@ -5432,7 +5466,8 @@ function resetEvalModalState() {
                 if (nameEl) groupNameField.value = nameEl.textContent.trim();
             }
         }
-
+        const stageId = container?.dataset.stageId || null;
+        document.getElementById('eval_stage_id').value = stageId || '';
         const milestoneSelect = document.getElementById('milestone_select');
         milestoneSelect.innerHTML = '<option value="">Loading milestone…</option>';
         milestoneSelect.disabled = true;
@@ -5467,7 +5502,7 @@ function resetEvalModalState() {
                 setEvalModeReadOnly('This group has already been evaluated. All fields are read-only.');
                 displayEvaluation(evalData);
                 const readOnlyRevisionSheet = document.getElementById('eval_revision_sheet_content');
-                if (readOnlyRevisionSheet) renderRevisionSheet(readOnlyRevisionSheet, groupId, true);
+                if (readOnlyRevisionSheet) renderRevisionSheet(readOnlyRevisionSheet, groupId, true, stageId);
                 hidePageLoader();
                 return;
             }
@@ -5520,7 +5555,7 @@ function resetEvalModalState() {
             if (absentContainer) absentContainer.classList.add('hidden');
 
             const revisionSheetEl = document.getElementById('eval_revision_sheet_content');
-            if (revisionSheetEl) renderRevisionSheet(revisionSheetEl, groupId);
+            if (revisionSheetEl) renderRevisionSheet(revisionSheetEl, groupId, false, stageId);
 
             hidePageLoader();
         })
@@ -6100,8 +6135,10 @@ function resetEvalModalState() {
     };
 
     // ── Revision Check Modal ──
-    window.openRevisionCheckModal = function(groupId, groupName, capstoneTitle) {
+    window.openRevisionCheckModal = function (groupId, groupName, capstoneTitle, stageId) {
         document.getElementById('check_group_id').value = groupId;
+        const stageInput = document.getElementById('check_stage_id');
+        if (stageInput) stageInput.value = stageId || '';
         document.getElementById('check_capstone_title').value = capstoneTitle || '';
 
         document.getElementById('check_chapters_tbody').innerHTML = '';
@@ -6115,9 +6152,11 @@ function resetEvalModalState() {
         openModal('revisionCheckModal');
         showPageLoader('Loading revision details…');
 
+        const stageQS = stageId ? `?capstone_stage_id=${stageId}` : '';
+
         Promise.all([
             fetch(`/teacher/get-group/${groupId}`).then(r => r.json()),
-            fetch(`/teacher/get-revision-details/${groupId}`).then(async r => {
+            fetch(`/teacher/get-revision-details/${groupId}${stageQS}`).then(async r => {
                 const data = await r.json();
                 if (!r.ok) throw new Error(data.error || 'Failed to load revision.');
                 return data;
@@ -6136,7 +6175,7 @@ function resetEvalModalState() {
 
             const chaptersTbody = document.getElementById('check_chapters_tbody');
             if (revData.chapters && revData.chapters.length) {
-                revData.chapters.forEach((ch, idx) => {
+                revData.chapters.forEach(ch => {
                     const remarks = ch.remarks || 'Pending';
                     const isCompleted = remarks.toLowerCase() === 'completed';
                     const tr = document.createElement('tr');
@@ -6160,7 +6199,7 @@ function resetEvalModalState() {
 
             const iotTbody = document.getElementById('check_iot_tbody');
             if (revData.iot_findings && revData.iot_findings.length) {
-                revData.iot_findings.forEach((iot, idx) => {
+                revData.iot_findings.forEach(iot => {
                     const remarks = iot.remarks || 'Pending';
                     const isCompleted = remarks.toLowerCase() === 'completed';
                     const tr = document.createElement('tr');
@@ -6184,19 +6223,19 @@ function resetEvalModalState() {
             objectivesList.innerHTML = '';
             const table = document.createElement('table');
             table.className = 'w-full text-left border-collapse';
-            const thead = document.createElement('thead');
-            thead.innerHTML = `
-                <tr class="bg-[#faf8f4] text-[#0a1428] font-semibold text-xs border-b border-[#e2dacf]">
-                    <th class="p-2 pl-3" style="width:65%">Objective</th>
-                    <th class="p-2 text-center" style="width:15%">Completed?</th>
-                    <th class="p-2 pr-3 text-center" style="width:20%">Remarks</th>
-                </tr>
+            table.innerHTML = `
+                <thead>
+                    <tr class="bg-[#faf8f4] text-[#0a1428] font-semibold text-xs border-b border-[#e2dacf]">
+                        <th class="p-2 pl-3" style="width:65%">Objective</th>
+                        <th class="p-2 text-center" style="width:15%">Completed?</th>
+                        <th class="p-2 pr-3 text-center" style="width:20%">Remarks</th>
+                    </tr>
+                </thead>
             `;
-            table.appendChild(thead);
             const tbodyObj = document.createElement('tbody');
             tbodyObj.className = 'divide-y divide-[#faf1e0] text-xs';
             if (revData.additional_objectives && revData.additional_objectives.length > 0) {
-                revData.additional_objectives.forEach((obj) => {
+                revData.additional_objectives.forEach(obj => {
                     const objectiveText = typeof obj === 'object' ? obj.objective : obj;
                     const remarks = typeof obj === 'object' ? (obj.remarks || 'Pending') : 'Pending';
                     const isCompleted = String(remarks).toLowerCase() === 'completed';
@@ -6215,9 +6254,7 @@ function resetEvalModalState() {
                     tbodyObj.appendChild(tr);
                 });
             } else {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td colspan="3" class="p-4 text-center text-[#5b6375]">No objectives.</td>`;
-                tbodyObj.appendChild(tr);
+                tbodyObj.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-[#5b6375]">No objectives.</td></tr>`;
             }
             table.appendChild(tbodyObj);
             objectivesList.appendChild(table);
@@ -6226,10 +6263,9 @@ function resetEvalModalState() {
                 '#check_chapters_tbody [data-role="chapter-completed"], ' +
                 '#check_iot_tbody [data-role="iot-completed"], ' +
                 '#check_objectives_list [data-role="objective-completed"]'
-            )
-            .forEach(cb => {
+            ).forEach(cb => {
                 cb.addEventListener('change', function () {
-                    const row = this.closest('tr, div');
+                    const row = this.closest('tr');
                     const remarksField = row?.querySelector('[data-role$="-remarks"]');
                     if (!remarksField) return;
                     if (this.checked) {
@@ -6243,6 +6279,7 @@ function resetEvalModalState() {
                     }
                 });
             });
+
             hidePageLoader();
         })
         .catch(error => {
@@ -6545,7 +6582,8 @@ function resetEvalModalState() {
         },
         body: JSON.stringify({
             revision_description: description,
-            chapters,
+            capstone_stage_id:       document.getElementById('eval_stage_id')?.value || null,  // ← ADD
+        chapters,
             iot_findings: iotFindings,
             additional_objectives: additionalObjectives
         })
@@ -6589,9 +6627,12 @@ function resetEvalModalState() {
             : '<i class="fa-solid fa-lock"></i> View Only';
     }
 
-    function renderRevisionSheet(container, groupId, forceReadOnly = false) {
+    function renderRevisionSheet(container, groupId, forceReadOnly = false, stageId = null) {
         container.innerHTML = window.skeletonBlock(4);
-        fetch(`/teacher/get-revision-details/${groupId}`)
+
+        const stageQS = stageId ? `?capstone_stage_id=${stageId}` : '';
+
+        fetch(`/teacher/get-revision-details/${groupId}${stageQS}`)
             .then(async response => {
                 const data = await response.json().catch(() => ({}));
                 if (response.status === 404) return {};
@@ -6800,7 +6841,7 @@ function resetEvalModalState() {
         };
 
         // ── REVISION SHEET (all panelists, official form layout) ──
-    window.openRevisionSheet = function (groupId, preferRevisionId) {
+    window.openRevisionSheet = function (groupId, preferRevisionId, stageId) {
         if (!groupId) return;
         const $ = id => document.getElementById(id);
         const serialEl = $('revisionSheetSerial'), tabsEl = $('revisionPanelistTabs'),
@@ -6866,7 +6907,8 @@ function resetEvalModalState() {
         if (loading) loading.style.display = 'flex';
         openModal('revisionSheetModal');
 
-        fetch(`/teacher/get-all-revisions/${groupId}`, { __silent: true })
+        const stageQS = stageId ? `?capstone_stage_id=${stageId}` : '';
+        fetch(`/teacher/get-all-revisions/${groupId}${stageQS}`, { __silent: true })
             .then(async r => {
                 const d = await r.json().catch(() => ({}));
                 if (!r.ok) throw new Error(d.error || `Server returned ${r.status}`);
@@ -6908,7 +6950,9 @@ function resetEvalModalState() {
         window.openTeacherRecommendationSheet = window.openRecommendationSheet;
         window.openTeacherApprovalSheet       = window.openApprovalSheet;
         window.openTeacherRevisionSheet       = window.openRevisionSheet;
-        window.openViewRevisionModal          = window.openRevisionSheet;
+        window.openViewRevisionModal = function (groupId, stageId) {
+    window.openRevisionSheet(groupId, null, stageId);
+};
     })();
 </script>
 <script src="{{ asset('js/idle-logout.js') }}"></script>
