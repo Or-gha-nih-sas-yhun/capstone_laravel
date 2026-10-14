@@ -1199,7 +1199,7 @@
         text-transform: uppercase; margin: calc(var(--in) * .05) 0 calc(var(--in) * .13); color: #0a1428;
     }
     #approvalSheetModal .approval-panel-grid {
-        gap: calc(var(--in) * .22) calc(var(--in) * .55); max-width: calc(var(--in) * 6);
+        gap: calc(var(--in) * 0.45) calc(var(--in) * 0.55);  max-width: calc(var(--in) * 6);
         margin: 0 auto calc(var(--in) * .16);
     }
     #approvalSheetModal .approval-panel-grid .approval-signature { margin: 0; }
@@ -1209,16 +1209,17 @@
        margin-top:auto pushes it to the bottom; the free space above is for panelists. */
     #approvalSheetModal .approval-accepted {
         font-size: calc(var(--pt) * 10); line-height: 1.4; max-width: calc(var(--in) * 6.2);
-        margin: auto auto calc(var(--in) * .16); padding-top: calc(var(--in) * .3);
+        margin: 0 auto calc(var(--in) * 0.3);  padding-top: calc(var(--in) * .3);
     }
     #approvalSheetModal .approval-oral-results {
-        gap: calc(var(--in) * .06); font-size: calc(var(--pt) * 10); line-height: 1.15; margin: 0 0 calc(var(--in) * .14);
+        gap: calc(var(--in) * 0.15);  font-size: calc(var(--pt) * 10); line-height: 1.15; margin: 0 0 calc(var(--in) * 0.3);
     }
     #approvalSheetModal .approval-oral-results .oral-value {
         display: inline-block; min-width: calc(var(--in) * 1.5);
         padding: 0 calc(var(--in) * .1) calc(var(--in) * .02); text-align: center; color: #0a1428;
     }
-    #approvalSheetModal .approval-approved-label { margin: 0 0 calc(var(--in) * .05); font-size: calc(var(--pt) * 10); line-height: 1; }
+    #approvalSheetModal .approval-approved-label { 
+        margin: calc(var(--in) * 0.2) 0 calc(var(--in) * 0.15);  font-size: calc(var(--pt) * 10); line-height: 1; }
     #approvalSheetModal #approvalSheetContent > .approval-signature:last-child { margin-bottom: 0; }
     #approvalSheetModal #approvalPresident { min-width: calc(var(--in) * 2.9); font-size: calc(var(--pt) * 10.5); letter-spacing: .03em; }
 

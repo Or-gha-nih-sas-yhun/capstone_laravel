@@ -2050,30 +2050,59 @@ public function teacherGetApprovalSheet($groupId)
         ? trim($group->adviser->teacher_first_name . ' ' . $group->adviser->teacher_last_name)
         : null;
 
-    $panelists = [];
+     $panelists = [];
+    $hasChairman = false;
+
     if ($group->room) {
         foreach ($group->room->panelists as $p) {
+            $role = $p->pivot->role ?? 'Member';
             $panelists[] = [
                 'name' => trim($p->teacher_first_name . ' ' . $p->teacher_last_name),
-                'role' => $p->pivot->role ?? 'Member',
+                'role' => $role,
             ];
+            if (stripos($role, 'chair') !== false) {
+                $hasChairman = true;
+            }
         }
     }
 
-    $oralExamResult = '—';
+    // Always ensure there is a Chairman
+    if (!$hasChairman) {
+        $panelists[] = [
+            'name' => 'DINO L. ILUSTRISIMO, Ph.D.',
+            'role' => 'Chairman, Board of Panels',
+        ];
+    }
+
+        $oralExamResult = 'PASSED'; // Always passed
     $oralExamDate   = null;
-    $oralMilestone = \App\Models\Milestone::where('milestone_title', 'like', '%Oral Presentation%')->first();
-    if ($oralMilestone) {
-        $eval = Evaluation::where('group_id', $groupId)
-            ->where('milestone_id', $oralMilestone->id)
-            ->latest('evaluation_date')->first();
-        if ($eval) {
-            $oralExamResult = $eval->score >= ($eval->max_score * 0.6) ? 'PASSED' : 'FAILED';
-            $oralExamDate = $eval->evaluation_date
-                ? \Carbon\Carbon::parse($eval->evaluation_date)->format('F d, Y') : null;
-        }
+    
+    $oralMilestone = \App\Models\Milestone::where('milestone_title', 'like', '%CAPSTONE PROJECT 2 ORAL PRESENTATION%')->first();
+    
+    // Fallback: If the exact title isn't found, look for ANY oral presentation milestone under Capstone 2
+    if (!$oralMilestone) {
+        $oralMilestone = \App\Models\Milestone::whereHas('capstoneStage', function($q) {
+            $q->where('stage_type', 2);
+        })->where('milestone_title', 'like', '%Oral Presentation%')->first();
     }
 
+    if ($oralMilestone) {
+        // 1. Prioritize the scheduled milestone date (e.g., Oct 5)
+        $milestoneDate = $oralMilestone->start_date ?: $oralMilestone->due_date;
+        
+        if ($milestoneDate) {
+            $oralExamDate = \Carbon\Carbon::parse($milestoneDate)->format('F d, Y');
+        } else {
+            // 2. Fallback to the actual evaluation date
+            $eval = Evaluation::where('group_id', $groupId)
+                ->where('milestone_id', $oralMilestone->id)
+                ->latest('evaluation_date')->first();
+            if ($eval) {
+                $oralExamDate = $eval->evaluation_date
+                    ? \Carbon\Carbon::parse($eval->evaluation_date)->format('F d, Y') : null;
+            }
+        }
+    }
     $record = GroupCertificate::where('group_id', $groupId)
         ->whereHas('certificate', function ($q) {
             $q->where('document_type', 'approval')
@@ -2089,7 +2118,7 @@ public function teacherGetApprovalSheet($groupId)
         'panelists'        => $panelists,
         'oral_exam_result' => $oralExamResult,
         'oral_exam_date'   => $oralExamDate,
-        'school_president' => 'DR. FLORIPIS A. MONTECILLO, Ed.D.',
+        'school_president' => ' FLORIPIS A. MONTECILLO, Ed.D.',
         'serial_number'    => $record?->serial_number,
     ]);
 }
@@ -3631,45 +3660,65 @@ public function getApprovalSheet($groupId)
 
     // Panelists – get from room, include pivot data if available
     $panelists = [];
+    $hasChairman = false;
+
     if ($group->room) {
         foreach ($group->room->panelists as $p) {
             $pivot = $p->pivot; // the room_panelists pivot
+            $role = $pivot->role ?? 'Member';
             $panelists[] = [
                 'name' => trim(($p->teacher_first_name ?? '') . ' ' . ($p->teacher_last_name ?? '')),
-                'role' => $pivot->role ?? 'Member',   // if you have a role column, else 'Member'
-                'date' => $pivot->date ?? null,        // if you have a date column
+                'role' => $role,
+                'date' => $pivot->date ?? null,
             ];
+            if (stripos($role, 'chair') !== false) {
+                $hasChairman = true;
+            }
         }
     }
 
-    // If no panelists, provide a fallback (optional)
-    if (empty($panelists)) {
-        // You could add a placeholder chairman from the department
+    // Always ensure there is a Chairman
+    if (!$hasChairman) {
         $panelists[] = [
-            'name' => 'DINO L. HUSTRIJIMO, MIT',
+            'name' => 'DINO L. ILUSTRISIMO, Ph.D.',
             'role' => 'Chairman, Board of Panels',
             'date' => null,
         ];
     }
 
-    // Oral exam result and date – fetch from the "Oral Presentation" milestone evaluation
-    $oralExamResult = '—';
+        // Oral exam result and date – fetch from the "Oral Presentation" milestone evaluation
+    $oralExamResult = 'PASSED'; // Always passed for approval sheet
     $oralExamDate = null;
 
-    $oralMilestone = Milestone::where('milestone_title', 'like', '%Oral Presentation%')->first();
-    if ($oralMilestone) {
-        $eval = Evaluation::where('group_id', $groupId)
-            ->where('milestone_id', $oralMilestone->id)
-            ->latest('evaluation_date')
-            ->first();
-        if ($eval) {
-            $oralExamResult = $eval->score >= ($eval->max_score * 0.6) ? 'PASSED' : 'FAILED'; // threshold
-            $oralExamDate = $eval->evaluation_date ? \Carbon\Carbon::parse($eval->evaluation_date)->format('F d, Y') : null;
-        }
+    // Specifically look for the Capstone Project 2 Oral Presentation milestone
+    $oralMilestone = Milestone::where('milestone_title', 'like', '%CAPSTONE PROJECT 2 ORAL PRESENTATION%')->first();
+    
+    // Fallback: If the exact title isn't found, look for ANY oral presentation milestone under Capstone 2
+    if (!$oralMilestone) {
+        $oralMilestone = Milestone::whereHas('capstoneStage', function($q) {
+            $q->where('stage_type', 2);
+        })->where('milestone_title', 'like', '%Oral Presentation%')->first();
     }
 
+    if ($oralMilestone) {
+        // 1. Prioritize the scheduled milestone date (e.g., Oct 5)
+        $milestoneDate = $oralMilestone->start_date ?: $oralMilestone->due_date;
+        
+        if ($milestoneDate) {
+            $oralExamDate = \Carbon\Carbon::parse($milestoneDate)->format('F d, Y');
+        } else {
+            // 2. Fallback to the actual evaluation date if the milestone has no scheduled dates
+            $eval = Evaluation::where('group_id', $groupId)
+                ->where('milestone_id', $oralMilestone->id)
+                ->latest('evaluation_date')
+                ->first();
+            if ($eval) {
+                $oralExamDate = $eval->evaluation_date ? \Carbon\Carbon::parse($eval->evaluation_date)->format('F d, Y') : null;
+            }
+        }
+    }
     // School President – you can store in settings or hardcode
-    $president = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
+    $president = 'FLORIPIS A. MONTECILLO, Ed.D.';
 
 
     $approvalRecord = GroupCertificate::where('group_id', $groupId)
