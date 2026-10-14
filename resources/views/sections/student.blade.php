@@ -1847,10 +1847,7 @@ body.print-approval #approvalSheetModal .approval-paper {
     body.print-recommendation #recommendationSheetModal {
         max-height: none !important;
         overflow: visible !important;
-    }
-@media print {
-    
-    body.print-recommendation #recommendationSheetModal .modal-box {
+
          box-sizing: border-box !important;
         width: 100% !important;
         max-width: 100% !important;
