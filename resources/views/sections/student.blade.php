@@ -1381,6 +1381,7 @@
     }
     #approvalSheetModal .approval-body {
         font-size: calc(var(--pt) * 10.5);
+        text-indent: 0.5in;
         line-height: 1.5;
         max-width: calc(var(--in) * 6.4);
         margin: 0 auto calc(var(--in) * 0.2);
@@ -1793,13 +1794,71 @@
     }
 }
 
+@page { margin: 0.55in 0.6in 0.7in 0.6in; }
+@page approval { size: A4 portrait; margin: 0.6in 0.65in 0.55in 1.5in; }
+@media print {
+  body.print-approval { page: approval; }
 
+  body.print-approval #approvalSheetModal .approval-paper {
+    --in: 1in !important;      /* real inches in print */
+    --pt: 1pt !important;
+    --sp: 0.2in;               /* ONE "space" – tune this single value */
+    width: 100% !important; height: auto !important; min-height: 0 !important;
+    aspect-ratio: auto !important; margin: 0 auto !important;
+    padding: 0 !important; box-shadow: none !important; overflow: visible !important;
+  }
+
+  /* default for every signature, then specific gaps */
+  body.print-approval #approvalSheetModal .approval-signature { margin: 0 auto !important; }
+
+  /* Body → Adviser (+2) */
+  body.print-approval #approvalSheetModal .approval-body {
+    margin: 0 auto calc(0.15in + var(--sp) * 2) !important;
+  }
+  /* Adviser → Panel heading (+2) */
+  body.print-approval #approvalSheetModal .approval-body + .approval-signature {
+    margin: 0 auto calc(0.15in + var(--sp) * 2) !important;
+  }
+  /* Panel heading → first row (+2) */
+  body.print-approval #approvalSheetModal .approval-panel-heading {
+    margin: 0 0 calc(0.1in + var(--sp) * 2) !important;
+  }
+  /* Row 1 → Row 2 (+1) and Row 2 → Chairman (+1) */
+  body.print-approval #approvalSheetModal .approval-panel-grid {
+    gap: calc(0.3in + var(--sp)) 0.4in !important;
+    margin: 0 auto calc(0.3in + var(--sp)) !important;
+  }
+  body.print-approval #approvalSheetModal .approval-panel-grid .approval-signature {
+    margin: 0 !important;
+  }
+  /* Chairman → Accepted: 3 spaces only */
+  body.print-approval #approvalSheetModal #approvalChairmanBlock {
+    margin: 0 auto calc(var(--sp) * 3) !important;
+  }
+  body.print-approval #approvalSheetModal .approval-accepted {
+    margin: 0 auto 0.14in !important; padding-top: 0 !important;
+  }
+  /* Oral date → Approved: 2 spaces */
+  body.print-approval #approvalSheetModal .approval-oral-results {
+    margin: 0 0 calc(var(--sp) * 2) !important;
+  }
+  /* Approved → President: 2 spaces */
+  body.print-approval #approvalSheetModal .approval-approved-label {
+    margin: 0 0 calc(var(--sp) * 2) !important;
+  }
+  body.print-approval #approvalSheetModal #approvalSheetContent > .approval-signature:last-child {
+    margin: 0 auto !important;
+  }
+}
 /* ══ PRINT — APPROVAL SHEET: same layout as screen, scaled to the printable width ══ */
 @media print {
+
+
     body.print-approval #approvalSheetModal {
         max-height: none !important;
         overflow: visible !important;
     }
+
     body.print-approval #approvalSheetModal .approval-sheet-modal-box {
         display: block !important;
         box-sizing: border-box !important;
@@ -1807,8 +1866,6 @@
         max-width: none !important;
         height: auto !important;
         max-height: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
         overflow: visible !important;
         border: 0 !important;
         border-radius: 0 !important;
@@ -1816,28 +1873,94 @@
         animation: none !important;
         background: #fff !important;
     }
-    /* Printable width = 8.5in - 2×0.6in margins = 7.3in.
-       --in scales the whole screen layout down proportionally (8.5in → 7.3in). */
-body.print-approval #approvalSheetModal .approval-paper {
-    /* --in comes from the shared rule: 100cqw / 8.5, so it follows the real page width */
-    width: 100% !important;
-    min-height: calc(var(--in) * 11) !important;
-    height: auto !important;
-    margin: 0 auto !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-    break-inside: avoid;
-}
+
+    body.print-approval #approvalSheetModal .approval-paper {
+        width: 100% !important;
+        height: auto !important; /* FIX: Allow content to dictate height */
+        min-height: 0 !important; /* FIX: Remove the forced 11in min-height */
+        aspect-ratio: auto !important; /* FIX: Remove aspect ratio for print */
+        box-shadow: none !important;
+        overflow: visible !important;
+        break-inside: avoid;
+    }
+
     body.print-approval #approvalSheetModal button,
     body.print-approval #approvalSheetModal .flex.justify-end {
         display: none !important;
     }
+
+    /* ── SPACING ADJUSTMENTS BASED ON ANNOTATIONS ── */
+
+    /* Adviser to Panel of Examiners: 2 more spaces */
+    body.print-approval #approvalSheetModal .approval-signature {
+    }
+
+    /* Panel Heading: 2 more spaces top, 2 more spaces bottom */
+    body.print-approval #approvalSheetModal .approval-panel-heading {
+    }
+
+    /* Chairman Block: 1 more space top */
+    body.print-approval #approvalSheetModal #approvalChairmanBlock {
+    }
+
+    /* Accepted Block: 1 more space top */
+    body.print-approval #approvalSheetModal .approval-accepted {
+    }
+
+    /* Approved Label: 2 more spaces top, 2 more spaces bottom */
     body.print-approval #approvalSheetModal .approval-approved-label {
-    margin: calc(var(--in) * 0.4) 0 calc(var(--in) * 0.3) !important;
-    font-size: calc(var(--pt) * 10) !important;
-    line-height: 1 !important;
-    text-align: center !important;
+        font-size: calc(var(--pt) * 10) !important;
+        line-height: 1 !important;
+        text-align: center !important;
+    }
+
+    /* President Name: 2 more spaces top */
+    body.print-approval #approvalSheetModal #approvalSheetContent > .approval-signature:last-child {
+    }
 }
+
+/* ══ PRINT — APPROVAL SHEET: Bigger fonts, spacing, justified text ══ */
+@media print {
+    body.print-approval #approvalSheetModal .approval-intro {
+        font-size: 10.5pt !important;
+    }
+    body.print-approval #approvalSheetModal .approval-title {
+        font-size: 12pt !important;
+    }
+    body.print-approval #approvalSheetModal .approval-body {
+        font-size: 10.5pt !important;
+        line-height: 1.25 !important;
+        text-indent: 0.5in !important;
+        text-align: justify !important;
+    }
+    body.print-approval #approvalSheetModal .approval-signature .approval-sig-line {
+        font-size: 10pt !important;
+    }
+    body.print-approval #approvalSheetModal .approval-signature .approval-sig-role {
+        font-size: 8.5pt !important;
+    }
+    body.print-approval #approvalSheetModal .approval-panel-heading {
+        font-size: 10.5pt !important;
+    }
+    body.print-approval #approvalSheetModal .approval-panel-grid .approval-sig-line {
+        font-size: 10pt !important;
+    }
+    body.print-approval #approvalSheetModal .approval-accepted {
+        font-size: 10pt !important;
+    }
+    body.print-approval #approvalSheetModal .approval-oral-results {
+        font-size: 10pt !important;
+    }
+    body.print-approval #approvalSheetModal .approval-approved-label {
+        font-size: 10pt !important;
+    }
+    body.print-approval #approvalSheetModal #approvalPresident {
+        font-size: 10.5pt !important;
+    }
+    body.print-approval #approvalSheetModal #approvalChairmanBlock {
+    }
+    body.print-approval #approvalSheetModal .approval-panel-grid {
+    }
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -2235,7 +2358,56 @@ body.print-approval #approvalSheetModal .approval-paper {
     color: #333;
 }
 #revisionSheetModal .rv-footer-note strong { font-weight: 700; }
+/* ══ PRINT — RECOMMENDATION SHEET: plain white page, no scroll/frame (same as approval) ══ */
+@page recommendation { size: A4 portrait; margin: 0.6in 0.65in 0.55in 0.8in; }
 
+@media print {
+    body.print-recommendation { page: recommendation; }
+
+    /* overlay: normal flow, no clipping */
+    body.print-recommendation #recommendationSheetModal {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        background: #fff !important;
+    }
+
+    /* inner modal box: remove scroll, padding, border, shadow, grey background */
+    body.print-recommendation #recommendationSheetModal .modal-box,
+    body.print-recommendation #recommendationSheetModal .recommendation-sheet-modal {
+        display: block !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        animation: none !important;
+        background: #fff !important;
+    }
+
+    /* the paper itself */
+    body.print-recommendation #recommendationSheetModal .recommendation-document {
+        position: relative !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        break-inside: avoid !important;
+    }
+
+    /* never print the loader, buttons or button row */
+    body.print-recommendation #recommendationSheetLoading,
+    body.print-recommendation #recommendationSheetModal button,
+    body.print-recommendation #recommendationSheetModal .flex.justify-end {
+        display: none !important;
+    }
+}   
     </style>
 </head>
 <body class="bg-[#f8f6f0] text-[#171e2c]">
@@ -3562,8 +3734,12 @@ body.print-approval #approvalSheetModal .approval-paper {
             approvalSheetModal: 'print-approval'
         };
 
-        const PRINTABLE_PX = 9.5 * 96 * 0.9;   // 9.5in minus 10% safety for print-font differences
-const PRINT_WIDTH_PX = 7.5 * 96;       // letter width minus 0.5in margins
+        // FIX: Separate dimensions for Letter and A4
+        const PRINT_WIDTH_LETTER_PX = 7.5 * 96; // Letter width minus 0.5in margins
+        const PRINTABLE_LETTER_PX = 9.5 * 96 * 0.9; // 9.5in minus 10% safety
+
+        const PRINT_WIDTH_A4_PX = (8.27 - 1.5 - 0.65) * 96;  // 6.12in
+        const PRINTABLE_A4_PX   = (11.69 - 0.6 - 0.55) * 96 * 0.95;
 
 window.printModalContent = function (modalId) {
     const modal = document.getElementById(modalId);
@@ -3573,20 +3749,29 @@ window.printModalContent = function (modalId) {
     const box = modal.querySelector('.modal-box');
 
     let previousZoom = '';
-    if (box && printClass === 'print-revision') {
+    if (box && (printClass === 'print-revision' || printClass === 'print-approval')) {
         previousZoom = box.style.zoom || '';
         const previousWidth = box.style.width || '';
+
+        // Determine dimensions based on document type
+        let printWidth = PRINT_WIDTH_LETTER_PX;
+        let printableHeight = PRINTABLE_LETTER_PX;
+
+        if (printClass === 'print-approval') {
+            printWidth = PRINT_WIDTH_A4_PX;
+            printableHeight = PRINTABLE_A4_PX;
+        }
 
         // Measure at the width the page will actually print at
         box.classList.add('print-measure'); 
         box.style.zoom = '1';
-        box.style.width = PRINT_WIDTH_PX + 'px';
+        box.style.width = printWidth + 'px';
         const naturalHeight = box.scrollHeight;
         box.style.width = previousWidth;
         box.classList.remove('print-measure');  
 
-        if (naturalHeight > PRINTABLE_PX) {
-            const scale = Math.max(0.45, PRINTABLE_PX / naturalHeight);
+        if (naturalHeight > printableHeight) {
+            const scale = Math.max(0.55, printableHeight / naturalHeight);
             box.style.zoom = String(Math.floor(scale * 100) / 100);
         }
     }
