@@ -579,37 +579,7 @@
     .recommendation-sheet-modal .rec-footer-label { margin-top:calc(var(--in)*.03); font-size:calc(var(--pt)*8.5); letter-spacing:.12em; text-transform:uppercase; color:#9a9385; }
 }
 
-/* ── APPROVAL — SCREEN ── */
-@media screen {
-    #approvalSheetModal .approval-sheet-modal-box { container-type:inline-size; box-sizing:border-box; width:100%; max-width:calc(8.5in + 3rem) !important; max-height:92vh; padding:1.5rem !important; background:#e9e5db; }
-    #approvalSheetModal .approval-paper { --in:calc(100cqw / 8.5); --pt:calc(var(--in) / 72); box-sizing:border-box; position:relative; display:flex; flex-direction:column; width:100%; min-height:calc(var(--in)*11); padding:calc(var(--in)*.75) calc(var(--in)*.85) calc(var(--in)*.8); background:#fff; box-shadow:0 12px 32px rgba(0,0,0,.18); text-align:center; font-family:'Times New Roman',serif; color:#1a1a1a; }
-    #approvalSheetModal .approval-header-image { margin:0 0 calc(var(--in)*.05); text-align:center; }
-    #approvalSheetModal .approval-header-image img { display:block; margin:0 auto; width:auto; max-width:calc(var(--in)*6.2); max-height:calc(var(--in)*.85); object-fit:contain; }
-    #approvalSheetModal #approvalSheetHeading { font-family:'Times New Roman',serif; font-size:calc(var(--pt)*17); line-height:1; font-weight:700; letter-spacing:.24em; margin:calc(var(--in)*.08) 0 calc(var(--in)*.02); color:#0a1428; }
-    #approvalSheetModal #approvalSheetHeading::after { content:''; display:block; width:calc(var(--in)*1.8); height:2px; background:#b88d3a; margin:calc(var(--in)*.08) auto calc(var(--in)*.14); }
-    #approvalSheetModal .print-serial { font-size:calc(var(--pt)*9); letter-spacing:.08em; margin:0 0 calc(var(--in)*.14); }
-    #approvalSheetModal #approvalSheetContent { flex:1 1 auto; display:flex; flex-direction:column; font-family:'Times New Roman',serif; font-size:calc(var(--pt)*10); line-height:1.28; color:#1a1a1a; }
-    #approvalSheetModal #approvalSheetContent > * { width:100%; }
-    #approvalSheetModal .approval-intro { font-size:calc(var(--pt)*10.5); margin:0 0 calc(var(--in)*.06); }
-    #approvalSheetModal .approval-title { font-size:calc(var(--pt)*12.5); font-weight:700; line-height:1.2; letter-spacing:.02em; text-transform:uppercase; max-width:calc(var(--in)*6.1); margin:0 auto calc(var(--in)*.14); padding:calc(var(--in)*.06) 0; border-top:1px solid #d9cda6; border-bottom:1px solid #d9cda6; color:#0a1428; }
-    #approvalSheetModal .approval-body { font-size:calc(var(--pt)*10.5); line-height:1.5; max-width:calc(var(--in)*6.4); margin:0 auto calc(var(--in)*.2); }
-    #approvalSheetModal .approval-signature { margin:0 auto calc(var(--in)*.16); }
-    #approvalSheetModal .approval-signature .approval-sig-line { display:inline-block; min-width:calc(var(--in)*2.55); padding:0 calc(var(--in)*.06) calc(var(--in)*.03); margin-bottom:calc(var(--in)*.04); border-bottom:1px solid #222; font-size:calc(var(--pt)*10); font-weight:700; line-height:1.05; text-transform:uppercase; color:#0a1428; }
-    #approvalSheetModal .approval-signature .approval-sig-role { font-size:calc(var(--pt)*8.5); line-height:1; letter-spacing:.06em; text-transform:uppercase; color:#5b6375; }
-    #approvalSheetModal .approval-panel-heading { font-size:calc(var(--pt)*10.5); line-height:1; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin:calc(var(--in)*.05) 0 calc(var(--in)*.13); color:#0a1428; }
-    #approvalSheetModal .approval-panel-grid { gap:calc(var(--in)*.22) calc(var(--in)*.55); max-width:calc(var(--in)*6); margin:0 auto calc(var(--in)*.16); }
-    #approvalSheetModal .approval-panel-grid .approval-signature { margin:0; }
-    #approvalSheetModal .approval-panel-grid .approval-sig-line { width:100%; min-width:0; font-size:calc(var(--pt)*9.5); }
-    /* lowered block */
-    #approvalSheetModal .approval-accepted { font-size:calc(var(--pt)*10); line-height:1.4; max-width:calc(var(--in)*6.2); margin:auto auto calc(var(--in)*.16); padding-top:calc(var(--in)*.3); }
-    #approvalSheetModal .approval-oral-results { gap:calc(var(--in)*.06); font-size:calc(var(--pt)*10); line-height:1.15; margin:0 0 calc(var(--in)*.14); }
-    #approvalSheetModal .approval-oral-results .oral-value { display:inline-block; min-width:calc(var(--in)*1.5); padding:0 calc(var(--in)*.1) calc(var(--in)*.02); text-align:center; color:#0a1428; }
-    #approvalSheetModal .approval-approved-label { margin:0 0 calc(var(--in)*.05); font-size:calc(var(--pt)*10); line-height:1; }
-    #approvalSheetModal #approvalSheetContent > .approval-signature:last-child { margin-bottom:0; }
-    #approvalSheetModal #approvalPresident { min-width:calc(var(--in)*2.9); font-size:calc(var(--pt)*10.5); letter-spacing:.03em; }
-    #approvalSheetModal .approval-sheet-modal-box.print-measure { padding:0 !important; }
-    #approvalSheetModal .approval-sheet-modal-box.print-measure .approval-paper { --in:1in !important; --pt:1pt !important; min-height:0 !important; padding:.2in .25in .05in !important; box-shadow:none; }
-}
+
 
 /* ══════════ PRINT ══════════ */
 @media print {
@@ -717,35 +687,7 @@ body.print-admin-revision #adminRevisionSheetModal th {
     body.print-recommendation .rec-footer-label { font-size:8.5pt !important; letter-spacing:.12em !important; text-transform:uppercase !important; color:#9a9385 !important; margin-top:.03in !important; }
     body.print-recommendation #recommendationSheetModal .flex.justify-end { display:none !important; }
 
-    /* approval (identical to screen page) */
-    body.print-approval #approvalSheetModal .approval-sheet-modal-box { display:block !important; box-sizing:border-box !important; width:100% !important; max-width:none !important; height:auto !important; max-height:none !important; margin:0 !important; padding:0 !important; overflow:visible !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; animation:none !important; background:#fff !important; font-family:'Times New Roman',serif !important; }
-    body.print-approval #approvalSheetModal .approval-paper { box-sizing:border-box !important; display:flex !important; flex-direction:column !important; width:100% !important; height:var(--print-h) !important; min-height:0 !important; padding:.2in .25in .05in !important; background:#fff !important; box-shadow:none !important; overflow:hidden !important; text-align:center !important; }
-    body.print-approval .approval-header-image { text-align:center !important; margin:0 0 .05in !important; }
-    body.print-approval .approval-header-image img { display:block !important; margin:0 auto !important; width:auto !important; max-width:6.2in !important; max-height:.85in !important; object-fit:contain !important; }
-    body.print-approval #approvalSheetHeading { font-family:'Times New Roman',serif !important; font-size:17pt !important; line-height:1 !important; font-weight:700 !important; letter-spacing:.24em !important; margin:.08in 0 .02in !important; text-align:center !important; color:#0a1428 !important; }
-    body.print-approval #approvalSheetHeading::after { content:'' !important; display:block !important; width:1.8in !important; height:2px !important; background:#b88d3a !important; margin:.08in auto .14in !important; }
-    body.print-approval #approvalSheetModal .print-serial { display:block !important; text-align:center !important; font-family:'Courier New',monospace !important; font-size:9pt !important; letter-spacing:.08em !important; color:#8b6914 !important; margin:0 0 .14in !important; }
-    body.print-approval #approvalSheetContent { display:flex !important; flex-direction:column !important; flex:1 1 auto !important; border:0 !important; padding:0 !important; margin:0 !important; overflow:visible !important; }
-    body.print-approval #approvalSheetContent > * { width:100% !important; }
-    body.print-approval .approval-sheet-doc { font-family:'Times New Roman',serif !important; line-height:1.28 !important; font-size:10pt !important; color:#1a1a1a !important; }
-    body.print-approval .approval-intro { font-size:10.5pt !important; margin:0 0 .06in !important; text-align:center !important; }
-    body.print-approval .approval-title { font-size:12.5pt !important; font-weight:700 !important; line-height:1.2 !important; margin:0 auto .14in !important; max-width:6.1in !important; padding:.06in 0 !important; border-top:1px solid #d9cda6 !important; border-bottom:1px solid #d9cda6 !important; text-align:center !important; text-transform:uppercase !important; color:#0a1428 !important; letter-spacing:.02em !important; }
-    body.print-approval .approval-body { font-size:10.5pt !important; line-height:1.5 !important; max-width:6.4in !important; margin:0 auto .2in !important; text-align:center !important; }
-    body.print-approval .approval-signature { margin:0 auto .16in !important; text-align:center !important; }
-    body.print-approval .approval-signature .approval-sig-line { display:inline-block !important; min-width:2.55in !important; border-bottom:1px solid #222 !important; font-size:10pt !important; font-weight:700 !important; text-transform:uppercase !important; line-height:1.05 !important; padding:0 .06in .03in !important; margin-bottom:.04in !important; color:#0a1428 !important; }
-    body.print-approval .approval-signature .approval-sig-role { font-size:8.5pt !important; line-height:1 !important; color:#5b6375 !important; letter-spacing:.06em !important; text-transform:uppercase !important; }
-    body.print-approval .approval-panel-heading { font-size:10.5pt !important; line-height:1 !important; margin:.05in 0 .13in !important; text-align:center !important; font-weight:700 !important; letter-spacing:.06em !important; text-transform:uppercase !important; color:#0a1428 !important; }
-    body.print-approval .approval-panel-grid { display:grid !important; grid-template-columns:1fr 1fr !important; gap:.22in .55in !important; max-width:6in !important; margin:0 auto .16in !important; }
-    body.print-approval .approval-panel-grid .approval-signature { margin:0 !important; }
-    body.print-approval .approval-panel-grid .approval-sig-line { width:100% !important; min-width:0 !important; font-size:9.5pt !important; }
-    body.print-approval .approval-accepted { font-size:10pt !important; line-height:1.4 !important; max-width:6.2in !important; margin:auto auto .16in !important; padding-top:.3in !important; text-align:center !important; }
-    body.print-approval .approval-oral-results { display:flex !important; flex-direction:column !important; align-items:center !important; gap:.06in !important; font-size:10pt !important; line-height:1.15 !important; margin:0 0 .14in !important; }
-    body.print-approval .approval-oral-results .oral-label { margin-right:.35rem !important; }
-    body.print-approval .approval-oral-results .oral-value { border-bottom:1px solid #222 !important; font-weight:700 !important; padding:0 .1in .02in !important; min-width:1.5in !important; display:inline-block !important; text-align:center !important; color:#0a1428 !important; }
-    body.print-approval .approval-approved-label { font-size:10pt !important; line-height:1 !important; margin:0 0 .05in !important; text-align:center !important; }
-    body.print-approval #approvalSheetContent > .approval-signature:last-child { margin-bottom:0 !important; }
-    body.print-approval #approvalPresident { min-width:2.9in !important; font-size:10.5pt !important; letter-spacing:.03em !important; }
-    body.print-approval #approvalSheetModal .flex.justify-end { display:none !important; }
+
 }
 /* ═══════ ADMIN REVISION SHEET — same document format as the student ═══════ */
 @media screen {
@@ -889,6 +831,114 @@ body.print-admin-revision #adminRevisionSheetModal th {
     font-size: calc(var(--pt) * 9);
     color: #666;
     font-style: italic;
+}
+
+
+
+/* ═══ APPROVAL SHEET — same as student, A4 ═══ */
+@media screen, print {
+    #approvalSheetModal .approval-sheet-modal-box {
+        container-type: inline-size; box-sizing: border-box; width: 100%;
+        max-width: calc(8.5in + 3rem) !important; max-height: 92vh;
+        padding: 1.5rem !important; background: #e9e5db;
+    }
+    #approvalSheetModal .approval-paper {
+        --in: calc(100cqw / 8.5); --pt: calc(var(--in) / 72);
+        box-sizing: border-box; position: relative; display: flex; flex-direction: column;
+        width: 100%; min-height: calc(var(--in) * 11);
+        padding: calc(var(--in) * 0.75) calc(var(--in) * 0.85) calc(var(--in) * 0.8);
+        background: #fff; box-shadow: 0 12px 32px rgba(0,0,0,.18);
+        text-align: center; font-family: 'Times New Roman', serif; color: #1a1a1a;
+    }
+    #approvalSheetModal .approval-header-image { margin: 0 0 calc(var(--in) * 0.05); text-align: center; }
+    #approvalSheetModal .approval-header-image img { display: block; margin: 0 auto; width: auto; max-width: calc(var(--in) * 6.2); max-height: calc(var(--in) * 0.85); object-fit: contain; }
+    #approvalSheetModal #approvalSheetHeading { font-family: 'Times New Roman', serif; font-size: calc(var(--pt) * 17); line-height: 1; font-weight: 700; letter-spacing: .24em; margin: calc(var(--in) * .08) 0 calc(var(--in) * .02); text-align: center; color: #0a1428; }
+    #approvalSheetModal #approvalSheetHeading::after { content: ''; display: block; width: calc(var(--in) * 1.8); height: 2px; background: #b88d3a; margin: calc(var(--in) * .08) auto calc(var(--in) * .14); }
+    #approvalSheetModal .print-serial { font-family: 'Courier New', monospace; font-size: calc(var(--pt) * 9); letter-spacing: .08em; color: #8b6914; margin: 0 0 calc(var(--in) * .14); }
+    #approvalSheetModal #approvalSheetContent { flex: 1 1 auto; display: flex; flex-direction: column; font-family: 'Times New Roman', serif; font-size: calc(var(--pt) * 10); line-height: 1.28; color: #1a1a1a; }
+    #approvalSheetModal #approvalSheetContent > * { width: 100%; }
+    #approvalSheetModal .approval-intro { font-size: calc(var(--pt) * 10.5); margin: 0 0 calc(var(--in) * .06); }
+    #approvalSheetModal .approval-title { font-size: calc(var(--pt) * 12.5); font-weight: 700; line-height: 1.2; letter-spacing: .02em; text-transform: uppercase; max-width: calc(var(--in) * 6.1); margin: 0 auto calc(var(--in) * .14); padding: calc(var(--in) * .06) 0; border-top: 1px solid #d9cda6; border-bottom: 1px solid #d9cda6; color: #0a1428; }
+    #approvalSheetModal .approval-body { font-size: calc(var(--pt) * 10.5); text-indent: .5in; line-height: 1.5; max-width: calc(var(--in) * 6.4); margin: 0 auto calc(var(--in) * .2); }
+    #approvalSheetModal .approval-signature { margin: 0 auto calc(var(--in) * .16); }
+    #approvalSheetModal .approval-signature .approval-sig-line { display: inline-block; min-width: calc(var(--in) * 2.55); padding: 0 calc(var(--in) * .06) calc(var(--in) * .03); margin-bottom: calc(var(--in) * .04); border-bottom: 1px solid #222; font-size: calc(var(--pt) * 10); font-weight: 700; line-height: 1.05; text-transform: uppercase; color: #0a1428; }
+    #approvalSheetModal .approval-signature .approval-sig-role { font-size: calc(var(--pt) * 8.5); line-height: 1; letter-spacing: .06em; text-transform: uppercase; color: #5b6375; }
+    #approvalSheetModal .approval-panel-heading { font-size: calc(var(--pt) * 10.5); line-height: 1; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin: calc(var(--in) * .05) 0 calc(var(--in) * .13); color: #0a1428; }
+    #approvalSheetModal .approval-panel-grid { gap: calc(var(--in) * .45) calc(var(--in) * .55); max-width: calc(var(--in) * 6); margin: 0 auto calc(var(--in) * .16); }
+    #approvalSheetModal .approval-panel-grid .approval-signature { margin: 0; }
+    #approvalSheetModal .approval-panel-grid .approval-sig-line { width: 100%; min-width: 0; font-size: calc(var(--pt) * 9.5); }
+    #approvalSheetModal .approval-accepted { font-size: calc(var(--pt) * 10); line-height: 1.4; max-width: calc(var(--in) * 6.2); margin: 0 auto calc(var(--in) * .3); padding-top: calc(var(--in) * .3); }
+    #approvalSheetModal .approval-oral-results { gap: calc(var(--in) * .06); font-size: calc(var(--pt) * 10); line-height: 1.15; margin: 0 0 calc(var(--in) * .3); }
+    #approvalSheetModal .approval-oral-results .oral-value { display: inline-block; min-width: calc(var(--in) * 1.5); padding: 0 calc(var(--in) * .1) calc(var(--in) * .02); text-align: center; color: #0a1428; }
+    #approvalSheetModal .approval-approved-label { margin: calc(var(--in) * .4) 0 calc(var(--in) * .3); font-size: calc(var(--pt) * 10); line-height: 1; }
+    #approvalSheetModal #approvalSheetContent > .approval-signature:last-child { margin-bottom: 0; }
+    #approvalSheetModal #approvalPresident { min-width: calc(var(--in) * 2.9); font-size: calc(var(--pt) * 10.5); letter-spacing: .03em; }
+    #approvalSheetModal .approval-sheet-modal-box.print-measure { padding: 0 !important; }
+    #approvalSheetModal .approval-sheet-modal-box.print-measure .approval-paper { --in: 1in !important; --pt: 1pt !important; min-height: 0 !important; padding: .2in .25in .05in !important; box-shadow: none; }
+}
+
+.approval-sheet-doc { color:#171e2c; background:#fff; font-family:'Times New Roman',serif; text-align:center; line-height:1.35; }
+.approval-sheet-doc .approval-intro { font-size:.9rem; margin:0 0 .35rem; }
+.approval-sheet-doc .approval-title { font-size:1.05rem; font-weight:700; text-transform:uppercase; letter-spacing:.025em; margin:0 auto 1rem; max-width:42rem; }
+.approval-sheet-doc .approval-body { font-size:.9rem; max-width:42rem; margin:0 auto 1.35rem; }
+.approval-sheet-doc .approval-body strong { font-weight:700; }
+.approval-signature { text-align:center; margin:0 auto 1.15rem; }
+.approval-signature .approval-sig-line { display:inline-block; min-width:2.45in; border-bottom:1px solid #222; font-weight:700; text-transform:uppercase; font-size:.85rem; padding-bottom:.18rem; margin-bottom:.2rem; }
+.approval-signature .approval-sig-role { font-size:.72rem; color:#444; }
+.approval-panel-heading { font-weight:700; font-size:.85rem; margin:0 0 .85rem; }
+.approval-panel-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem 1.5rem; max-width:34rem; margin:0 auto 1rem; }
+.approval-panel-grid .approval-signature { margin:0; }
+.approval-panel-grid .approval-sig-line { width:100%; min-width:0; font-size:.78rem; }
+.approval-accepted { max-width:39rem; margin:0 auto 1.1rem; font-size:.88rem; }
+.approval-oral-results { display:flex; flex-direction:column; align-items:center; gap:.25rem; margin-bottom:1rem; font-size:.86rem; }
+.approval-oral-results .oral-label { margin-right:.35rem; }
+.approval-oral-results .oral-value { border-bottom:1px solid #222; font-weight:700; padding-bottom:.05rem; }
+.approval-approved-label { margin:0 0 .25rem; font-size:.86rem; }
+
+/* ── PRINT: A4 ── */
+@page approval { size: A4 portrait; margin: 0.6in 0.65in 0.55in 1.5in; }
+@media print {
+    body.print-approval { page: approval; }
+
+    body.print-approval #approvalSheetModal { max-height: none !important; overflow: visible !important; }
+    body.print-approval #approvalSheetModal .approval-sheet-modal-box {
+        display: block !important; box-sizing: border-box !important; width: 100% !important;
+        max-width: none !important; height: auto !important; max-height: none !important;
+        overflow: visible !important; border: 0 !important; border-radius: 0 !important;
+        box-shadow: none !important; animation: none !important; background: #fff !important;
+    }
+    body.print-approval #approvalSheetModal .approval-paper {
+        --in: 1in !important; --pt: 1pt !important; --sp: 0.2in;
+        width: 100% !important; height: auto !important; min-height: 0 !important;
+        aspect-ratio: auto !important; margin: 0 auto !important; padding: 0 !important;
+        box-shadow: none !important; overflow: visible !important; break-inside: avoid;
+    }
+    body.print-approval #approvalSheetModal button,
+    body.print-approval #approvalSheetModal .flex.justify-end { display: none !important; }
+
+    body.print-approval #approvalSheetModal .approval-signature { margin: 0 auto !important; }
+    body.print-approval #approvalSheetModal .approval-body { margin: 0 auto calc(0.15in + var(--sp) * 2) !important; }
+    body.print-approval #approvalSheetModal .approval-body + .approval-signature { margin: 0 auto calc(0.15in + var(--sp) * 2) !important; }
+    body.print-approval #approvalSheetModal .approval-panel-heading { margin: 0 0 calc(0.1in + var(--sp) * 2) !important; }
+    body.print-approval #approvalSheetModal .approval-panel-grid { gap: calc(0.3in + var(--sp)) 0.4in !important; margin: 0 auto calc(0.3in + var(--sp)) !important; }
+    body.print-approval #approvalSheetModal .approval-panel-grid .approval-signature { margin: 0 !important; }
+    body.print-approval #approvalSheetModal #approvalChairmanBlock { margin: 0 auto calc(var(--sp) * 3) !important; }
+    body.print-approval #approvalSheetModal .approval-accepted { margin: 0 auto 0.14in !important; padding-top: 0 !important; }
+    body.print-approval #approvalSheetModal .approval-oral-results { margin: 0 0 calc(var(--sp) * 2) !important; }
+    body.print-approval #approvalSheetModal .approval-approved-label { margin: 0 0 calc(var(--sp) * 2) !important; line-height: 1 !important; text-align: center !important; }
+    body.print-approval #approvalSheetModal #approvalSheetContent > .approval-signature:last-child { margin: 0 auto !important; }
+
+    body.print-approval #approvalSheetModal .approval-intro { font-size: 10.5pt !important; }
+    body.print-approval #approvalSheetModal .approval-title { font-size: 12pt !important; }
+    body.print-approval #approvalSheetModal .approval-body { font-size: 10.5pt !important; line-height: 1.25 !important; text-indent: 0.5in !important; text-align: justify !important; }
+    body.print-approval #approvalSheetModal .approval-signature .approval-sig-line { font-size: 10pt !important; }
+    body.print-approval #approvalSheetModal .approval-signature .approval-sig-role { font-size: 8.5pt !important; }
+    body.print-approval #approvalSheetModal .approval-panel-heading { font-size: 10.5pt !important; }
+    body.print-approval #approvalSheetModal .approval-panel-grid .approval-sig-line { font-size: 10pt !important; }
+    body.print-approval #approvalSheetModal .approval-accepted,
+    body.print-approval #approvalSheetModal .approval-oral-results,
+    body.print-approval #approvalSheetModal .approval-approved-label { font-size: 10pt !important; }
+    body.print-approval #approvalSheetModal #approvalPresident { font-size: 10.5pt !important; }
 }
     </style>
 </head>
@@ -3393,9 +3443,11 @@ body.print-admin-revision #adminRevisionSheetModal th {
             <p class="print-serial text-center text-xs tracking-widest mt-1" id="approvalSerial" style="font-family:'Courier New',monospace; color:#8b6914;">&nbsp;</p>
 
             <div id="approvalSheetContent" class="approval-sheet-doc relative">
-                <div id="approvalSheetLoading" class="modal-loading-box absolute inset-0 bg-white/90 z-10">
-                    <div class="spinner-sm"></div><p>Loading approval sheet…</p>
-                </div>
+            <div id="approvalSheetLoading" class="modal-loading-box absolute inset-0 bg-white/90 backdrop-blur-sm z-10 rounded-lg">
+                <div class="spinner-sm"></div>
+                <p>Loading approval sheet…</p>
+                <span class="hint">Fetching panel, adviser, and oral exam results</span>
+            </div>
                 <p class="approval-intro">This Capstone Project 2 hereto entitled:</p>
                 <p id="approvalTitle" class="approval-title">—</p>
                 <p class="approval-body">prepared and submitted by <span id="approvalProponents">—</span>
@@ -3419,7 +3471,7 @@ body.print-admin-revision #adminRevisionSheetModal th {
                 <p class="approval-approved-label">Approved:</p>
                 <div class="approval-signature">
                     <span id="approvalPresident" class="approval-sig-line">DR. FLORIPIS A. MONTECILLO, Ed.D.</span>
-                    <div class="approval-sig-role">School President</div>
+                    <div class="approval-sig-role">College President</div>
                 </div>
             </div>
         </div>
@@ -5359,7 +5411,10 @@ window.addEventListener('pageshow', e => {
     approvalSheetModal:       'print-approval',
     adminRevisionSheetModal:  'print-admin-revision'
 };
-    const PRINTABLE_PX = 9.5 * 96 * 0.9, PRINT_WIDTH_PX = 7.5 * 96;
+        const PRINT_WIDTH_LETTER_PX = 7.5 * 96;
+        const PRINTABLE_LETTER_PX   = 9.5 * 96 * 0.9;
+        const PRINT_WIDTH_A4_PX     = (8.27 - 1.5 - 0.65) * 96;
+        const PRINTABLE_A4_PX       = (11.69 - 0.6 - 0.55) * 96 * 0.95;
     const $ = id => document.getElementById(id);
     const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const personName = p => typeof p === 'string' ? p : (p?.name || 'Panelist');
@@ -5371,27 +5426,30 @@ window.addEventListener('pageshow', e => {
         return `${l.slice(0, -1).join(', ')}, and ${l[l.length - 1]}`;
     };
 
-    window.printModalContent = function (modalId) {
-        const modal = $(modalId); if (!modal) return;
-        const cls = PRINT_CLASS_MAP[modalId];
-        const box = modal.querySelector('.modal-box');
-        let prevZoom = '';
-        if (box && cls !== 'print-recommendation') {
-            prevZoom = box.style.zoom || '';
-            const prevW = box.style.width || '';
-            box.classList.add('print-measure');
-            box.style.zoom = '1'; box.style.width = PRINT_WIDTH_PX + 'px';
-            const h = box.scrollHeight;
-            box.style.width = prevW; box.classList.remove('print-measure');
-            if (h > PRINTABLE_PX) box.style.zoom = String(Math.floor(Math.max(.45, PRINTABLE_PX / h) * 100) / 100);
-        }
-        Object.values(PRINT_CLASS_MAP).forEach(c => document.body.classList.remove(c));
-        document.body.classList.add(cls);
-        const cleanup = () => { document.body.classList.remove(cls); if (box) box.style.zoom = prevZoom; window.removeEventListener('afterprint', cleanup); };
-        window.addEventListener('afterprint', cleanup);
-        window.print();
-        setTimeout(cleanup, 2000);
-    };
+window.printModalContent = function (modalId) {
+    const modal = $(modalId); if (!modal) return;
+    const cls = PRINT_CLASS_MAP[modalId];
+    const box = modal.querySelector('.modal-box');
+    let prevZoom = '';
+    if (box && cls !== 'print-recommendation') {
+        const isA4 = cls === 'print-approval';
+        const width = isA4 ? PRINT_WIDTH_A4_PX : PRINT_WIDTH_LETTER_PX;
+        const maxH  = isA4 ? PRINTABLE_A4_PX   : PRINTABLE_LETTER_PX;
+        prevZoom = box.style.zoom || '';
+        const prevW = box.style.width || '';
+        box.classList.add('print-measure');
+        box.style.zoom = '1'; box.style.width = width + 'px';
+        const h = box.scrollHeight;
+        box.style.width = prevW; box.classList.remove('print-measure');
+        if (h > maxH) box.style.zoom = String(Math.floor(Math.max(.55, maxH / h) * 100) / 100);
+    }
+    Object.values(PRINT_CLASS_MAP).forEach(c => document.body.classList.remove(c));
+    document.body.classList.add(cls);
+    const cleanup = () => { document.body.classList.remove(cls); if (box) box.style.zoom = prevZoom; window.removeEventListener('afterprint', cleanup); };
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+    setTimeout(cleanup, 2000);
+};
 
     window.openRecommendationSheet = function (groupId) {
         const title = $('recommendationTitle'), props = $('recommendationProponents'), adviser = $('recommendationAdviser'),
@@ -5413,43 +5471,57 @@ window.addEventListener('pageshow', e => {
           .finally(() => { loading.style.display = 'none'; });
     };
 
-    window.openApprovalSheet = function (groupId) {
-        const title = $('approvalTitle'), prop = $('approvalProponents'), adv = $('approvalAdviser'),
-              pan = $('approvalPanelists'), chBlk = $('approvalChairmanBlock'), ch = $('approvalChairman'),
-              oRes = $('approvalOralResult'), oDate = $('approvalOralDate'), pres = $('approvalPresident'),
-              serial = $('approvalSerial'), loading = $('approvalSheetLoading');
-        const DEF = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
-        title.textContent = '—'; prop.textContent = 'Loading...'; adv.textContent = '—';
-        pan.innerHTML = '<div class="approval-signature"><span class="approval-sig-line">Loading...</span><div class="approval-sig-role">Member</div></div>';
-        chBlk.style.display = 'none'; oRes.textContent = '—'; oDate.textContent = '—'; pres.textContent = DEF; serial.textContent = ' ';
-        loading.style.display = 'flex';
-        openModal('approvalSheetModal');
-        fetch(`/admin/get-approval-sheet/${groupId}`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => {
+window.openApprovalSheet = function (groupId, capNo) {
+    const title = $('approvalTitle'), prop = $('approvalProponents'), adv = $('approvalAdviser'),
+          pan = $('approvalPanelists'), chBlk = $('approvalChairmanBlock'), ch = $('approvalChairman'),
+          oRes = $('approvalOralResult'), oDate = $('approvalOralDate'), pres = $('approvalPresident'),
+          serial = $('approvalSerial'), loading = $('approvalSheetLoading'), capEl = $('approvalCapNo');
+    const DEF = 'DR. FLORIPIS A. MONTECILLO, Ed.D.';
+    if (capEl) capEl.textContent = capNo || 2;
+    title.textContent = '—'; prop.textContent = 'Loading...'; adv.textContent = '—';
+    pan.innerHTML = '<div class="approval-signature"><span class="approval-sig-line">Loading...</span><div class="approval-sig-role">Member</div></div>';
+    chBlk.style.display = 'none'; ch.textContent = '—'; oRes.textContent = '—'; oDate.textContent = '—';
+    pres.textContent = DEF; serial.textContent = ' ';
+    loading.style.display = 'flex';
+    openModal('approvalSheetModal');
+
+    fetch(`/admin/get-approval-sheet/${groupId}`)
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(d => {
+            if (capEl && !capNo && d.capstone_no) capEl.textContent = d.capstone_no;
             title.textContent = d.capstone_title || '—';
             prop.textContent = joinNames(d.members);
             adv.textContent = d.adviser || '—';
+
             const all = Array.isArray(d.panelists) ? d.panelists : [];
-            const chair = all.find(p => /chair/i.test(String(p?.role || p?.type || ''))) || (d.chairman ? { name: d.chairman } : null);
-            const mem = chair ? all.filter(p => p !== chair) : all;
+            const chair = all.find(p => /chair/i.test(String(p?.role || p?.type || ''))) ||
+                (d.chairman ? { name: d.chairman } : { name: 'DINO L. ILUSTRISIMO, Ph.D.', role: 'Chairman, Board of Panels' });
+            const mem = all.filter(p => p !== chair);
+
             pan.innerHTML = mem.length
                 ? mem.map(p => `<div class="approval-signature"><span class="approval-sig-line">${esc(personName(p))}</span><div class="approval-sig-role">Member</div></div>`).join('')
                 : '<div class="approval-signature"><span class="approval-sig-line">No panelists assigned</span><div class="approval-sig-role">Member</div></div>';
-            if (chair) { chBlk.style.display = 'block'; ch.textContent = personName(chair); }
-            oRes.textContent = d.oral_exam_result || '—';
-            const examDateRaw = d.issued_date || d.oral_exam_date;
-if (examDateRaw) {
-    const dt = new Date(examDateRaw);
-    oDate.textContent = isNaN(dt.getTime())
-        ? examDateRaw
-        : dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-} else {
-    oDate.textContent = '—';
-}
+
+            chBlk.style.display = 'block';
+            ch.textContent = personName(chair);
+
+            oRes.textContent = d.oral_exam_result || 'PASSED';
+            const raw = d.oral_exam_date;
+            if (raw) {
+                const dt = new Date(raw);
+                oDate.textContent = isNaN(dt.getTime()) ? raw
+                    : dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            } else oDate.textContent = '—';
+
             pres.textContent = d.school_president || DEF;
             serial.textContent = d.serial_number || ' ';
-        }).catch(() => { prop.textContent = 'Unable to load approval data'; })
-          .finally(() => { loading.style.display = 'none'; });
-    };
+        })
+        .catch(err => {
+            prop.textContent = 'Unable to load approval data';
+            pan.innerHTML = `<div class="approval-signature"><span class="approval-sig-line">Error loading panel</span><div class="approval-sig-role">${esc(err.message)}</div></div>`;
+        })
+        .finally(() => { loading.style.display = 'none'; });
+};
 
     // called by the View button in the Documents table
    // called by the View button in the Documents table

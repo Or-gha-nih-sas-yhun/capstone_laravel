@@ -2408,6 +2408,74 @@
         display: none !important;
     }
 }   
+/* ══ REVISION SHEET: print = exactly the on-screen view ══ */
+@page revision { size: auto; margin: 0; }   /* margin 0 also removes browser date/URL headers */
+
+@media print {
+    body.print-revision { page: revision; }
+
+    body.print-revision #revisionSheetModal,
+    body.print-revision #revisionSheetModal .revision-sheet-modal-box {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    /* same scaling engine as the screen view */
+    body.print-revision #revisionSheetModal .revision-sheet-modal-box {
+        container-type: inline-size !important;
+        display: block !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: #fff !important;
+    }
+
+    body.print-revision #revisionSheetModal .revision-paper {
+        --in: calc(100cqw / 8.5) !important;     /* full page width = 8.5 "in", like the view */
+        --pt: calc(var(--in) / 72) !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        margin: 0 auto !important;
+        padding: calc(var(--in) * 0.6) calc(var(--in) * 0.7) calc(var(--in) * 0.55) !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        background: #fff !important;
+    }
+
+    body.print-revision #revisionSheetModal .rv-header {
+        margin: 0 0 calc(var(--in) * 0.1) !important;
+    }
+    body.print-revision #revisionSheetModal .rv-header img {
+        max-width: calc(var(--in) * 6.2) !important;
+        max-height: calc(var(--in) * 0.9) !important;
+        width: auto !important;
+    }
+
+    /* signature block: identical to the view */
+    body.print-revision #revisionSheetModal .rv-signature {
+        display: inline-block !important;
+        min-width: calc(var(--in) * 2.4) !important;
+        margin-top: calc(var(--in) * 0.3) !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+    body.print-revision #revisionSheetModal #sheetApprovedBy {
+        display: block !important;
+        min-height: calc(var(--in) * 0.2) !important;
+        border-bottom: 1px solid #000 !important;
+    }
+    body.print-revision #revisionSheetModal .rv-approved {
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+    }
+}
     </style>
 </head>
 <body class="bg-[#f8f6f0] text-[#171e2c]">
@@ -3749,7 +3817,7 @@ window.printModalContent = function (modalId) {
     const box = modal.querySelector('.modal-box');
 
     let previousZoom = '';
-    if (box && (printClass === 'print-revision' || printClass === 'print-approval')) {
+    if (box && printClass === 'print-approval') {
         previousZoom = box.style.zoom || '';
         const previousWidth = box.style.width || '';
 
