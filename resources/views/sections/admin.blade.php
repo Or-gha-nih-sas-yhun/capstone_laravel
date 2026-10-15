@@ -3460,7 +3460,7 @@ body.print-admin-revision #adminRevisionSheetModal th {
                     <div class="approval-signature"><span class="approval-sig-line">Loading...</span><div class="approval-sig-role">Member</div></div>
                 </div>
                 <div id="approvalChairmanBlock" class="approval-signature" style="display:none;">
-                    <span id="approvalChairman" class="approval-sig-line">—</span><div class="approval-sig-role">Chairman, Board of Panels</div>
+                    <span id="approvalChairman" class="approval-sig-line">—</span><div class="approval-sig-role">Program Chair/Chairman, Panel of Examiners</div>
                 </div>
                 <p class="approval-accepted"><strong>ACCEPTED AND APPROVED</strong> in partial fulfillment of the requirements for the degree of
                     <strong>BACHELOR OF SCIENCE IN INFORMATION TECHNOLOGY</strong>.</p>
@@ -5495,7 +5495,7 @@ window.openApprovalSheet = function (groupId, capNo) {
 
             const all = Array.isArray(d.panelists) ? d.panelists : [];
             const chair = all.find(p => /chair/i.test(String(p?.role || p?.type || ''))) ||
-                (d.chairman ? { name: d.chairman } : { name: 'DINO L. ILUSTRISIMO, Ph.D.', role: 'Chairman, Board of Panels' });
+                (d.chairman ? { name: d.chairman } : { name: 'DINO L. ILUSTRISIMO, Ph.D.', role: 'Program Chair/Chairman, Panel of Examiners' });
             const mem = all.filter(p => p !== chair);
 
             pan.innerHTML = mem.length

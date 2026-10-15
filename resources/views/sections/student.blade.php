@@ -3553,7 +3553,7 @@
 
             <div id="approvalChairmanBlock" class="approval-signature" style="display:none;">
                 <span id="approvalChairman" class="approval-sig-line">—</span>
-                <div class="approval-sig-role">Chairman, Board of Panels</div>
+                <div class="approval-sig-role">Program Chair/Chairman, Panel of Examiners</div>
             </div>
 
             <p class="approval-accepted">
@@ -4116,7 +4116,7 @@ window.printModalContent = function (modalId) {
                     
                     // Ensure there is always a Chairman
                     const chairmanEntry = allPanelists.find(p => /chair/i.test(String(p?.role || p?.type || ''))) ||
-                        (data.chairman ? { name: data.chairman } : { name: 'DINO L. ILUSTRISIMO, Ph.D.', role: 'Chairman, Board of Panels' });
+                        (data.chairman ? { name: data.chairman } : { name: 'DINO L. ILUSTRISIMO, Ph.D.', role: 'Program Chair/Chairman, Panel of Examiners' });
                     
                     const memberPanelists = chairmanEntry
                         ? allPanelists.filter(p => p !== chairmanEntry)
