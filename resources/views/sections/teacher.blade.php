@@ -1736,7 +1736,7 @@
                 </div>
 
                 <div id="ag_group_list" class="space-y-3">
-                    @forelse($adviserGroups ?? [] as $group)
+                    @forelse(($adviserGroups ?? collect())->sort(fn($a, $b) => strnatcasecmp($a->group_name ?? '', $b->group_name ?? ''))->values() as $group)
                     @php
                         $teacherRevision = \App\Models\Revision::with([
                             'documentation',
@@ -1871,7 +1871,12 @@
         <div class="grid grid-cols-1 gap-6">
             @forelse($teacherSections ?? [] as $section)
                 @php
-                    $groupsInSection = \App\Models\Group::where('section_id', $section->id)->where('is_archived', false)->with(['students', 'groupMilestones', 'room'])->get();
+                    $groupsInSection = \App\Models\Group::where('section_id', $section->id)
+                        ->where('is_archived', false)
+                        ->with(['students', 'groupMilestones', 'room'])
+                        ->get()
+                        ->sort(fn($a, $b) => strnatcasecmp($a->group_name ?? '', $b->group_name ?? ''))
+                        ->values();
                     $sectionStudents = \App\Models\Student::where('section', $section->section_name)->with(['user', 'groups'])->get();
                 @endphp
                 <div class="content-card">
@@ -2012,7 +2017,12 @@
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             @forelse($sectionsWithGroups ?? [] as $section)
-                @php $groupsInSection = $adviserGroups->where('section_id', $section->id); @endphp
+                @php
+                    $groupsInSection = $adviserGroups
+                        ->where('section_id', $section->id)
+                        ->sort(fn($a, $b) => strnatcasecmp($a->group_name ?? '', $b->group_name ?? ''))
+                        ->values();
+                @endphp
                 <div class="content-card">
                     <div class="card-accent"></div>
                     <div class="p-6">
@@ -2104,76 +2114,41 @@
                             </div>
                             <span class="badge badge-green"><i class="fas fa-check-circle mr-1"></i> Joined</span>
                         </div>
-
                         <div class="mt-4 pt-4 border-t border-[#e2dacf]">
                             @php
-                                $revisedGroups = $room->groups->where('revision_status', 'revised');
-                                $normalGroups = $room->groups->where('revision_status', '!=', 'revised');
+                                $normalGroups = $room->groups
+                                    ->sort(fn($a, $b) => strnatcasecmp($a->group_name ?? '', $b->group_name ?? ''))
+                                    ->values();
                             @endphp
 
-                            <!-- REVISED GROUPS SECTION -->
-                            @if($revisedGroups->isNotEmpty())
-                                <div class="mb-4 p-4 bg-green-50/50 border border-green-200 rounded-xl">
-                                    <h4 class="text-sm font-bold text-green-800 mb-3 flex items-center gap-2">
-                                        <i class="fas fa-check-circle text-green-600"></i> Revised Groups (Taps to Evaluate)
-                                    </h4>
-                                    <div class="flex flex-col gap-3 w-full">
-                                        @foreach($revisedGroups as $rg)
-                                            @php
-                                                $rgSection = $rg->students->first()->section ?? 'No Section';
-                                                $searchData = strtolower($rg->group_name . ' ' . ($rg->capstone_title ?? '') . ' ' . $rgSection);
-                                                $teacher = \App\Models\Teacher::where('user_id', Auth::user()->user_id)->first();
-                                                $rgHasEvaluated = $teacher ? \App\Models\Evaluation::where('group_id', $rg->id)
-                                                    ->where('milestone_id', $room->required_milestone_id)
-                                                    ->where('teacher_id', $teacher->id)
-                                                    ->exists() : false;
-                                            @endphp
-                                            <div onclick="window.openEvaluationModal({{ $rg->id }})" class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-white border border-green-200 rounded-xl text-sm group-item transition hover:shadow-md cursor-pointer hover:border-green-400 w-full"
-                                                data-search="{{ $searchData }}"
-                                                data-group-id="{{ $rg->id }}"
-                                                data-stage-id="{{ $room->capstone_stage_id ?? '' }}">
-                                                <div class="flex flex-col gap-1">
-                                                    <div class="flex items-center gap-2 flex-wrap">
-                                                        <span class="font-bold text-[#0a1428] text-base">{{ $rg->group_name }}</span>
-                                                        <span class="badge badge-green text-[9px]">{{ $rgSection }}</span>
-                                                        <span class="badge badge-navy text-[9px]">Revised</span>
-                                                        @if($rgHasEvaluated)
-                                                            <span class="badge badge-green text-[9px]"><i class="fas fa-check-circle mr-1"></i> Already Evaluated</span>
-                                                        @endif
-                                                    </div>
-                                                    <span class="text-xs text-[#3d4450]">{{ $rg->capstone_title ?? 'No title' }}</span>
-                                                    @if($rg->revision_description)
-                                                        <span class="text-xs text-[#5b6375] italic block mt-1"><span class="font-semibold">Revision Instructions:</span> "{{ $rg->revision_description }}"</span>
-                                                    @endif
-                                                    @if($rg->students->isNotEmpty())
-                                                    <div class="flex flex-wrap gap-1 mt-1.5">
-                                                        @foreach($rg->students as $mem)
-                                                            <span class="badge badge-muted text-[9px]"><i class="fa-regular fa-user text-[8px] mr-1"></i>{{ $mem->student_first_name }} {{ $mem->student_last_name }}</span>
-                                                        @endforeach
-                                                    </div>
-                                                    @endif
-                                                </div>
-                                                <div class="mt-3 sm:mt-0 flex gap-2">
-                                                    @if($rgHasEvaluated)
-                                                        <button class="btn-outline text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 focus:outline-none transition shadow-sm text-green-700 hover:text-green-800 hover:border-green-800" style="border-color: #15803d; color: #15803d; background: transparent;">
-                                                            <i class="fas fa-check-double"></i> Re-evaluate Revised Group
-                                                        </button>
-                                                    @else
-                                                        <button class="btn-primary text-xs px-4 py-2 rounded-lg flex items-center gap-1.5 focus:outline-none transition shadow-sm bg-green-700 hover:bg-green-800" style="background-color: #15803d; border-color: #15803d;">
-                                                            <i class="fa-regular fa-pen-to-square"></i> Evaluate Revised Group
-                                                        </button>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-
-                            <div class="flex justify-between items-center mb-2">
+                            <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
                                 <p class="text-xs font-semibold text-[#5b6375] uppercase tracking-wide">Groups in this room</p>
-                                <input type="text" class="room-group-filter form-input text-xs py-1 px-2 w-48"
-                                       placeholder="Search by group, title, or section…" data-room-id="{{ $room->id }}">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <!-- Status filter -->
+                                    <div class="flex bg-[#faf8f4] border border-[#e2dacf] rounded-lg p-0.5 text-[10px] room-group-status-filter"
+                                         data-room-id="{{ $room->id }}">
+                                        <button type="button"
+                                                class="room-filter-btn px-2.5 py-1 rounded-md font-semibold text-[#b88d3a] bg-white shadow-sm transition-all focus:outline-none"
+                                                data-status="all">All</button>
+                                        <button type="button"
+                                                class="room-filter-btn px-2.5 py-1 rounded-md font-semibold text-[#5b6375] hover:text-[#0a1428] transition-all focus:outline-none"
+                                                data-status="evaluated">
+                                            <i class="fas fa-check-circle mr-1"></i>Evaluated
+                                        </button>
+                                        <button type="button"
+                                                class="room-filter-btn px-2.5 py-1 rounded-md font-semibold text-[#5b6375] hover:text-[#0a1428] transition-all focus:outline-none"
+                                                data-status="revision">
+                                            <i class="fas fa-undo-alt mr-1"></i>Revision
+                                        </button>
+                                        <button type="button"
+                                                class="room-filter-btn px-2.5 py-1 rounded-md font-semibold text-[#5b6375] hover:text-[#0a1428] transition-all focus:outline-none"
+                                                data-status="pending">
+                                            <i class="fas fa-clock mr-1"></i>Not Evaluated
+                                        </button>
+                                    </div>
+                                    <input type="text" class="room-group-filter form-input text-xs py-1 px-2 w-48"
+                                           placeholder="Search by group, title, or section…" data-room-id="{{ $room->id }}">
+                                </div>
                             </div>
                             <div class="flex flex-col gap-3 w-full room-group-list" data-room-id="{{ $room->id }}">
                                 @forelse($normalGroups as $g)
@@ -2267,8 +2242,21 @@
                                             $allEnhancementsComplete &&
                                             $allObjectivesComplete;
                                     }
+
+                                    // Classify status for the room filter
+                                    if ($teacherRevision && !$revisionComplete) {
+                                        $roomFilterStatus = 'revision';
+                                    } elseif ($g->revision_status === 'needs_revision') {
+                                        $roomFilterStatus = 'revision';
+                                    } elseif ($hasEvaluated) {
+                                        $roomFilterStatus = 'evaluated';
+                                    } else {
+                                        $roomFilterStatus = 'pending';
+                                    }
                                 @endphp
-                                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-[#faf8f4] border border-[#e2dacf] rounded-xl text-sm group-item transition hover:shadow-sm w-full" data-search="{{ $searchData }}"
+                                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-[#faf8f4] border border-[#e2dacf] rounded-xl text-sm group-item transition hover:shadow-sm w-full"
+                            data-search="{{ $searchData }}"
+                            data-room-status="{{ $roomFilterStatus }}"
                             data-group-id="{{ $g->id }}"
                             data-group-name="{{ addslashes($g->group_name) }}"
                             data-stage-id="{{ $room->capstone_stage_id ?? '' }}">
@@ -2315,14 +2303,19 @@
                     <i class="fas fa-file-alt mr-1"></i> View Revision
                 </button>
 
-            @else
-                <button type="button" onclick="window.openEvaluationModal({{ $g->id }})"
-                    class="btn-primary text-xs px-4 py-2 rounded-lg flex items-center gap-1.5"
-                    style="background-color:#15803d; border-color:#15803d;">
-                    <i class="fa-regular fa-pen-to-square"></i> Evaluate Group
-                </button>
-            @endif
-
+                @else
+                    <div class="flex flex-col items-end gap-1.5">
+                        <div class="text-[10px] text-[#8a5d0b] bg-[#fdf9ef] border border-[rgba(214,177,92,0.5)] rounded-lg px-2.5 py-1.5 flex items-start gap-1.5 max-w-[240px] leading-snug text-left">
+                            <i class="fas fa-circle-info mt-[1px] text-[#b88d3a]"></i>
+                            <span>You need to score this group.</span>
+                        </div>
+                        <button type="button" onclick="window.openEvaluationModal({{ $g->id }})"
+                            class="btn-primary text-xs px-4 py-2 rounded-lg flex items-center gap-1.5"
+                            style="background-color:#15803d; border-color:#15803d;">
+                            <i class="fa-regular fa-pen-to-square"></i> Evaluate Group
+                        </button>
+                    </div>
+                @endif
         @else
 
             <button
@@ -4923,10 +4916,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('#check_chapters_tbody tr').forEach(row => {
             if (!row.dataset.chapter) return;
             chapters.push({
-                chapter:   row.dataset.chapter,
-                findings:  row.dataset.findings,
+                id:        row.dataset.id,
                 completed: row.querySelector('[data-role="chapter-completed"]')?.checked || false,
-                remarks:   row.querySelector('[data-role="chapter-remarks"]')?.value || '',
             });
         });
 
@@ -4934,9 +4925,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('#check_iot_tbody tr').forEach(row => {
             if (!row.dataset.finding) return;
             iot.push({
-                finding:   row.dataset.finding,
+                id:        row.dataset.id,
                 completed: row.querySelector('[data-role="iot-completed"]')?.checked || false,
-                remarks:   row.querySelector('[data-role="iot-remarks"]')?.value || '',
             });
         });
 
@@ -4944,9 +4934,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('#check_objectives_list tbody tr').forEach(row => {
             if (!row.dataset.objective) return;
             objectives.push({
-                objective: row.dataset.objective,
+                id:        row.dataset.id,
                 completed: row.querySelector('[data-role="objective-completed"]')?.checked || false,
-                remarks:   row.querySelector('[data-role="objective-remarks"]')?.value || '',
             });
         });
 
@@ -5824,34 +5813,71 @@ function resetEvalModalState() {
         })
     );
 
-    // ── FILTER GROUPS IN ROOMS ──
+    // ── FILTER GROUPS IN ROOMS (search + status) ──
+    function applyRoomGroupFilters(roomId) {
+        const list = document.querySelector(`.room-group-list[data-room-id="${roomId}"]`);
+        if (!list) return;
+
+        const searchInput   = document.querySelector(`.room-group-filter[data-room-id="${roomId}"]`);
+        const statusWrap    = document.querySelector(`.room-group-status-filter[data-room-id="${roomId}"]`);
+        const searchTerm    = (searchInput?.value || '').toLowerCase().trim();
+        const statusFilter  = statusWrap?.querySelector('.room-filter-btn.active')?.dataset.status || 'all';
+
+        const items = list.querySelectorAll('.group-item');
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const searchData = item.dataset.search || '';
+            const itemStatus = item.dataset.roomStatus || 'pending';
+            const matchSearch = !searchTerm || searchData.includes(searchTerm);
+            const matchStatus = statusFilter === 'all' || itemStatus === statusFilter;
+            const match = matchSearch && matchStatus;
+            item.style.display = match ? 'flex' : 'none';
+            if (match) visibleCount++;
+        });
+
+        let noResult = list.querySelector('.no-result-msg');
+        if (visibleCount === 0) {
+            if (!noResult) {
+                noResult = document.createElement('p');
+                noResult.className = 'text-xs text-[#5b6375] col-span-full text-center py-2 no-result-msg';
+                list.appendChild(noResult);
+            }
+            noResult.textContent = 'No groups match your filter.';
+            noResult.style.display = 'block';
+        } else if (noResult) {
+            noResult.style.display = 'none';
+        }
+    }
+    window.applyRoomGroupFilters = applyRoomGroupFilters;
+
+    // Search input
     document.querySelectorAll('.room-group-filter').forEach(input => {
         input.addEventListener('input', function () {
-            const roomId = this.dataset.roomId;
-            const searchTerm = this.value.toLowerCase().trim();
-            const list = document.querySelector(`.room-group-list[data-room-id="${roomId}"]`);
-            if (!list) return;
-            const items = list.querySelectorAll('.group-item');
-            let visibleCount = 0;
-            items.forEach(item => {
-                const searchData = item.dataset.search || '';
-                const match = !searchTerm || searchData.includes(searchTerm);
-                item.style.display = match ? 'flex' : 'none';
-                if (match) visibleCount++;
-            });
-            let noResult = list.querySelector('.no-result-msg');
-            if (visibleCount === 0) {
-                if (!noResult) {
-                    noResult = document.createElement('p');
-                    noResult.className = 'text-xs text-[#5b6375] col-span-full text-center py-2 no-result-msg';
-                    noResult.textContent = 'No groups match your filter.';
-                    list.appendChild(noResult);
-                }
-                noResult.style.display = 'block';
-            } else if (noResult) {
-                noResult.style.display = 'none';
-            }
+            applyRoomGroupFilters(this.dataset.roomId);
         });
+    });
+
+    // Status filter buttons
+    document.querySelectorAll('.room-group-status-filter').forEach(wrap => {
+        const buttons = wrap.querySelectorAll('.room-filter-btn');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                // Deactivate all
+                buttons.forEach(b => {
+                    b.className = 'room-filter-btn px-2.5 py-1 rounded-md font-semibold text-[#5b6375] hover:text-[#0a1428] transition-all focus:outline-none';
+                });
+                // Activate clicked
+                this.className = 'room-filter-btn px-2.5 py-1 rounded-md font-semibold text-[#b88d3a] bg-white shadow-sm transition-all focus:outline-none';
+                this.classList.add('active');
+
+                applyRoomGroupFilters(wrap.dataset.roomId);
+            });
+        });
+
+        // Ensure the "All" button is marked active on load
+        const allBtn = wrap.querySelector('.room-filter-btn[data-status="all"]');
+        if (allBtn) allBtn.classList.add('active');
     });
 
     // ── ASSIGNED SECTIONS: group filter for the Students table ──
@@ -6091,6 +6117,7 @@ function resetEvalModalState() {
                     const remarks = ch.remarks || 'Pending';
                     const isCompleted = remarks.toLowerCase() === 'completed';
                     const tr = document.createElement('tr');
+                    tr.dataset.id = ch.id;
                     tr.dataset.chapter = ch.chapter;
                     tr.dataset.findings = ch.findings;
                     tr.innerHTML = `
@@ -6115,6 +6142,7 @@ function resetEvalModalState() {
                     const remarks = iot.remarks || 'Pending';
                     const isCompleted = remarks.toLowerCase() === 'completed';
                     const tr = document.createElement('tr');
+                    tr.dataset.id = iot.id;
                     tr.dataset.finding = iot.finding;
                     tr.innerHTML = `
                         <td class="p-2 pl-3">${iot.finding}</td>
@@ -6153,6 +6181,7 @@ function resetEvalModalState() {
                     const isCompleted = String(remarks).toLowerCase() === 'completed';
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-[#faf8f4]/50';
+                    tr.dataset.id = typeof obj === 'object' ? obj.id : '';
                     tr.dataset.objective = objectiveText;
                     tr.innerHTML = `
                         <td class="p-2 pl-3 font-medium text-[#171e2c]">${objectiveText}</td>

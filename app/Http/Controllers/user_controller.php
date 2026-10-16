@@ -3149,201 +3149,71 @@ public function verifyRevision(Request $request, $groupId)
     }
 
 
-    // ==========================================
-    // VALIDATION
-    // ==========================================
+$validated = $request->validate([
+    'chapters'               => 'nullable|array',
+    'chapters.*.id'          => 'required|integer',
+    'chapters.*.completed'   => 'nullable|boolean',
+    'iot'                    => 'nullable|array',
+    'iot.*.id'               => 'required|integer',
+    'iot.*.completed'        => 'nullable|boolean',
+    'objectives'             => 'nullable|array',
+    'objectives.*.id'        => 'required|integer',
+    'objectives.*.completed' => 'nullable|boolean',
+]);
 
-    $validated = $request->validate([
+// ALL of this panelist's revisions for the stage (covers duplicates)
+$myRevIds = \App\Models\Revision::where('group_id', $groupId)
+    ->where('panelist_id', $teacher->id)
+    ->when($stageId, fn ($q) => $q->where('capstone_stage_id', $stageId))
+    ->pluck('id');
 
-        'chapters' => 'nullable|array',
+if ($myRevIds->isEmpty()) {
+    return response()->json(['success' => false, 'error' => 'No revision found for this stage.'], 404);
+}
 
-        'chapters.*.chapter' =>
-            'nullable|string',
+try {
+    DB::transaction(function () use ($validated, $myRevIds, $groupId, $stageId, $group) {
+        $map = [
+            'chapters'   => 'revisions_documentation',
+            'iot'        => 'revisions_enhancements',
+            'objectives' => 'revisions_objectives',
+        ];
 
-        'chapters.*.findings' =>
-            'nullable|string',
-
-        'chapters.*.completed' =>
-            'nullable|boolean',
-
-        'chapters.*.remarks' =>
-            'nullable|string',
-
-
-        'iot' => 'nullable|array',
-
-        'iot.*.finding' =>
-            'nullable|string',
-
-        'iot.*.completed' =>
-            'nullable|boolean',
-
-        'iot.*.remarks' =>
-            'nullable|string',
-
-
-        'objectives' => 'nullable|array',
-
-        'objectives.*.objective' =>
-            'nullable|string',
-
-        'objectives.*.completed' =>
-            'nullable|boolean',
-
-        'objectives.*.remarks' =>
-            'nullable|string',
-
-    ]);
-
-
-    try {
-
-        DB::transaction(function () use (
-            $revision,
-            $validated
-        ) {
-
-
-            // =====================================
-            // CHAPTERS
-            // =====================================
-
-            foreach (
-                $validated['chapters'] ?? []
-                as $chapter
-            ) {
-
-                if (
-                    empty($chapter['chapter']) ||
-                    !isset($chapter['findings'])
-                ) {
-                    continue;
-                }
-
-
-                $status =
-                    !empty($chapter['completed'])
-                        ? 'Completed'
-                        : 'Pending';
-
-
-                $revision->documentation()
-                    ->where(
-                        'chapter',
-                        $chapter['chapter']
-                    )
-                    ->where(
-                        'findings',
-                        $chapter['findings']
-                    )
+        foreach ($map as $key => $table) {
+            foreach ($validated[$key] ?? [] as $row) {
+                DB::table($table)
+                    ->where('id', $row['id'])
+                    ->whereIn('revision_id', $myRevIds)   // can only touch own items
                     ->update([
-                        'remarks' => $status
+                        'remarks'    => !empty($row['completed']) ? 'Completed' : 'Pending',
+                        'updated_at' => now(),
                     ]);
             }
+        }
 
+        // Recompute group status from EVERY panelist's revisions at this stage
+        $allRevIds = \App\Models\Revision::where('group_id', $groupId)
+            ->when($stageId, fn ($q) => $q->where('capstone_stage_id', $stageId))
+            ->pluck('id');
 
-
-            // =====================================
-            // SYSTEM / IoT
-            // =====================================
-
-            foreach (
-                $validated['iot'] ?? []
-                as $iot
-            ) {
-
-                if (empty($iot['finding'])) {
-                    continue;
-                }
-
-
-                $status =
-                    !empty($iot['completed'])
-                        ? 'Completed'
-                        : 'Pending';
-
-
-                $revision->enhancements()
-                    ->where(
-                        'enhancement',
-                        $iot['finding']
-                    )
-                    ->update([
-                        'remarks' => $status
-                    ]);
-            }
-
-
-
-            // =====================================
-            // ADDITIONAL OBJECTIVES
-            // =====================================
-
-            foreach (
-                $validated['objectives'] ?? []
-                as $objective
-            ) {
-
-                if (empty($objective['objective'])) {
-                    continue;
-                }
-
-
-                $status =
-                    !empty($objective['completed'])
-                        ? 'Completed'
-                        : 'Pending';
-
-
-                $revision->objectives()
-                    ->where(
-                        'objective',
-                        $objective['objective']
-                    )
-                    ->update([
-                        'remarks' => $status
-                    ]);
-            }
-
-        });
-
-
-        return response()->json([
-
-            'success' => true,
-
-            'revision_id' => $revision->id,
-
-            'message' =>
-                'Revision verification submitted successfully!'
-
-        ]);
-
-    } catch (\Throwable $e) {
-
-        Log::error(
-            'Revision verification failed',
-            [
-                'group_id' => $groupId,
-                'teacher_id' => $teacher->id,
-                'revision_id' => $revision->id,
-                'error' => $e->getMessage()
-            ]
+        $pending = collect($map)->contains(fn ($table) =>
+            DB::table($table)->whereIn('revision_id', $allRevIds)
+                ->where(fn ($q) => $q->whereNull('remarks')
+                    ->orWhereRaw('LOWER(TRIM(remarks)) <> ?', ['completed']))
+                ->exists()
         );
 
+        $group->update(['revision_status' => $pending ? 'needs_revision' : 'revised']);
+    });
 
-        return response()->json([
-
-            'success' => false,
-
-            'error' =>
-                'Verification could not be saved.',
-
-            // Remove this after debugging if desired.
-            'debug' => $e->getMessage()
-
-        ], 500);
-    }
+    return response()->json([
+        'success' => true,
+        'message' => 'Revision verification submitted successfully!',
+    ]);
+} catch (\Throwable $e) {
+    Log::error('Revision verification failed', ['group_id' => $groupId, 'error' => $e->getMessage()]);
+    return response()->json(['success' => false, 'error' => 'Verification could not be saved.'], 500);
+}
 }
 public function getStudentGroup($groupId)
 {
