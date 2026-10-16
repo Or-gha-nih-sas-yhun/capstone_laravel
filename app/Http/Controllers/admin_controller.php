@@ -907,29 +907,30 @@ class admin_controller extends Controller
     $selectedStageId = $milestone->capstone_stage_id;
     $selectedYearId  = $milestone->capstoneStage->capstone_year_id ?? null;
 
-    DB::transaction(function () use (
-        $validated, $panelists, $roomCount, $activityName,
-        $qualificationMilestoneId, $selectedStageId, $selectedYearId, $roomColumn
-    ) {
-        $requiredMilestoneId = $validated['required_milestone_id'];
+DB::transaction(function () use (
+    $validated, $panelists, $roomCount, $activityName,
+    $qualificationMilestoneId, $selectedStageId, $selectedYearId, $roomColumn, $stageType
+) {
+    $requiredMilestoneId = $validated['required_milestone_id'];
 
-        // ── Stage-aware qualification ──
-        // A group is eligible for THIS stage's rooms when:
-        //   • it is not archived
-        //   • it belongs to the same capstone cycle
-        //   • it has completed the qualification milestone
-        //   • it does NOT yet have a room for THIS stage
-        //     (`$roomColumn` = capstone1_room_id  OR  capstone2_room_id)
-        // NOTE: we deliberately do NOT filter on `room_id` — a group that
-        // already sits in a Capstone 1 room can still get a Capstone 2 room.
-        $groups = Group::where('is_archived', false)
-            ->whereNull($roomColumn)
-            ->when($selectedYearId, fn ($q) => $q->where('capstone_year_id', $selectedYearId))
-            ->whereHas('groupMilestones', function ($query) use ($qualificationMilestoneId) {
-                $query->where('milestone_id', $qualificationMilestoneId)
-                      ->where('status', 'completed');
-            })
-            ->get();
+    // Active rooms that already belong to THIS stage type
+    $stageRoomIds = EvaluationRoom::where('is_archived', false)
+        ->whereHas('capstoneStage', fn ($q) => $q->where('stage_type', $stageType))
+        ->pluck('id');
+
+    $groups = Group::where('is_archived', false)
+        ->whereNull($roomColumn)
+        // only groups NOT already in a room of this stage
+        ->where(function ($q) use ($stageRoomIds) {
+            $q->whereNull('room_id')
+              ->orWhereNotIn('room_id', $stageRoomIds);
+        })
+        ->when($selectedYearId, fn ($q) => $q->where('capstone_year_id', $selectedYearId))
+        ->whereHas('groupMilestones', function ($query) use ($qualificationMilestoneId) {
+            $query->where('milestone_id', $qualificationMilestoneId)
+                  ->where('status', 'completed');
+        })
+        ->get();
 
         $maxRoomNumber = EvaluationRoom::where('room_name', 'like', 'Room %')
             ->pluck('room_name')
