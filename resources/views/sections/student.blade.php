@@ -3175,7 +3175,8 @@
     // documentation/enhancement item is marked completed.
     $isRevisionComplete = function ($rev) {
         $items = collect(data_get($rev, 'documentation', []))
-            ->merge(collect(data_get($rev, 'enhancements', [])));
+            ->concat(collect(data_get($rev, 'enhancements', [])))
+            ->concat(collect(data_get($rev, 'objectives', [])));
         return $items->isNotEmpty() && $items->every(
             fn ($item) => strtolower(trim((string) data_get($item, 'remarks', ''))) === 'completed'
         );
